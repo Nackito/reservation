@@ -11,13 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('properties', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->text('description');
-            $table->decimal('price_per_night', 8, 2);
-            $table->string('image')->nullable();
-            $table->timestamps();
+        Schema::table('properties', function (Blueprint $table) {
+            $table->string('image')->nullable()->after('price_per_night');
         });
     }
 
@@ -26,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('properties');
+        Schema::table('properties', function (Blueprint $table) {
+            $table->dropColumn('image');
+        });
     }
 };

@@ -20,9 +20,9 @@
             @error('price_per_night') <span class="text-red-500">{{ $message }}</span> @enderror
         </div>
         <div class="mb-4">
-            <label for="image" class="block text-gray-700">Image</label>
-            <input type="file" wire:model="image" class="border p-2 rounded w-full">
-            @error('image') <span class="text-red-500">{{ $message }}</span> @enderror
+            <label text-gray-700">Images</label>
+            <input type="file" wire:model="images" multiple class="border p-2 rounded w-full">
+            @error('images.*') <span class="text-red-500">{{ $message }}</span> @enderror
         </div>
         <button type="submit" class="bg-primary text-white py-2 px-4 rounded">Ajouter</button>
         <button type="button" wire:click="update" class="bg-yellow-500 text-white py-2 px-4 rounded">Modifier</button>

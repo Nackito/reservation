@@ -47,4 +47,11 @@
         </div>
         @endforeach
     </div>
+
+    <h2 class="text-xl font-bold mb-4">Demandes de Réservation</h2>
+    <ul>
+        @foreach($bookings as $booking)
+        <li class="border-b py-2">{{ $booking->name }}</li>
+        @endforeach
+    </ul>
 </div>

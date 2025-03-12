@@ -3,6 +3,9 @@
 namespace App\Livewire;
 
 use Livewire\Component;
+use Livewire\Livewire;
+use App\Models\Booking;
+use Illuminate\Support\Facades\Auth;
 
 class BookingManager extends Component
 {
@@ -20,6 +23,10 @@ class BookingManager extends Component
 
     public function addBooking()
     {
+        if (!Auth::check()) {
+            return redirect()->route('login');
+        }
+
         $this->validate();
 
         Booking::create(['name' => $this->newBooking]);
@@ -32,6 +39,6 @@ class BookingManager extends Component
 
     public function render()
     {
-        return view('livewire.booking-manager');
+        return view('livewire.booking-manager')->extends('layouts.app');
     }
 }

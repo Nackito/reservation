@@ -5,12 +5,15 @@ namespace App\Livewire;
 use Livewire\Component;
 use App\Models\Property;
 use App\Models\PropertyImage;
+use App\Models\Booking;
 use Livewire\WithFileUploads;
+use Illuminate\Support\Facades\Auth;
 
 class PropertyManager extends Component
 {
     use WithFileUploads;
     public $properties;
+    public $bookings;
     public $name;
     public $description;
     public $price_per_night;
@@ -27,6 +30,7 @@ class PropertyManager extends Component
     public function mount()
     {
         $this->properties = Property::with('images')->get();
+        $this->bookings = Booking::all();
     }
 
     public function resetInputFields()
@@ -40,6 +44,9 @@ class PropertyManager extends Component
 
     public function store()
     {
+        if (!Auth::check()) {
+            return redirect()->route('login');
+        }
         $this->validate();
 
         $property = Property::create([
@@ -113,6 +120,6 @@ class PropertyManager extends Component
 
     public function render()
     {
-        return view('livewire.property-manager');
+        return view('livewire.property-manager')->extends('layouts.app')->section('content');
     }
 }

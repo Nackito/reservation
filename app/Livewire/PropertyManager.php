@@ -29,8 +29,9 @@ class PropertyManager extends Component
 
     public function mount()
     {
-        $this->properties = Property::with('images')->get();
-        $this->bookings = Booking::all();
+        $user = Auth::user();
+        $this->properties = Property::with('images')->where('user_id', $user->id)->get();
+        $this->bookings = Booking::whereIn('property_id', $this->properties->pluck('id'))->get();
     }
 
     public function resetInputFields()
@@ -67,7 +68,8 @@ class PropertyManager extends Component
         }
 
         $this->resetInputFields();
-        $this->properties = Property::with('images')->get();
+        $this->properties = Property::with('images')->where('user_id', Auth::id())->get();
+        $this->bookings = Booking::whereIn('property_id', $this->properties->pluck('id'))->get();
     }
 
     public function edit($id)
@@ -109,7 +111,8 @@ class PropertyManager extends Component
         }
 
         $this->resetInputFields();
-        $this->properties = Property::with('images')->get();
+        $this->properties = Property::with('images')->where('user_id', Auth::id())->get();
+        $this->bookings = Booking::whereIn('property_id', $this->properties->pluck('id'))->get();
     }
 
     public function delete($id)

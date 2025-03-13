@@ -51,7 +51,7 @@ class BookingManager extends Component
         $this->bookings = Booking::where('property_id', $this->propertyId)->get();
         LivewireAlert::title('Réservation ajoutée avec succès!')->success()->show();
         // Redirection après l'alerte
-        //return redirect()->route('nom_de_la_route');
+        return redirect()->route('home');
     }
 
     public function render()

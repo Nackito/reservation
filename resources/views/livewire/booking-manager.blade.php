@@ -25,10 +25,4 @@
         </button>
     </form>
 
-    <h2 class="text-xl font-bold mb-4">Réservations</h2>
-    <ul>
-        @foreach($bookings as $booking)
-        <li class="border-b py-2">{{ $booking->check_in_date }} - {{ $booking->check_out_date }} : {{ $booking->total_price }} €</li>
-        @endforeach
-    </ul>
 </div>

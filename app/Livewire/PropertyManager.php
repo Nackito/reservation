@@ -8,6 +8,7 @@ use App\Models\PropertyImage;
 use App\Models\Booking;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Auth;
+use Jantinnerezo\LivewireAlert\Facades\LivewireAlert;
 
 class PropertyManager extends Component
 {
@@ -32,6 +33,13 @@ class PropertyManager extends Component
         $user = Auth::user();
         $this->properties = Property::with('images')->where('user_id', $user->id)->get();
         $this->bookings = Booking::whereIn('property_id', $this->properties->pluck('id'))->get();
+    }
+
+    public function deleteBooking($id)
+    {
+        Booking::find($id)->delete();
+        $this->bookings = Booking::where('user_id', Auth::id())->get();
+        LivewireAlert::title('Réservation ajoutée avec succès!')->success()->show();
     }
 
     public function resetInputFields()

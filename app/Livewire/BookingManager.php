@@ -7,6 +7,7 @@ use App\Models\Property;
 use App\Models\Booking;
 use Illuminate\Support\Facades\Auth;
 use Jantinnerezo\LivewireAlert\Facades\LivewireAlert;
+use Carbon\Carbon;
 
 class BookingManager extends Component
 {
@@ -45,6 +46,13 @@ class BookingManager extends Component
         // Vérifier si l'utilisateur essaie de réserver sa propre propriété
         if ($property->user_id == Auth::id()) {
             LivewireAlert::title('Vous ne pouvez pas réserver une de vos propriétés')->error()->show();
+            return;
+        }
+
+        // Vérifier si la date d'entrée est inférieure à la date du jour
+        $today = Carbon::today()->toDateString();
+        if ($this->checkInDate < $today) {
+            LivewireAlert::title('La date d\'entrée ne peut pas être inférieure à la date du jour')->error()->show();
             return;
         }
 

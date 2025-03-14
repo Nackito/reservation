@@ -36,8 +36,8 @@ class PropertyManager extends Component
     {
         $user = Auth::user();
         $this->properties = Property::with('images')->where('user_id', $user->id)->get();
-        $this->bookings = Booking::with('property')->where('user_id', $user->id)->get();
-
+        $this->pendingBookings = Booking::with('property')->where('user_id', $user->id)->where('status', 'pending')->get();
+        $this->acceptedBookings = Booking::with('property')->where('user_id', $user->id)->where('status', 'accepted')->get();
         //$this->bookings = Booking::whereIn('property_id', $this->properties->pluck('id'))->get();
         $this->receivedBookings = Booking::with('user')
             ->whereIn('property_id', $this->properties->pluck('id'))
@@ -48,7 +48,8 @@ class PropertyManager extends Component
     public function deleteBooking($id)
     {
         Booking::find($id)->delete();
-        $this->bookings = Booking::where('user_id', Auth::id())->get();
+        $this->pendingBookings = Booking::with('property')->where('user_id', Auth::id())->where('status', 'pending')->get();
+        $this->acceptedBookings = Booking::with('property')->where('user_id', Auth::id())->where('status', 'accepted')->get();
         $this->receivedBookings = Booking::with('user')
             ->whereIn('property_id', $this->properties->pluck('id'))
             ->where('user_id', '!=', Auth::id())
@@ -105,8 +106,8 @@ class PropertyManager extends Component
 
         $this->resetInputFields();
         $this->properties = Property::with('images')->where('user_id', Auth::id())->get();
-        $this->bookings = Booking::with('property')->where('user_id', $user->id)->get();
-        //$this->bookings = Booking::whereIn('property_id', $this->properties->pluck('id'))->get();
+        $this->pendingBookings = Booking::with('property')->where('user_id', Auth::id())->where('status', 'pending')->get();
+        $this->acceptedBookings = Booking::with('property')->where('user_id', Auth::id())->where('status', 'accepted')->get();
         $this->receivedBookings = Booking::with('user')
             ->whereIn('property_id', $this->properties->pluck('id'))
             ->where('user_id', '!=', Auth::id())
@@ -153,8 +154,8 @@ class PropertyManager extends Component
 
         $this->resetInputFields();
         $this->properties = Property::with('images')->where('user_id', Auth::id())->get();
-        $this->bookings = Booking::with('property')->where('user_id', $user->id)->get();
-        //$this->bookings = Booking::whereIn('property_id', $this->properties->pluck('id'))->get();
+        $this->pendingBookings = Booking::with('property')->where('user_id', Auth::id())->where('status', 'pending')->get();
+        $this->acceptedBookings = Booking::with('property')->where('user_id', Auth::id())->where('status', 'accepted')->get();
         $this->receivedBookings = Booking::with('user')
             ->whereIn('property_id', $this->properties->pluck('id'))
             ->where('user_id', '!=', Auth::id())
@@ -165,8 +166,8 @@ class PropertyManager extends Component
     {
         Property::find($id)->delete();
         $this->properties = Property::with('images')->where('user_id', Auth::id())->get();
-        $this->bookings = Booking::with('property')->where('user_id', $user->id)->get();
-        //$this->bookings = Booking::whereIn('property_id', $this->properties->pluck('id'))->get();
+        $this->pendingBookings = Booking::with('property')->where('user_id', Auth::id())->where('status', 'pending')->get();
+        $this->acceptedBookings = Booking::with('property')->where('user_id', Auth::id())->where('status', 'accepted')->get();
         $this->receivedBookings = Booking::with('user')
             ->whereIn('property_id', $this->properties->pluck('id'))
             ->where('user_id', '!=', Auth::id())

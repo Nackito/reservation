@@ -49,11 +49,23 @@
     </div>
 
     <h2 class="text-xl font-bold mb-4">Demandes de Réservation</h2>
-    <ul>
-        @foreach($bookings as $booking)
-        <li class="border-b py-2">{{ $booking->name }}</li>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        @foreach($receivedBookings as $booking)
+        <div class="bg-white shadow-md rounded-lg overflow-hidden">
+            <div class="p-4">
+                <h3 class="text-lg text-gray-800">{{ $booking->property->name ?? 'Nom non disponible' }}</h3>
+                <p class="text-gray-500">Demande par : {{ $booking->user->name ?? 'Nom non disponible' }}</p>
+                <p class="text-gray-500">Date d'entrée : {{ $booking->start_date }}</p>
+                <p class="text-gray-500">Date de sortie : {{ $booking->end_date }}</p>
+                <p class="text-gray-600">Prix total : {{ $booking->total_price }} €</p>
+                <div class="mt-4 flex justify-between">
+                    <button wire:click="acceptBooking({{ $booking->id }})" class="bg-green-500 text-white py-1 px-2 rounded">Accepter</button>
+                    <button wire:click="deleteBooking({{ $booking->id }})" class="bg-red-500 text-white py-1 px-2 rounded">Annuler</button>
+                </div>
+            </div>
+        </div>
         @endforeach
-    </ul>
+    </div>
 
     <h2 class="text-xl font-bold mb-4">Mes réservations</h2>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

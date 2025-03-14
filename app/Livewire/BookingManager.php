@@ -40,6 +40,14 @@ class BookingManager extends Component
     {
         $this->validate();
 
+        $property = Property::find($this->propertyId);
+
+        // Vérifier si l'utilisateur essaie de réserver sa propre propriété
+        if ($property->user_id == Auth::id()) {
+            LivewireAlert::title('Vous ne pouvez pas réserver une de vos propriétés')->error()->show();
+            return;
+        }
+
         Booking::create([
             'property_id' => $this->propertyId,
             'user_id' => Auth::id(),

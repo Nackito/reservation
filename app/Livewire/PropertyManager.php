@@ -6,6 +6,7 @@ use Livewire\Component;
 use App\Models\Property;
 use App\Models\PropertyImage;
 use App\Models\Booking;
+use Filament\Forms\Components\Livewire;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Auth;
 use Jantinnerezo\LivewireAlert\Facades\LivewireAlert;
@@ -15,6 +16,9 @@ class PropertyManager extends Component
     use WithFileUploads;
     public $properties;
     public $bookings;
+    public $receivedBookings;
+    public $pendingBookings;
+    public $acceptedBookings;
     public $name;
     public $description;
     public $price_per_night;
@@ -32,14 +36,37 @@ class PropertyManager extends Component
     {
         $user = Auth::user();
         $this->properties = Property::with('images')->where('user_id', $user->id)->get();
-        $this->bookings = Booking::whereIn('property_id', $this->properties->pluck('id'))->get();
+        $this->bookings = Booking::with('property')->where('user_id', $user->id)->get();
+
+        //$this->bookings = Booking::whereIn('property_id', $this->properties->pluck('id'))->get();
+        $this->receivedBookings = Booking::with('user')
+            ->whereIn('property_id', $this->properties->pluck('id'))
+            ->where('user_id', '!=', $user->id)
+            ->get();
     }
 
     public function deleteBooking($id)
     {
         Booking::find($id)->delete();
         $this->bookings = Booking::where('user_id', Auth::id())->get();
-        LivewireAlert::title('Réservation ajoutée avec succès!')->success()->show();
+        $this->receivedBookings = Booking::with('user')
+            ->whereIn('property_id', $this->properties->pluck('id'))
+            ->where('user_id', '!=', Auth::id())
+            ->get();
+        LivewireAlert::title('Réservation annulée avec succès!')->success()->show();
+    }
+
+    public function acceptBooking($id)
+    {
+        $booking = Booking::find($id);
+        // Ajoutez ici la logique pour accepter la réservation
+        $booking->status = 'accepted';
+        $booking->save();
+        $this->receivedBookings = Booking::with('user')
+            ->whereIn('property_id', $this->properties->pluck('id'))
+            ->where('user_id', '!=', Auth::id())
+            ->get();
+        LivewireAlert::title('Réservation acceptée avec succès!')->success()->show();
     }
 
     public function resetInputFields()
@@ -63,6 +90,7 @@ class PropertyManager extends Component
             'description' => $this->description,
             'price_per_night' => $this->price_per_night,
             'image' => $this->images ? $this->images[0]->store('images', 'public') : null,
+            'user_id' => Auth::id(),
         ]);
 
         foreach ($this->images as $index => $image) {
@@ -77,7 +105,12 @@ class PropertyManager extends Component
 
         $this->resetInputFields();
         $this->properties = Property::with('images')->where('user_id', Auth::id())->get();
-        $this->bookings = Booking::whereIn('property_id', $this->properties->pluck('id'))->get();
+        $this->bookings = Booking::with('property')->where('user_id', $user->id)->get();
+        //$this->bookings = Booking::whereIn('property_id', $this->properties->pluck('id'))->get();
+        $this->receivedBookings = Booking::with('user')
+            ->whereIn('property_id', $this->properties->pluck('id'))
+            ->where('user_id', '!=', Auth::id())
+            ->get();
     }
 
     public function edit($id)
@@ -120,13 +153,24 @@ class PropertyManager extends Component
 
         $this->resetInputFields();
         $this->properties = Property::with('images')->where('user_id', Auth::id())->get();
-        $this->bookings = Booking::whereIn('property_id', $this->properties->pluck('id'))->get();
+        $this->bookings = Booking::with('property')->where('user_id', $user->id)->get();
+        //$this->bookings = Booking::whereIn('property_id', $this->properties->pluck('id'))->get();
+        $this->receivedBookings = Booking::with('user')
+            ->whereIn('property_id', $this->properties->pluck('id'))
+            ->where('user_id', '!=', Auth::id())
+            ->get();
     }
 
     public function delete($id)
     {
         Property::find($id)->delete();
-        $this->properties = Property::with('images')->get();
+        $this->properties = Property::with('images')->where('user_id', Auth::id())->get();
+        $this->bookings = Booking::with('property')->where('user_id', $user->id)->get();
+        //$this->bookings = Booking::whereIn('property_id', $this->properties->pluck('id'))->get();
+        $this->receivedBookings = Booking::with('user')
+            ->whereIn('property_id', $this->properties->pluck('id'))
+            ->where('user_id', '!=', Auth::id())
+            ->get();
     }
 
     public function render()

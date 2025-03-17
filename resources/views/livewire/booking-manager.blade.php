@@ -24,5 +24,4 @@
             Confirmer la réservation
         </button>
     </form>
-
 </div>

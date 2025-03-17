@@ -40,6 +40,7 @@ class UserReservations extends Component
 
     public function render()
     {
-        return view('livewire.user-reservations')->extends('layouts.app')->section('content');
+        //return view('livewire.user-reservations')->extends('layouts.app')->section('content');
+        return view('livewire.user-reservations');
     }
 }

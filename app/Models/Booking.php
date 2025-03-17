@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Booking extends Model
 {
     use HasFactory;
-    protected $fillable = ['property_id', 'user_id', 'start_date', 'end_date', 'total_price'];
+    protected $fillable = ['property_id', 'user_id', 'start_date', 'end_date', 'total_price', 'status'];
 
     public function property()
     {

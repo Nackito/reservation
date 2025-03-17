@@ -72,6 +72,7 @@ class BookingManager extends Component
 
     public function render()
     {
-        return view('livewire.booking-manager')->extends('layouts.app');
+        //return view('livewire.booking-manager')->extends('layouts.app')->section('content');
+        return view('livewire.booking-manager');
     }
 }

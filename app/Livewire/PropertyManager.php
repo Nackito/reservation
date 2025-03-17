@@ -176,6 +176,7 @@ class PropertyManager extends Component
 
     public function render()
     {
-        return view('livewire.property-manager')->extends('layouts.app')->section('content');
+        //return view('livewire.property-manager')->extends('layouts.app')->section('content');
+        return view('livewire.property-manager');
     }
 }

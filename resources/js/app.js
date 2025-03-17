@@ -8,3 +8,6 @@ import Swal from "sweetalert2";
 window.Swal = Swal;
 
 Alpine.start();
+
+// index.js
+import "preline";

@@ -1,4 +1,4 @@
-<div>
+<div class="container mx-auto p-4">
     <h1 class="text-2xl font-bold mb-4">Gestion des Propriétés</h1>
 
     <form wire:submit.prevent="store" class="mb-4">
@@ -35,7 +35,7 @@
             @if($property->image)
             <img src="{{ asset('storage/' . $property->image) }}" alt="{{ $property->name }}" class="w-full h-48 object-cover">
             @endif
-            <div class="p-4">
+            <div class="p-4 text-center">
                 <h3 class="text-lg text-gray-800">{{ $property->name ?? 'Nom non disponible' }}</h3>
                 <p class="text-gray-500">{{ $property->description ?? 'Description non disponible' }}</p>
                 <p class="text-gray-600">{{ $property->price_per_night ?? 'Prix non disponible' }} € par nuit</p>

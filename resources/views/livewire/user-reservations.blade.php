@@ -1,4 +1,4 @@
-<div>
+<div class="container mx-auto p-4">
     <h2 class="text-xl font-bold mb-4">Mes réservations</h2>
     <h3 class="text-lg font-bold mb-4">En attente</h3>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

@@ -35,10 +35,16 @@ class BookingManager extends Component
         $checkOut = strtotime($this->checkOutDate);
         $days = ($checkOut - $checkIn) / 86400; // 86400 seconds in a day
         $this->totalPrice = $days * $property->price_per_night;
+
+        $this->dispatch('show-confirmation', ['totalPrice' => $this->totalPrice]);
+        LivewireAlert::title('Le prix total est de ' . $this->totalPrice . '€')->show();
     }
 
     public function addBooking()
     {
+        if (!Auth::check()) {
+            return redirect()->route('login');
+        }
         $this->validate();
 
         $property = Property::find($this->propertyId);
@@ -58,7 +64,7 @@ class BookingManager extends Component
 
         Booking::create([
             'property_id' => $this->propertyId,
-            'user_id' => Auth::id(),
+            'user_id' => Auth::id(), // Assurez-vous que l'utilisateur est authentifié
             'start_date' => $this->checkInDate,
             'end_date' => $this->checkOutDate,
             'total_price' => $this->totalPrice,
@@ -72,7 +78,8 @@ class BookingManager extends Component
 
     public function render()
     {
-        //return view('livewire.booking-manager')->extends('layouts.app')->section('content');
-        return view('livewire.booking-manager');
+        //                return view('livewire.booking-manager')->extends('layouts.app')->section('content');
+        $properties = Property::all();
+        return view('livewire.booking-manager', compact('properties'));
     }
 }

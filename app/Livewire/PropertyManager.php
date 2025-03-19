@@ -10,7 +10,9 @@ use Filament\Forms\Components\Livewire;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Auth;
 use Jantinnerezo\LivewireAlert\Facades\LivewireAlert;
+use Livewire\Attributes\Title;
 
+#[Title('Gestion des propriétés')]
 class PropertyManager extends Component
 {
     use WithFileUploads;

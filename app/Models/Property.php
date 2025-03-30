@@ -9,7 +9,7 @@ class Property extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'description', 'price_per_night', 'image', 'user_id'];
+    protected $fillable = ['name', 'description', 'price_per_night', 'image', 'user_id', 'city', 'district', 'status', 'slug', 'features'];
 
     public function images()
     {
@@ -25,4 +25,8 @@ class Property extends Model
     {
         return $this->hasMany(Booking::class);
     }
+
+    protected $casts = [
+        'features' => 'array',
+    ];
 }

@@ -6,6 +6,7 @@ use App\Filament\Resources\PropertiesResource\Pages;
 use App\Filament\Resources\PropertiesResource\RelationManagers;
 use App\Models\Property;
 use Filament\Forms;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\Section;
@@ -16,10 +17,12 @@ use Filament\Tables\Table;
 use Filament\Forms\Components\Group;
 use Filament\Forms\Set;
 use Filament\Support\Markdown;
+use Filament\Tables\Columns\ImageColumn;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use function Laravel\Prompts\search;
 
 class PropertiesResource extends Resource
 {
@@ -61,10 +64,13 @@ class PropertiesResource extends Resource
 
                     Section::make('Images')->schema([
                         Forms\Components\FileUpload::make('images')
+                            ->image()
                             ->multiple()
-                            ->directory('products')
+                            ->directory('properties')
                             ->maxFiles(10)
                             ->reorderable()
+                            ->preserveFilenames() // Conserve les noms de fichiers d'origine
+                            ->helperText('Upload images of the property. You can upload multiple images.')
                         //->afterStateUpdated(function ($state, $set, $get) {
                         //Stockez les images temporairement dans le dossier public
                         //    $set('image', $state);
@@ -168,15 +174,44 @@ class PropertiesResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('name')
-                    ->sortable(),
-
-                Tables\Columns\ImageColumn::make('image'),
+                    ->sortable()
+                    ->searchable(),
 
                 Tables\Columns\TextColumn::make('description')
                     ->searchable(),
 
+                ImageColumn::make('images.image_path')
+                    ->label('Images')
+                    ->circular()
+                    ->stacked()
+                    ->limit(3)
+                    ->toggleable()
+                    ->limitedRemainingText(),
+
                 Tables\Columns\TextColumn::make('price_per_night')
                     ->searchable(),
+
+                Tables\Columns\TextColumn::make('city')
+                    ->searchable(),
+
+                Tables\Columns\TextColumn::make('district')
+                    ->searchable(),
+
+                Tables\Columns\TextColumn::make('status')
+                    ->sortable()
+                    ->searchable(),
+
+                Tables\Columns\TextColumn::make('created_at')
+                    ->dateTime()
+                    ->label('Created At')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                Tables\Columns\TextColumn::make('updated_at')
+                    ->dateTime()
+                    ->label('Created At')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 //

@@ -22,7 +22,7 @@
                         <div class="p-4">
                             <h3 class="text-lg text-gray-800">{{ $property->name ?? 'Nom non disponible' }}</h3>
                             <p class="text-gray-700">{{ $property->city ?? 'Ville non disponible' }}, {{ Str::words($property->district ?? 'Quartier non disponible') }}</p>
-                            <p class="text-gray-500 mt-5">{{ $property->description ?? 'Description non disponible' }}</p>
+                            <p class="text-gray-500 mt-5">{{ Str::words($property->description ?? 'Description non disponible', 20, '...') }}</p>
                             <p class="text-gray-600 text-right font-bold mt-5">{{ $property->price_per_night ?? 'Prix non disponible' }} € par nuit</p>
                             <div class="mt-4">
                                 <a href="{{ route('booking-manager', ['propertyId' => $property->id]) }}" class="border border-blue-500 bg-white-500 text-blue-500 text-center py-2 px-4 rounded block w-full">Réserver cette résidence</a>

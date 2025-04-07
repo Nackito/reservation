@@ -10,6 +10,6 @@ class HomeController extends Controller
   public function index()
   {
     $properties = Property::all();
-    return view('welcome', compact('properties'));
+    return view('home-page', compact('properties'));
   }
 }

@@ -26,7 +26,7 @@ class HomePage extends Component
     {
         $properties = Property::all();
         return view('livewire.home-page', [
-            'properties' => $properties,
+            'properties' => $properties, // Fetch all properties
         ]);
     }
 }

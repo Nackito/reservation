@@ -11,6 +11,8 @@ use Carbon\Carbon;
 
 class BookingManager extends Component
 {
+    public $property;
+    public $firstImage;
     public $propertyId;
     public $checkInDate;
     public $checkOutDate;
@@ -25,6 +27,12 @@ class BookingManager extends Component
     public function mount($propertyId)
     {
         $this->propertyId = $propertyId;
+        $this->property = Property::find($propertyId); // Récupère la propriété par son ID
+
+        if (!$this->property) {
+            abort(404, 'Propriété non trouvée'); // Gère le cas où la propriété n'existe pas
+        }
+
         $this->bookings = Booking::where('property_id', $propertyId)->get();
     }
 

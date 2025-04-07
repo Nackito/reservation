@@ -12,6 +12,7 @@ use Carbon\Carbon;
 class BookingManager extends Component
 {
     public $property;
+    public $propertyName;
     public $firstImage;
     public $propertyId;
     public $checkInDate;
@@ -27,6 +28,8 @@ class BookingManager extends Component
     public function mount($propertyId)
     {
         $this->propertyId = $propertyId;
+        $this->propertyName = Property::find($propertyId)->name; // Récupère le nom de la propriété par son ID
+        $this->checkInDate = Carbon::today()->toDateString(); // Définit la date d'entrée par défaut à aujourd'hui
         $this->property = Property::find($propertyId); // Récupère la propriété par son ID
 
         if (!$this->property) {

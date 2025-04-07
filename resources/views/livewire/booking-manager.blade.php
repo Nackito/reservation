@@ -3,19 +3,32 @@
         <h1 class="block text-3xl font-bold text-gray-800 sm:text-4xl lg:text-6xl lg:leading-tight dark:text-white">Entrez vos dates</h1>
 
         <form wire:submit.prevent="addBooking" class="mb-4">
-            <div class="mb-4">
-                <label for="checkInDate" class="block text-gray-700">Date d'entrée</label>
-                <input type="date" wire:model="checkInDate" class="border p-2 rounded w-full">
-                @error('checkInDate') <span class="text-red-500">{{ $message }}</span> @enderror
+            <div class="flex mt-4 flex-col sm:flex-row gap-2 sm:gap-3 items-center bg-white rounded-lg p-2 dark:bg-gray-800">
+                <div class="w-full">
+                    <p class="py-3 px-4 block w-full border-transparent rounded-lg text-sm 
+                    focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 
+                    disabled:pointer-events-none dark:bg-slate-900 dark:border-transparent 
+                    dark:text-gray-400 dark:focus:ring-gray-600" readonly> {{ $propertyName }} </p>
+                </div>
+
+                <div class="w-full">
+                    <input type="date" wire:model="checkInDate" class="py-3 px-4 block w-full border-transparent rounded-lg text-sm 
+                    focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 
+                    disabled:pointer-events-none dark:bg-slate-900 dark:border-transparent 
+                    dark:text-gray-400 dark:focus:ring-gray-600" min="{{ now()->format('Y-m-d') }}">
+                    @error('checkInDate') <span class="text-red-500">{{ $message }}</span> @enderror
+                </div>
+                <div class="w-full">
+                    <input type="date" wire:model="checkOutDate" wire:change="calculateTotalPrice" class="py-3 px-4 block w-full border-transparent rounded-lg text-sm 
+                    focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 
+                    disabled:pointer-events-none dark:bg-slate-900 dark:border-transparent 
+                    dark:text-gray-400 dark:focus:ring-gray-600" min="{{ $checkInDate }}">
+                    @error('checkOutDate') <span class="text-red-500">{{ $message }}</span> @enderror
+                </div>
+                <button type="submit" wire:submit.prevent="addBooking" id="confirm-booking" class="bg-blue-500 text-white py-2 px-4 rounded">
+                    Confirmer
+                </button>
             </div>
-            <div class="mb-4">
-                <label for="checkOutDate" class="block text-gray-700">Date de sortie</label>
-                <input type="date" wire:model="checkOutDate" wire:change="calculateTotalPrice" class="border p-2 rounded w-full">
-                @error('checkOutDate') <span class="text-red-500">{{ $message }}</span> @enderror
-            </div>
-            <button type="submit" wire:submit.prevent="addBooking" id="confirm-booking" class="bg-blue-500 text-white py-2 px-4 rounded">
-                Confirmer la réservation
-            </button>
         </form>
     </div>
 
@@ -78,4 +91,5 @@
             });
         });
     </script>
+
 </div>

@@ -32,23 +32,73 @@
         </form>
     </div>
 
-    <div class="bg-white shadow-md rounded-lg overflow-hidden w-61 h-90">
-        @if($property->firstImage())
-        <img src="{{ asset('storage/' . $property->firstImage()->image_path) }}" alt="{{ $property->name }}" class="w-full h-48 object-cover">
-        @else
-        <img src="{{ asset('images/default-image.jpg') }}" alt="Image par défaut" class="w-full h-48 object-cover">
-        @endif
-        <div class="p-4">
-            <h3 class="text-lg text-gray-800">{{ $property->name ?? 'Nom non disponible' }}</h3>
-            <p class="text-gray-700">{{ $property->city ?? 'Ville non disponible' }}, {{ $property->district ?? 'Quartier non disponible' }}</p>
-            <p class="text-gray-500 mt-5">
-                {{ Str::words($property->description ?? 'Description non disponible', 20, '...') }}
-            </p>
-            <p class="text-gray-600 text-right font-bold mt-5">{{ $property->price_per_night ?? 'Prix non disponible' }} € par nuit</p>
-            <div class="mt-4">
-                <a href="{{ route('booking-manager', ['propertyId' => $property->id]) }}" class="border border-blue-500 bg-white-500 text-blue-500 text-center py-2 px-4 rounded block w-full">Réserver cette résidence</a>
+    <!-- NavBar -->
+    <div class="mt-8">
+        <nav class="flex justify-center space-x-4 bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
+            <a href="#overview" class="text-gray-700 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 font-semibold">Vue d'ensemble</a>
+            <a href="#pricing" class="text-gray-700 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 font-semibold">Tarifs</a>
+            <a href="#amenities" class="text-gray-700 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 font-semibold">Équipements</a>
+            <a href="#house-rules" class="text-gray-700 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 font-semibold">Règles de la maison</a>
+            <a href="#info" class="text-gray-700 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 font-semibold">À savoir</a>
+            <a href="#reviews" class="text-gray-700 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 font-semibold">Avis des clients</a>
+        </nav>
+    </div>
+
+    <div class="container mx-auto mt-8">
+        <!-- Overview section -->
+        <div id="overview" class="bg-white shadow-md rounded-lg overflow-hidden w-61 h-90">
+            <div class="pl-4 pt-6">
+                <h2 class="text-lg text-gray-800">{{ $property->name ?? 'Nom non disponible' }}</h2>
+                <p class="text-gray-700">{{ $property->city ?? 'Ville non disponible' }}, {{ $property->district ?? 'Quartier non disponible' }}</p>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-2 p-4">
+                @forelse($property->images as $image)
+                <img src="{{ asset('storage/' . $image->image_path) }}" alt="Image de la propriété" class="w-full h-48 object-cover rounded-lg">
+                @empty
+                <p class="text-gray-500">Aucune image disponible pour cette propriété.</p>
+                @endforelse
+            </div>
+            <div class="p-4">
+                <p class="text-gray-500 mt-5">
+                    {{ $property->description ?? 'Description non disponible' }}
+                </p>
+                <p class="text-gray-600 text-right font-bold mt-5">{{ $property->price_per_night ?? 'Prix non disponible' }} € par nuit</p>
+                <div class="mt-4">
+                    <a href="{{ route('booking-manager', ['propertyId' => $property->id]) }}" class="border border-blue-500 bg-white-500 text-blue-500 text-center py-2 px-4 rounded block w-full">Réserver cette résidence</a>
+                </div>
             </div>
         </div>
+
+        <!-- Pricing Section -->
+        <div id="pricing" class="mt-8">
+            <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Tarifs</h2>
+            <p class="text-gray-600 dark:text-gray-400">Contenu de la section Tarifs...</p>
+        </div>
+
+        <!-- Amenities Section -->
+        <div id="amenities" class="mt-8">
+            <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Équipements</h2>
+            <p class="text-gray-600 dark:text-gray-400">Contenu de la section Équipements...</p>
+        </div>
+
+        <!-- House rules section -->
+        <div id="house-rules" class="mt-8">
+            <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Règles de la maison</h2>
+            <p class="text-gray-600 dark:text-gray-400">Contenu de la section Règles de la maison...</p>
+        </div>
+
+        <!-- Info section -->
+        <div id="info" class="mt-8">
+            <h2 class="text-2xl font-bold text-gray-800 dark:text-white">À savoir</h2>
+            <p class="text-gray-600 dark:text-gray-400">Contenu de la section À savoir...</p>
+        </div>
+
+        <!-- Reviews section -->
+        <div id="reviews" class="mt-8">
+            <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Avis des clients</h2>
+            <p class="text-gray-600 dark:text-gray-400">Contenu de la section Avis des clients...</p>
+        </div>
+
     </div>
 
     <!-- Preline Modal -->

@@ -19,6 +19,25 @@
         </form>
     </div>
 
+    <div class="bg-white shadow-md rounded-lg overflow-hidden w-61 h-90">
+        @if($property->firstImage())
+        <img src="{{ asset('storage/' . $property->firstImage()->image_path) }}" alt="{{ $property->name }}" class="w-full h-48 object-cover">
+        @else
+        <img src="{{ asset('images/default-image.jpg') }}" alt="Image par défaut" class="w-full h-48 object-cover">
+        @endif
+        <div class="p-4">
+            <h3 class="text-lg text-gray-800">{{ $property->name ?? 'Nom non disponible' }}</h3>
+            <p class="text-gray-700">{{ $property->city ?? 'Ville non disponible' }}, {{ $property->district ?? 'Quartier non disponible' }}</p>
+            <p class="text-gray-500 mt-5">
+                {{ Str::words($property->description ?? 'Description non disponible', 20, '...') }}
+            </p>
+            <p class="text-gray-600 text-right font-bold mt-5">{{ $property->price_per_night ?? 'Prix non disponible' }} € par nuit</p>
+            <div class="mt-4">
+                <a href="{{ route('booking-manager', ['propertyId' => $property->id]) }}" class="border border-blue-500 bg-white-500 text-blue-500 text-center py-2 px-4 rounded block w-full">Réserver cette résidence</a>
+            </div>
+        </div>
+    </div>
+
     <!-- Preline Modal -->
     <div id="confirmationModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
         <div class="flex items-center justify-center min-h-screen px-4">

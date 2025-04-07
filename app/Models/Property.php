@@ -16,6 +16,11 @@ class Property extends Model
         return $this->hasMany(PropertyImage::class);
     }
 
+    public function firstImage()
+    {
+        return $this->images()->orderBy('id')->first(); // Récupère la première image
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class);

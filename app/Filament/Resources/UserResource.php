@@ -121,8 +121,9 @@ class UserResource extends Resource
         ];
     }
 
-    public static function shouldRegisterNavigation(): bool
+    // Si je souhaite désactiver la navigation pour cette ressource, décommenter la ligne ci-dessous
+    /*public static function shouldRegisterNavigation(): bool
     {
         return false;
-    }
+    }*/
 }

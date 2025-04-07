@@ -41,11 +41,8 @@ class PropertiesResource extends Resource
                             ->required()
                             ->maxLength(255)
                             ->live(onBlur: true)
-                            ->afterStateUpdated(function (string $operation, $state, Set $set) {
-                                if ($operation !== 'create') {
-                                    return;
-                                }
-                                $set('slug', Str::slug($state));
+                            ->afterStateUpdated(function ($state, Set $set) {
+                                $set('slug', Str::slug($state)); // Met à jour le slug à chaque modification du nom
                             }),
 
                         Forms\Components\TextInput::make('slug')

@@ -19,6 +19,39 @@ class BookingManager extends Component
     public $checkOutDate;
     public $totalPrice;
     public $bookings;
+    public $featureIcons = [
+        'WiFi' => 'fa-wifi',
+        'Piscine' => 'fa-swimming-pool',
+        'Parking gratuit' => 'fa-parking',
+        'Climatisation' => 'fa-snowflake',
+        'TV' => 'fa-tv',
+        'Animaux acceptés' => 'fa-paw',
+        'Cuisine' => 'fa-utensils',
+        'Salle de sport' => 'fa-dumbbell',
+        'Jacuzzi' => 'fa-hot-tub',
+        'Balcon' => 'fa-balcony',
+        'Terrasse' => 'fa-umbrella-beach',
+        'Jardin' => 'fa-tree',
+        'Barbecue' => 'fa-fire',
+        'Lave-linge' => 'fa-washing-machine',
+        'Sèche-linge' => 'fa-tshirt',
+        'Fer à repasser' => 'fa-iron',
+        'Sèche-cheveux' => 'fa-blowdryer',
+        'Chauffage' => 'fa-thermometer-half',
+        'Coffre-fort' => 'fa-lock',
+        'Réveil' => 'fa-clock',
+        'Canal+' => 'fa-tv',
+        'Netflix' => 'fa-tv',
+        'Youtube' => 'fa-brands-youtube',
+        'Playstation' => 'fa-gamepad',
+        'Eau chaude' => 'fa-water',
+        'Groupe électrogène' => 'fa-plug',
+        'Petit déjeuné' => 'fa-coffee',
+        'Sécurité 24/7' => 'fa-shield-alt',
+        'Ascenseur' => 'fa-elevator',
+        'Salle de bain privée' => 'fa-bath',
+        'Ventilateur' => 'fa-fan',
+    ];
 
     protected $rules = [
         'checkInDate' => 'required|date',

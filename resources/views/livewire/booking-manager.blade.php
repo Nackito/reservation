@@ -33,14 +33,14 @@
     </div>
 
     <!-- NavBar -->
-    <div class="mt-8">
-        <nav class="flex justify-center space-x-4 bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
-            <a href="#overview" class="text-gray-700 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 font-semibold">Vue d'ensemble</a>
-            <a href="#pricing" class="text-gray-700 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 font-semibold">Tarifs</a>
-            <a href="#amenities" class="text-gray-700 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 font-semibold">Équipements</a>
-            <a href="#house-rules" class="text-gray-700 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 font-semibold">Règles de la maison</a>
-            <a href="#info" class="text-gray-700 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 font-semibold">À savoir</a>
-            <a href="#reviews" class="text-gray-700 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 font-semibold">Avis des clients</a>
+    <div class="relative">
+        <nav id="menu" class="hidden lg:flex flex-col lg:flex-row justify-center space-x-4 bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
+            <a href="#overview" class="nav-link text-gray-700 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 font-semibold">Vue d'ensemble</a>
+            <a href="#pricing" class="nav-link text-gray-700 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 font-semibold">Tarifs</a>
+            <a href="#amenities" class="nav-link text-gray-700 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 font-semibold">Équipements</a>
+            <a href="#house-rules" class="nav-link text-gray-700 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 font-semibold">Règles de la maison</a>
+            <a href="#info" class="nav-link text-gray-700 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 font-semibold">À savoir</a>
+            <a href="#reviews" class="nav-link text-gray-700 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 font-semibold">Avis des clients</a>
         </nav>
     </div>
 
@@ -51,13 +51,38 @@
                 <h2 class="text-lg text-gray-800">{{ $property->name ?? 'Nom non disponible' }}</h2>
                 <p class="text-gray-700">{{ $property->city ?? 'Ville non disponible' }}, {{ $property->district ?? 'Quartier non disponible' }}</p>
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-2 p-4">
-                @forelse($property->images as $image)
-                <img src="{{ asset('storage/' . $image->image_path) }}" alt="Image de la propriété" class="w-full h-48 object-cover rounded-lg">
-                @empty
-                <p class="text-gray-500">Aucune image disponible pour cette propriété.</p>
-                @endforelse
+
+            <div class="container mx-auto mt-8 grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <!-- Section des images (2/3) -->
+                <div id="PropertyImage" class="lg:col-span-2 pl-4 pr-4">
+                    <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        @foreach($property->images as $index => $image)
+                        <div class="image-container {{ $index % 3 === 0 ? 'large' : 'small' }}">
+                            <img src="{{ asset('storage/' . $image->image_path) }}" alt="Image de la propriété" class="w-full h-auto object-cover rounded-lg">
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                <!-- Section "House rules" (1/3) -->
+                <div id="house-rules" class="bg-white shadow-md rounded-lg p-4">
+                    <h2 class="text-2xl font-bold text-gray-800 dark:text-dark">Les équipements de l'établissement</h2>
+                    <ul class="list-none mt-4 text-gray-600 dark:text-gray-400">
+                        @forelse($property->features as $feature)
+                        <li class="flex items-center mb-2">
+                            @php
+                            $iconClass = $featureIcons[$feature] ?? 'fa-circle'; // Icône par défaut si aucune correspondance
+                            @endphp
+                            <i class="fas {{ $iconClass }} text-blue-500 mr-2"></i>
+                            <span>{{ $feature }}</span>
+                        </li>
+                        @empty
+                        <li>Aucun équipement disponible pour cet établissement.</li>
+                        @endforelse
+                    </ul>
+                </div>
             </div>
+
             <div class="p-4">
                 <p class="text-gray-500 mt-5">
                     {{ $property->description ?? 'Description non disponible' }}
@@ -79,12 +104,6 @@
         <div id="amenities" class="mt-8">
             <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Équipements</h2>
             <p class="text-gray-600 dark:text-gray-400">Contenu de la section Équipements...</p>
-        </div>
-
-        <!-- House rules section -->
-        <div id="house-rules" class="mt-8">
-            <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Règles de la maison</h2>
-            <p class="text-gray-600 dark:text-gray-400">Contenu de la section Règles de la maison...</p>
         </div>
 
         <!-- Info section -->
@@ -138,6 +157,29 @@
             window.addEventListener('show-confirmation', event => {
                 document.getElementById('totalPrice').textContent = event.detail.totalPrice;
                 document.getElementById('confirmationModal').classList.remove('hidden');
+            });
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialisation du Swiper des miniatures
+            const swiperThumbs = new Swiper('.mySwiper2', {
+                spaceBetween: 10,
+                slidesPerView: 4,
+                freeMode: true,
+                watchSlidesProgress: true, // Permet de suivre la progression des miniatures
+            });
+
+            // Initialisation du Swiper principal
+            const swiperMain = new Swiper('.mySwiper', {
+                spaceBetween: 10,
+                navigation: {
+                    nextEl: '.swiper-button-next',
+                    prevEl: '.swiper-button-prev',
+                },
+                thumbs: {
+                    swiper: swiperThumbs, // Connecte le Swiper principal aux miniatures
+                },
             });
         });
     </script>

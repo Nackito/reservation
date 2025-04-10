@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use Livewire\Component;
+use Illuminate\Support\Str;
 use App\Models\Property;
 use App\Models\Booking;
 use Illuminate\Support\Facades\Auth;
@@ -68,6 +69,9 @@ class BookingManager extends Component
         if (!$this->property) {
             abort(404, 'Propriété non trouvée'); // Gère le cas où la propriété n'existe pas
         }
+
+        // Convertir la description Markdown en HTML
+        $this->property->description = Str::markdown($this->property->description);
 
         $this->bookings = Booking::where('property_id', $propertyId)->get();
     }

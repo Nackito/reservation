@@ -37,8 +37,6 @@
         <nav id="menu" class="hidden lg:flex flex-col lg:flex-row justify-center space-x-4 bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
             <a href="#overview" class="nav-link text-gray-700 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 font-semibold">Vue d'ensemble</a>
             <a href="#pricing" class="nav-link text-gray-700 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 font-semibold">Tarifs</a>
-            <a href="#amenities" class="nav-link text-gray-700 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 font-semibold">Équipements</a>
-            <a href="#house-rules" class="nav-link text-gray-700 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 font-semibold">Règles de la maison</a>
             <a href="#info" class="nav-link text-gray-700 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 font-semibold">À savoir</a>
             <a href="#reviews" class="nav-link text-gray-700 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 font-semibold">Avis des clients</a>
         </nav>
@@ -51,7 +49,7 @@
                 <h2 class="text-2xl lg:text-3xl text-gray-800 font-inter font-extrabold">{{ $property->name ?? 'Nom non disponible' }}</h2>
                 <p class="text-lg lg:text-xl text-gray-700">
                     <i class="fas fa-map-marker-alt text-blue-500 mr-2"></i>
-                    {{ $property->city ?? 'Ville non disponible' }}, {{ $property->district ?? 'Quartier non disponible' }}
+                    {{ $property->city ?? 'Ville non disponible' }}, {{ $property->municipality }}, {{ $property->district ?? 'Quartier non disponible' }}
                 </p>
             </div>
 
@@ -119,9 +117,9 @@
         </div>
         <div class="p-4">
             <p class="text-gray-500 mt-5">
-                {{ $property->description ?? 'Description non disponible' }}
+                {!! $property->description ?? 'Description non disponible' !!}
             </p>
-            <p id="pricing" class="text-gray-600 dark:text-gray-400 mt-5">Vous pouvez disposez de cette (Types de residences) de (nbre de pièce) à {{ $property->price_per_night }} euro par nuit</p>
+            <p id="pricing" class="text-gray-600  mt-5">Vous pouvez disposez de ce logement à <span class="text-xl font-bold"> {{ $property->price_per_night }} euros par nuit</span></p>
         </div>
     </div>
 
@@ -151,13 +149,6 @@
         <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Avis des clients</h2>
         <p class="text-gray-600 dark:text-gray-400">Contenu de la section Avis des clients...</p>
     </div>
-
-    <!-- Amenities Section -->
-    <div id="amenities" class="mt-8">
-        <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Équipements</h2>
-        <p class="text-gray-600 dark:text-gray-400">Contenu de la section Équipements...</p>
-    </div>
-
 
 
 </div>

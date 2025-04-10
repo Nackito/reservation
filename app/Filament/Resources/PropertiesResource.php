@@ -86,9 +86,31 @@ class PropertiesResource extends Resource
                             ->required()
                             ->placeholder('Abidjan'),
 
+                        Forms\Components\TextInput::make('municipality')
+                            ->required()
+                            ->placeholder('Cocody'),
+
                         Forms\Components\TextInput::make('district')
                             ->required()
                             ->placeholder('Cocody 9e Tranche'),
+
+                        Forms\Components\Select::make('property_type')
+                            ->options([
+                                'apartment' => 'Apartment',
+                                'house' => 'House',
+                                'duplex house' => 'Duplex House',
+                                'studio' => 'Studio',
+                            ])
+                            ->required()
+                            ->placeholder('Select property type'),
+
+                        Forms\Components\TextInput::make('number_of_rooms')
+                            ->numeric()
+                            ->required()
+                            ->minValue(2)
+                            ->maxValue(10)
+                            ->placeholder('3')
+                            ->visible(fn($get) => $get('property_type') !== 'studio'),
 
                         Forms\Components\Hidden::make('user_id')
                             ->default(fn() => Auth::id()),
@@ -203,7 +225,18 @@ class PropertiesResource extends Resource
                 Tables\Columns\TextColumn::make('price_per_night')
                     ->searchable(),
 
+                Tables\Columns\TextColumn::make('property_type')
+                    ->sortable()
+                    ->searchable(),
+
+                Tables\Columns\TextColumn::make('number_of_rooms')
+                    ->sortable()
+                    ->searchable(),
+
                 Tables\Columns\TextColumn::make('city')
+                    ->searchable(),
+
+                Tables\Columns\TextColumn::make('municipality')
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('district')

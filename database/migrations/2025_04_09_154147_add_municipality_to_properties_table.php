@@ -12,9 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('properties', function (Blueprint $table) {
-            if (!Schema::hasColumn('properties', 'category_id')) {
-                $table->foreignId('category_id')->nullable()->constrained()->onDelete('set null');
-            }
+            $table->string('municipality')->nullable()->after('city');
         });
     }
 
@@ -24,8 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('properties', function (Blueprint $table) {
-            $table->dropForeign(['category_id']);
-            $table->dropColumn('category_id');
+            $table->dropColumn('municipality');
         });
     }
 };

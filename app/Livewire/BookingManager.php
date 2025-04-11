@@ -6,6 +6,7 @@ use Livewire\Component;
 use Illuminate\Support\Str;
 use App\Models\Property;
 use App\Models\Booking;
+use App\Models\Reviews;
 use Illuminate\Support\Facades\Auth;
 use Jantinnerezo\LivewireAlert\Facades\LivewireAlert;
 use Carbon\Carbon;
@@ -20,6 +21,9 @@ class BookingManager extends Component
     public $checkOutDate;
     public $totalPrice;
     public $bookings;
+    public $reviews;
+    public $rating;
+    public $canLeaveReview = false;
     public $featureIcons = [
         'WiFi' => 'fa-wifi',
         'Piscine' => 'fa-swimming-pool',
@@ -74,6 +78,25 @@ class BookingManager extends Component
         $this->property->description = Str::markdown($this->property->description);
 
         $this->bookings = Booking::where('property_id', $propertyId)->get();
+    }
+
+    public function submitReview()
+    {
+        $this->validate([
+            'review' => 'required|string|max:1000',
+            'rating' => 'required|integer|min:1|max:5',
+        ]);
+
+        Reviews::create([
+            'user_id' => Auth::id(),
+            'property_id' => $this->propertyId,
+            'review' => $this->review,
+            'rating' => $this->rating,
+            'approved' => false, // En attente de validation par l'admin
+        ]);
+
+        session()->flash('message', 'Votre avis a été soumis et est en attente de validation.');
+        $this->reset(['review', 'rating']);
     }
 
     public function calculateTotalPrice()

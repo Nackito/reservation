@@ -88,10 +88,27 @@ class UserReservations extends Component
 
     public function deleteBooking($id)
     {
-        Booking::find($id)->delete();
-        $this->pendingBookings = Booking::with('property')->where('user_id', Auth::id())->where('status', 'pending')->get();
-        $this->acceptedBookings = Booking::with('property')->where('user_id', Auth::id())->where('status', 'accepted')->get();
-        LivewireAlert::title('Réservation annulée avec succès!')->success()->show();
+        $booking = Booking::find($id);
+
+        if ($booking) {
+            // Mettre à jour le statut de la réservation à "canceled"
+            $booking->status = 'canceled';
+            $booking->save();
+
+            // Mettre à jour les listes de réservations
+            $this->pendingBookings = Booking::with('property.images')
+                ->where('user_id', Auth::id())
+                ->where('end_date', '>=', Carbon::now())
+                ->where('status', 'pending')
+                ->get();
+
+            $this->canceledBookings = Booking::with('property.images')
+                ->where('user_id', Auth::id())
+                ->where('status', 'canceled')
+                ->get();
+
+            session()->flash('message', 'Réservation annulée avec succès.');
+        }
     }
 
     public function acceptBooking($id)

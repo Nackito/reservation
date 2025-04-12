@@ -41,7 +41,7 @@ class BookingResource extends Resource
                     ->options([
                         'pending' => 'Pending',
                         'accepted' => 'Accepted',
-                        'cancelled' => 'Cancelled',
+                        'canceled' => 'Canceled',
                     ]),
             ]);
     }

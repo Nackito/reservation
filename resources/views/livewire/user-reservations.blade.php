@@ -7,7 +7,15 @@
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         @if ($pendingBookings->isEmpty())
-        <p class="text-black">Vous n'avez pas de réservation en cours</p>
+        <div class="row flex items-center">
+            <div class="col-span-3">
+                <img src="{{ asset('images/photo5.jpg') }}" alt="Image par défaut" class="w-full h-64 md-96 object-cover rounded-lg mb-4">
+            </div>
+            <div class="col-span-2 p-4">
+                <p class="text-4xl font-bold text-gray-900 dark:text-white">Vous preferez avez ou sans Jaccuzy?</p>
+                <p class="text-black">Lorsque vous aurez effectué une réservation, elle apparaîtra ici.</p>
+            </div>
+        </div>
         @else
         @foreach($pendingBookings as $booking)
         <div class="bg-white shadow-md rounded-lg overflow-hidden">
@@ -64,20 +72,26 @@
         <p class="text-black">Vous n'avez pas de réservation en attente</p>
         @else
         @foreach($pendingBookings as $booking)
-        <div class="bg-white shadow-md rounded-lg overflow-hidden">
-            <div class="p-4">
-                <!-- Affichage de l'image de la propriété -->
-                @if($booking->property->images->isNotEmpty())
-                <img src="{{ asset('storage/' . $booking->property->images->first()->image_path) }}" alt="Image de la propriété" class="w-full h-48 object-cover rounded-lg mb-4">
+        <a href="#" class="flex flex-col items-center bg-white border border-gray-200 rounded-lg shadow-sm md:flex-row md:max-w-xl 
+            hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 
+            dark:hover:bg-gray-700">
+            <!-- Affichage de l'image de la propriété -->
+            @if($booking->property->images->isNotEmpty())
+            <img src="{{ asset('storage/' . $booking->property->images->first()->image_path) }}" alt="Image de la propriété" class="object-cover w-full rounded-t-lg h-96 md:h-auto md:w-48 md:rounded-none md:rounded-s-lg">
+            @else
+            <img src="{{ asset('images/default-property.jpg') }}" alt="Image par défaut" class="object-cover w-full rounded-t-lg h-96 md:h-auto md:w-48 md:rounded-none md:rounded-s-lg">
+            @endif
+            <div class="flex flex-col justify-between p-4 leading-normal">
+                <h3 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{{ $booking->property->name ?? 'Nom non disponible' }}</h3>
+                <p class="mb-3 font-normal text-gray-700 dark:text-gray-400">{{ $booking->start_date }} - {{ $booking->end_date }}</p>
+                <p class="mb-3 font-normal text-gray-700 dark:text-gray-400">Prix total : {{ $booking->total_price }} €</p>
+                @if(\Carbon\Carbon::now()->gte(\Carbon\Carbon::parse($booking->start_date)))
+                <button wire:click="openReviewModal({{ $booking->id }})" class="bg-blue-500 text-white py-1 px-2 rounded">Laissez un avis</button>
                 @else
-                <img src="{{ asset('images/default-property.jpg') }}" alt="Image par défaut" class="w-full h-48 object-cover rounded-lg mb-4">
+                <button wire:click="deleteBooking({{ $booking->id }})" class="bg-red-500 text-white py-1 px-2 rounded">Annuler</button>
                 @endif
-                <h3 class="text-lg text-gray-800">{{ $booking->property->name ?? 'Nom non disponible' }}</h3>
-                <p class="text-gray-500">Date d'entrée : {{ $booking->start_date }}</p>
-                <p class="text-gray-500">Date de sortie : {{ $booking->end_date }}</p>
-                <p class="text-gray-600">Prix total : {{ $booking->total_price }} €</p>
             </div>
-        </div>
+        </a>
         @endforeach
         @endif
         @elseif ($activeTab === 'past')
@@ -85,27 +99,26 @@
         <p class="text-black">Vous n'avez pas de réservation passée</p>
         @else
         @foreach($pastBookings as $booking)
-        <div class="bg-white shadow-md rounded-lg overflow-hidden">
-            <div class="p-4">
-                <!-- Affichage de l'image de la propriété -->
-                @if($booking->property->images->isNotEmpty())
-                <img src="{{ asset('storage/' . $booking->property->images->first()->image_path) }}" alt="Image de la propriété" class="w-full h-48 object-cover rounded-lg mb-4">
+        <a href="#" class="flex flex-col items-center bg-white border border-gray-200 rounded-lg shadow-sm md:flex-row md:max-w-xl 
+            hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 
+            dark:hover:bg-gray-700">
+            <!-- Affichage de l'image de la propriété -->
+            @if($booking->property->images->isNotEmpty())
+            <img src="{{ asset('storage/' . $booking->property->images->first()->image_path) }}" alt="Image de la propriété" class="object-cover w-full rounded-t-lg h-96 md:h-auto md:w-48 md:rounded-none md:rounded-s-lg">
+            @else
+            <img src="{{ asset('images/default-property.jpg') }}" alt="Image par défaut" class="object-cover w-full rounded-t-lg h-96 md:h-auto md:w-48 md:rounded-none md:rounded-s-lg">
+            @endif
+            <div class="flex flex-col justify-between p-4 leading-normal">
+                <h3 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{{ $booking->property->name ?? 'Nom non disponible' }}</h3>
+                <p class="mb-3 font-normal text-gray-700 dark:text-gray-400">{{ $booking->start_date }} - {{ $booking->end_date }}</p>
+                <p class="mb-3 font-normal text-gray-700 dark:text-gray-400">Prix total : {{ $booking->total_price }} €</p>
+                @if(\Carbon\Carbon::now()->gte(\Carbon\Carbon::parse($booking->start_date)))
+                <button wire:click="openReviewModal({{ $booking->id }})" class="bg-blue-500 text-white py-1 px-2 rounded">Laissez un avis</button>
                 @else
-                <img src="{{ asset('images/default-property.jpg') }}" alt="Image par défaut" class="w-full h-48 object-cover rounded-lg mb-4">
+                <button wire:click="deleteBooking({{ $booking->id }})" class="bg-red-500 text-white py-1 px-2 rounded">Annuler</button>
                 @endif
-                <h3 class="text-lg text-gray-800">{{ $booking->property->name ?? 'Nom non disponible' }}</h3>
-                <p class="text-gray-500">Date d'entrée : {{ $booking->start_date }}</p>
-                <p class="text-gray-500">Date de sortie : {{ $booking->end_date }}</p>
-                <p class="text-gray-600">Prix total : {{ $booking->total_price }} €</p>
-                <div class="mt-4 flex justify-between">
-                    @if(\Carbon\Carbon::now()->gte(\Carbon\Carbon::parse($booking->start_date)))
-                    <button wire:click="openReviewModal({{ $booking->id }})" class="bg-blue-500 text-white py-1 px-2 rounded">Laissez un avis</button>
-                    @else
-                    <button wire:click="deleteBooking({{ $booking->id }})" class="bg-red-500 text-white py-1 px-2 rounded">Annuler</button>
-                    @endif
-                </div>
             </div>
-        </div>
+        </a>
         @endforeach
         @endif
         @elseif ($activeTab === 'canceled')
@@ -113,20 +126,22 @@
         <p class="text-black">Vous n'avez pas de réservation annulée</p>
         @else
         @foreach($canceledBookings as $booking)
-        <div class="bg-white shadow-md rounded-lg overflow-hidden">
-            <div class="p-4">
-                <!-- Affichage de l'image de la propriété -->
-                @if($booking->property->images->isNotEmpty())
-                <img src="{{ asset('storage/' . $booking->property->images->first()->image_path) }}" alt="Image de la propriété" class="w-full h-48 object-cover rounded-lg mb-4">
-                @else
-                <img src="{{ asset('images/default-property.jpg') }}" alt="Image par défaut" class="w-full h-48 object-cover rounded-lg mb-4">
-                @endif
-                <h3 class="text-lg text-gray-800">{{ $booking->property->name ?? 'Nom non disponible' }}</h3>
-                <p class="text-gray-500">Date d'entrée : {{ $booking->start_date }}</p>
-                <p class="text-gray-500">Date de sortie : {{ $booking->end_date }}</p>
-                <p class="text-gray-600">Prix total : {{ $booking->total_price }} €</p>
+        <a href="#" class="flex flex-col items-center bg-white border border-gray-200 rounded-lg shadow-sm md:flex-row md:max-w-xl 
+            hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 
+            dark:hover:bg-gray-700">
+            <!-- Affichage de l'image de la propriété -->
+            @if($booking->property->images->isNotEmpty())
+            <img src="{{ asset('storage/' . $booking->property->images->first()->image_path) }}" alt="Image de la propriété" class="object-cover w-full rounded-t-lg h-96 md:h-auto md:w-48 md:rounded-none md:rounded-s-lg">
+            @else
+            <img src="{{ asset('images/default-property.jpg') }}" alt="Image par défaut" class="object-cover w-full rounded-t-lg h-96 md:h-auto md:w-48 md:rounded-none md:rounded-s-lg">
+            @endif
+            <div class="flex flex-col justify-between p-4 leading-normal">
+                <h3 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{{ $booking->property->name ?? 'Nom non disponible' }}</h3>
+                <p class="mb-3 font-normal text-gray-700 dark:text-gray-400">{{ $booking->start_date }} - {{ $booking->end_date }}</p>
+                <p class="mb-3 font-normal text-gray-700 dark:text-gray-400">Prix total : {{ $booking->total_price }} €</p>
+                <p class="text-red-500">Annulé</p>
             </div>
-        </div>
+        </a>
         @endforeach
         @endif
         @endif

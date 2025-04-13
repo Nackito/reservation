@@ -5,15 +5,15 @@
     <!-- Reservations en cours -->
 
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div class="container mx-auto p-4">
         @if ($pendingBookings->isEmpty())
         <div class="row flex items-center">
-            <div class="col-span-3">
-                <img src="{{ asset('images/photo5.jpg') }}" alt="Image par défaut" class="w-full h-64 md-96 object-cover rounded-lg mb-4">
+            <div class="w-1/3">
+                <img src="{{ asset('images/photo5.jpg') }}" alt="Image par défaut" class="rounded-full w-96 h-96">
             </div>
-            <div class="col-span-2 p-4">
-                <p class="text-4xl font-bold text-gray-900 dark:text-white">Vous preferez avez ou sans Jaccuzy?</p>
-                <p class="text-black">Lorsque vous aurez effectué une réservation, elle apparaîtra ici.</p>
+            <div class="w-2/3 p-4">
+                <p class="text-4xl font-bold text-gray-900 dark:text-white mb-4">Vous preferez avec ou sans Jaccuzy?</p>
+                <p class="text-black text-2xl">Lorsque vous aurez effectué une réservation, elle apparaîtra ici.</p>
             </div>
         </div>
         @else

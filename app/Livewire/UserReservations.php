@@ -25,6 +25,10 @@ class UserReservations extends Component
     public $selectedBookingId;
     public $ongoingBookings;
     public $showReviewModal = false;
+    public $editReviewId;
+    public $editReviewContent;
+    public $editReviewRating;
+    public $groupedPastBookings;
 
     public function mount()
     {
@@ -47,11 +51,19 @@ class UserReservations extends Component
             ->get();
 
         // Récupérer les réservations passées
-        $this->pastBookings = Booking::with('property.images')
+        $pastBookings = Booking::with('property.images')
             ->where('user_id', $userId)
             ->where('end_date', '<', Carbon::now()) // Date de sortie < date actuelle
             ->where('status', 'accepted') // Statut accepté
             ->get();
+
+        // Grouper les réservations par propriété
+        $this->groupedPastBookings = $pastBookings->groupBy('property_id')->map(function ($bookings) {
+            return [
+                'property' => $bookings->first()->property,
+                'count' => $bookings->count(),
+            ];
+        });
 
         // Récupérer les réservations annulées
         $this->canceledBookings = Booking::with('property.images')
@@ -84,6 +96,13 @@ class UserReservations extends Component
         $this->closeReviewModal();
 
         session()->flash('message', 'Votre avis a été soumis et est en attente de validation.');
+    }
+
+    public function hasReview($propertyId)
+    {
+        return Reviews::where('user_id', Auth::id())
+            ->where('property_id', $propertyId)
+            ->exists();
     }
 
     public function deleteBooking($id)
@@ -136,5 +155,39 @@ class UserReservations extends Component
     {
         //return view('livewire.user-reservations')->extends('layouts.app')->section('content');
         return view('livewire.user-reservations');
+    }
+
+    public function openEditReviewModal($propertyId)
+    {
+        $review = Reviews::where('user_id', Auth::id())
+            ->where('property_id', $propertyId)
+            ->first();
+
+        if ($review) {
+            $this->editReviewId = $review->id;
+            $this->editReviewContent = $review->review;
+            $this->editReviewRating = $review->rating;
+            $this->showReviewModal = true;
+        }
+    }
+
+    public function updateReview()
+    {
+        $this->validate([
+            'editReviewContent' => 'required|string|max:1000',
+            'editReviewRating' => 'required|integer|min:1|max:5',
+        ]);
+
+        $review = Reviews::find($this->editReviewId);
+
+        if ($review) {
+            $review->update([
+                'review' => $this->editReviewContent,
+                'rating' => $this->editReviewRating,
+            ]);
+
+            $this->reset(['editReviewId', 'editReviewContent', 'editReviewRating', 'showReviewModal']);
+            session()->flash('message', 'Votre avis a été mis à jour avec succès.');
+        }
     }
 }

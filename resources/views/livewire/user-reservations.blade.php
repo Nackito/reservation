@@ -99,7 +99,7 @@
         <p class="text-black">Vous n'avez pas de réservation passée</p>
         @else
         @foreach($groupedPastBookings as $group)
-        <a href="#" class="flex flex-col items-center bg-white border border-gray-200 rounded-lg shadow-sm md:flex-row md:max-w-xl 
+        <a href="{{ route('reservations.details', ['propertyId' => $group['property']->id]) }}" class="flex flex-col items-center bg-white border border-gray-200 rounded-lg shadow-sm md:flex-row md:max-w-xl 
             hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 
             dark:hover:bg-gray-700">
             <!-- Affichage de l'image de la propriété -->

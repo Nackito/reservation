@@ -8,6 +8,7 @@ use App\Livewire\UserReservations;
 use App\Livewire\PropertyManager;
 use App\Livewire\BookingManager;
 use App\Livewire\HomePage;
+use App\Livewire\ReservationDetails;
 use App\Http\Requests\Auth\RegisterRequest;
 use Illuminate\Container\Attributes\Auth;
 use Illuminate\Support\Facades\Auth as FacadesAuth;
@@ -25,6 +26,7 @@ Route::get('/property-manager', PropertyManager::class);
 //Route::get('/mes_reservations', UserReservations::class)->name('user-reservations');
 Route::get('/booking-manager/{propertyId}', BookingManager::class)->name('booking-manager');
 Route::get('/user-reservations', UserReservations::class)->name('user-reservations');
+Route::get('/reservation-details/{propertyId}', ReservationDetails::class)->name('reservations.details');
 //Route::get('/dashboard', function () {
 //    return redirect('/admin');
 //})->name('dashboard');

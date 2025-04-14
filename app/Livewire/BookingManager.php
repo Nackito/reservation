@@ -79,8 +79,11 @@ class BookingManager extends Component
 
         $this->bookings = Booking::where('property_id', $propertyId)->get();
 
-        // Récupérer les avis liés à cette propriété
-        $this->reviews = Reviews::where('property_id', $propertyId)->get();
+        // Récupérer les avis approuvés liés à cette propriété
+        $this->reviews = Reviews::where('property_id', $propertyId)
+            ->where('approved', true) // Filtrer les avis approuvés
+            ->with('user') // Charger les utilisateurs qui ont laissé des avis
+            ->get();
     }
 
     public function submitReview()

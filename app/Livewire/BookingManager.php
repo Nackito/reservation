@@ -78,6 +78,9 @@ class BookingManager extends Component
         $this->property->description = Str::markdown($this->property->description);
 
         $this->bookings = Booking::where('property_id', $propertyId)->get();
+
+        // Récupérer les avis liés à cette propriété
+        $this->reviews = Reviews::where('property_id', $propertyId)->get();
     }
 
     public function submitReview()

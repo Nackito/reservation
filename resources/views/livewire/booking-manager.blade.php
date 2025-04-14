@@ -147,7 +147,32 @@
     <!-- Reviews section -->
     <div id="reviews" class="mt-8">
         <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Avis des clients</h2>
-        <p class="text-gray-600 dark:text-gray-400">Contenu de la section Avis des clients...</p>
+
+        @if($reviews->isEmpty())
+        <p class="text-gray-600 dark:text-gray-400">Aucun avis pour cette propriété pour le moment.</p>
+        @else
+        @foreach($reviews as $review)
+        <div class="bg-white shadow-md rounded-lg p-4 mb-4">
+            <div class="flex items-center mb-2">
+                <div class="flex items-center">
+                    @for($i = 1; $i <= 5; $i++)
+                        <svg class="w-5 h-5 {{ $i <= $review->rating ? 'text-yellow-500' : 'text-gray-300' }}" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.868 1.464 8.826L12 18.896l-7.4 4.104 1.464-8.826L0 9.306l8.332-1.151z" />
+                        </svg>
+                        @endfor
+                </div>
+                <p class="ml-2 text-sm text-gray-500">{{ $review->user->name ?? 'Utilisateur inconnu' }}</p>
+            </div>
+            <blockquote class="text-xl italic font-semibold text-gray-900 dark:text-dark">
+                <svg class="w-8 h-8 text-gray-400 dark:text-gray-600 mb-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 18 14">
+                    <path d="M6 0H2a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h4v1a3 3 0 0 1-3 3H2a1 1 0 0 0 0 2h1a5.006 5.006 0 0 0 5-5V2a2 2 0 0 0-2-2Zm10 0h-4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h4v1a3 3 0 0 1-3 3h-1a1 1 0 0 0 0 2h1a5.006 5.006 0 0 0 5-5V2a2 2 0 0 0-2-2Z" />
+                </svg>
+                <p>"{{ $review->review }}"</p>
+            </blockquote>
+            <p class="text-sm text-gray-500 mt-2">Posté le : {{ $review->created_at->format('d/m/Y') }}</p>
+        </div>
+        @endforeach
+        @endif
     </div>
 
 

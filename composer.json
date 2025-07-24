@@ -1,9 +1,12 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/laravel",
+    "name": "afridays/afridays",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
-    "keywords": ["laravel", "framework"],
+    "description": "Afridays - Plateforme de réservation de propriétés en Côte d'Ivoire.",
+    "keywords": [
+        "laravel",
+        "framework"
+    ],
     "license": "MIT",
     "require": {
         "php": "^8.2",

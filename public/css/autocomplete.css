@@ -1,0 +1,210 @@
+/**
+ * Styles pour l'autocomplétion de la barre de recherche
+ * Fichier: autocomplete.css
+ * Utilisation: Composant HomePage de Livewire
+ */
+
+/* Conteneur principal des suggestions d'autocomplétion */
+.autocomplete-dropdown {
+    /* Animation d'apparition fluide */
+    animation: fadeInDown 0.2s ease-out;
+
+    /* Z-index élevé pour s'assurer que les suggestions apparaissent au-dessus de tous les autres éléments */
+    z-index: 9999 !important;
+
+    /* Position absolue pour le positionnement par rapport au champ de saisie */
+    position: absolute !important;
+
+    /* Ombre portée pour donner de la profondeur */
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+
+    /* Bordure arrondie pour un look moderne */
+    border-radius: 8px;
+
+    /* Couleur de fond */
+    background-color: white;
+
+    /* Hauteur maximale avec défilement automatique si nécessaire */
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+/* Animation d'apparition des suggestions */
+@keyframes fadeInDown {
+    /* État initial : invisible et légèrement déplacé vers le haut */
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    /* État final : visible et à sa position normale */
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Styles pour chaque élément de suggestion */
+.autocomplete-item {
+    /* Curseur pointeur pour indiquer que l'élément est cliquable */
+    cursor: pointer !important;
+
+    /* Transition fluide pour les effets de survol */
+    transition: all 0.15s ease-in-out;
+
+    /* Espacement interne */
+    padding: 12px 16px;
+
+    /* Bordure en bas pour séparer les éléments */
+    border-bottom: 1px solid #f3f4f6;
+
+    /* Alignement des éléments à l'intérieur */
+    display: flex;
+    align-items: center;
+}
+
+/* Suppression de la bordure pour le dernier élément */
+.autocomplete-item:last-child {
+    border-bottom: none;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+/* Effet de survol sur les suggestions */
+.autocomplete-item:hover {
+    /* Couleur de fond bleu clair au survol */
+    background-color: #eff6ff !important;
+
+    /* Couleur du texte plus foncée au survol */
+    color: #1d4ed8 !important;
+
+    /* Légère élévation au survol */
+    transform: translateY(-1px);
+}
+
+/* Premier élément arrondi en haut */
+.autocomplete-item:first-child {
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+
+/* Styles pour les icônes dans les suggestions */
+.autocomplete-item i {
+    /* Espacement à droite de l'icône */
+    margin-right: 12px;
+
+    /* Couleur des icônes */
+    color: #3b82f6;
+
+    /* Taille des icônes */
+    font-size: 14px;
+
+    /* Largeur fixe pour l'alignement */
+    width: 16px;
+    text-align: center;
+}
+
+/* Animation au survol des icônes */
+.autocomplete-item:hover i {
+    /* Légère rotation de l'icône au survol */
+    transform: scale(1.1);
+
+    /* Couleur plus foncée au survol */
+    color: #1d4ed8;
+}
+
+/* Styles pour le texte des suggestions */
+.autocomplete-item span {
+    /* Taille de police */
+    font-size: 14px;
+
+    /* Épaisseur de police */
+    font-weight: 500;
+
+    /* Couleur du texte */
+    color: #374151;
+
+    /* Espacement des lettres */
+    letter-spacing: 0.025em;
+}
+
+/* Responsive Design - Tablettes */
+@media (max-width: 768px) {
+    .autocomplete-dropdown {
+        /* Réduction de la hauteur maximale sur les petits écrans */
+        max-height: 150px;
+    }
+
+    .autocomplete-item {
+        /* Réduction de l'espacement sur les petits écrans */
+        padding: 10px 14px;
+    }
+
+    .autocomplete-item span {
+        /* Réduction de la taille de police sur les petits écrans */
+        font-size: 13px;
+    }
+}
+
+/* Responsive Design - Téléphones */
+@media (max-width: 480px) {
+    .autocomplete-dropdown {
+        /* Hauteur encore plus réduite sur les très petits écrans */
+        max-height: 120px;
+    }
+
+    .autocomplete-item {
+        /* Espacement minimal sur les téléphones */
+        padding: 8px 12px;
+    }
+
+    .autocomplete-item i {
+        /* Icônes plus petites sur mobile */
+        font-size: 12px;
+        margin-right: 8px;
+    }
+
+    .autocomplete-item span {
+        /* Texte plus petit sur mobile */
+        font-size: 12px;
+    }
+}
+
+/* Amélioration de l'accessibilité */
+.autocomplete-item:focus {
+    /* Bordure de focus visible pour l'accessibilité */
+    outline: 2px solid #3b82f6;
+    outline-offset: -2px;
+
+    /* Même style que le survol */
+    background-color: #eff6ff !important;
+    color: #1d4ed8 !important;
+}
+
+/* État actif (quand on clique) */
+.autocomplete-item:active {
+    /* Légère réduction de taille au clic pour un feedback visuel */
+    transform: scale(0.98);
+
+    /* Couleur de fond plus foncée */
+    background-color: #dbeafe !important;
+}
+
+/* Amélioration de la barre de défilement sur les navigateurs webkit */
+.autocomplete-dropdown::-webkit-scrollbar {
+    width: 6px;
+}
+
+.autocomplete-dropdown::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.autocomplete-dropdown::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.autocomplete-dropdown::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}

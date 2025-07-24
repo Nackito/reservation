@@ -1,8 +1,8 @@
-# Reservation Project
+# Afridays
 
 ## Description
 
-Ce projet est une application de réservation développée avec Laravel et Filament. Il permet aux utilisateurs de s'inscrire, de se connecter, de gérer leurs réservations et de consulter les propriétés disponibles.
+Afridays est une plateforme moderne de réservation de propriétés en Côte d'Ivoire, développée avec Laravel et Filament. Elle permet aux utilisateurs de découvrir, rechercher et réserver des propriétés à travers le pays avec une interface intuitive et des fonctionnalités d'autocomplétion avancées.
 
 ## Installation
 

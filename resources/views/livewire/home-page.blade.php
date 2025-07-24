@@ -185,22 +185,30 @@
             @foreach($properties as $property)
             {{-- Carte de propriété avec effet hover --}}
             <div class="bg-white shadow-lg rounded-lg overflow-hidden hover:shadow-xl transition duration-200">
-                {{-- Image de la propriété : première image ou image par défaut --}}
-                @if($property->firstImage())
-                <img src="{{ asset('storage/' . $property->firstImage()->image_path) }}"
-                    alt="{{ $property->name }}"
-                    class="w-full h-48 object-cover">
-                @else
-                <img src="{{ asset('images/default-image.jpg') }}"
-                    alt="Propriété par défaut"
-                    class="w-full h-48 object-cover">
-                @endif
+                {{-- Image de la propriété avec lien : première image ou image par défaut --}}
+                <a href="{{ route('booking-manager', ['propertyId' => $property->id]) }}"
+                    class="block"
+                    aria-label="Réserver {{ $property->name }}">
+                    @if($property->firstImage())
+                    <img src="{{ asset('storage/' . $property->firstImage()->image_path) }}"
+                        alt="{{ $property->name }}"
+                        class="w-full h-48 object-cover hover:scale-105 transition-transform duration-300">
+                    @else
+                    <img src="{{ asset('images/default-image.jpg') }}"
+                        alt="{{ $property->name ?? 'propriété' }}"
+                        class="w-full h-48 object-cover hover:scale-105 transition-transform duration-300">
+                    @endif
+                </a>
 
                 {{-- Contenu de la carte --}}
                 <div class="p-4">
-                    {{-- Nom de la propriété --}}
+                    {{-- Nom de la propriété avec lien --}}
                     <h3 class="text-lg font-semibold text-gray-800 mb-2">
-                        {{ $property->name ?? 'Nom non disponible' }}
+                        <a href="{{ route('booking-manager', ['propertyId' => $property->id]) }}"
+                            class="hover:text-blue-600 transition-colors duration-200"
+                            aria-label="Réserver {{ $property->name }}">
+                            {{ $property->name ?? 'Nom non disponible' }}
+                        </a>
                     </h3>
 
                     {{-- Localisation : ville et quartier --}}
@@ -252,57 +260,82 @@
         </div>
         @endif
         @else
-        {{-- Affichage par défaut : propriétés populaires avec carrousel Swiper --}}
-        <h2 class="text-3xl font-bold mb-6 text-gray-800">Nos propriétés populaires</h2>
+        {{-- Affichage par défaut : propriétés populaires avec carrousel Swiper optimisé --}}
+        <div class="mb-6">
+            <h2 class="text-3xl font-bold text-gray-800 mb-2">Nos propriétés populaires</h2>
+            <p class="text-gray-600">Découvrez les hébergements les plus appréciés en Côte d'Ivoire</p>
+        </div>
 
-        {{-- Conteneur Swiper pour le carrousel des propriétés --}}
-        <div class="swiper-container max-w-full mx-auto relative">
+        {{-- Conteneur Swiper optimisé pour le carrousel des propriétés --}}
+        <div class="swiper-container property-carousel max-w-full mx-auto relative"
+            data-swiper-slides="{{ count($properties) }}">
+
             {{-- Wrapper contenant les slides --}}
             <div class="swiper-wrapper">
                 {{-- Boucle sur toutes les propriétés pour créer les slides --}}
-                @foreach($properties as $property)
-                <div class="swiper-slide">
-                    {{-- Carte de propriété dans le carrousel --}}
-                    <div class="bg-white shadow-md rounded-lg overflow-hidden w-full h-full">
-                        {{-- Image de la propriété --}}
-                        @if($property->firstImage())
-                        <img src="{{ asset('storage/' . $property->firstImage()->image_path) }}"
-                            alt="{{ $property->name }}"
-                            class="w-full h-auto object-cover">
-                        @else
-                        <img src="{{ asset('images/default-image.jpg') }}"
-                            alt="Propriété par défaut"
-                            class="w-full object-cover">
-                        @endif
+                @foreach($properties as $index => $property)
+                <div class="swiper-slide" data-swiper-slide-index="{{ $index }}">
+                    {{-- Carte de propriété optimisée dans le carrousel --}}
+                    <div class="property-card bg-white shadow-md rounded-lg overflow-hidden w-full h-full hover:shadow-lg transition-shadow duration-300">
 
-                        {{-- Contenu de la carte --}}
-                        <div class="p-4">
-                            {{-- Nom de la propriété --}}
-                            <h3 class="text-lg text-gray-800">
-                                {{ $property->name ?? 'Nom non disponible' }}
-                            </h3>
+                        {{-- Container d'image avec lazy loading et lien vers booking --}}
+                        <div class="property-image-container relative overflow-hidden">
+                            <a href="{{ route('booking-manager', ['propertyId' => $property->id]) }}"
+                                class="block w-full h-full"
+                                aria-label="Réserver {{ $property->name }}">
+                                @if($property->firstImage())
+                                <img src="{{ asset('storage/' . $property->firstImage()->image_path) }}"
+                                    alt="{{ $property->name }}"
+                                    class="property-image w-full h-48 object-cover transition-transform duration-300 hover:scale-105"
+                                    loading="{{ $index < 3 ? 'eager' : 'lazy' }}"
+                                    decoding="async">
+                                @else
+                                <img src="{{ asset('images/default-image.jpg') }}"
+                                    alt="{{ $property->name ?? 'propriété' }}"
+                                    class="property-image w-full h-48 object-cover transition-transform duration-300 hover:scale-105"
+                                    loading="{{ $index < 3 ? 'eager' : 'lazy' }}"
+                                    decoding="async">
+                                @endif
+                            </a>
 
-                            {{-- Localisation --}}
-                            <p class="text-gray-700">
-                                {{ $property->city ?? 'Ville non disponible' }},
-                                {{ Str::words($property->district ?? 'Quartier non disponible') }}
-                            </p>
+                            {{-- Badge de prix en overlay --}}
+                            <div class="absolute top-3 right-3 bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-semibold shadow-lg">
+                                {{ $property->price_per_night ?? 'N/A' }} €/nuit
+                            </div>
+                        </div> {{-- Contenu de la carte optimisé --}}
+                        <div class="property-content p-4 flex flex-col h-full">
+                            {{-- En-tête avec nom et localisation --}}
+                            <div class="property-header mb-3">
+                                <h3 class="property-title text-lg font-semibold text-gray-800 mb-1 line-clamp-1">
+                                    <a href="{{ route('booking-manager', ['propertyId' => $property->id]) }}"
+                                        class="hover:text-blue-600 transition-colors duration-200"
+                                        aria-label="Réserver {{ $property->name }}">
+                                        {{ $property->name ?? 'Nom non disponible' }}
+                                    </a>
+                                </h3>
 
-                            {{-- Description tronquée --}}
-                            <p class="text-gray-500 mt-5">
-                                {{ Str::words($property->description ?? 'Description non disponible', 20, '...') }}
-                            </p>
+                                <div class="property-location flex items-center text-gray-600 text-sm">
+                                    <i class="fas fa-map-marker-alt text-blue-500 mr-1 flex-shrink-0" aria-hidden="true"></i>
+                                    <span class="line-clamp-1">
+                                        {{ $property->city ?? 'Ville non disponible' }}@if($property->district), {{ $property->district }}@endif
+                                    </span>
+                                </div>
+                            </div>
 
-                            {{-- Prix par nuit --}}
-                            <p class="text-gray-600 text-right font-bold mt-5">
-                                {{ $property->price_per_night ?? 'Prix non disponible' }} € par nuit
-                            </p>
+                            {{-- Description avec limitation de lignes --}}
+                            <div class="property-description flex-grow mb-4">
+                                <p class="text-gray-500 text-sm line-clamp-3">
+                                    {{ $property->description ?? 'Description non disponible' }}
+                                </p>
+                            </div>
 
-                            {{-- Bouton de réservation --}}
-                            <div class="mt-4">
+                            {{-- Pied de carte avec bouton de réservation --}}
+                            <div class="property-footer mt-auto">
                                 <a href="{{ route('booking-manager', ['propertyId' => $property->id]) }}"
-                                    class="border border-blue-500 bg-white-500 text-blue-500 text-center py-2 px-4 rounded block w-full">
-                                    Réserver cette résidence
+                                    class="property-cta inline-flex items-center justify-center w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2.5 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                                    aria-label="Réserver {{ $property->name }}">
+                                    <i class="fas fa-calendar-check mr-2" aria-hidden="true"></i>
+                                    Réserver maintenant
                                 </a>
                             </div>
                         </div>
@@ -311,14 +344,33 @@
                 @endforeach
             </div>
 
-            {{-- Boutons de navigation du carrousel --}}
-            {{-- Bouton suivant --}}
-            <div class="swiper-button-next absolute right-0 top-1/2 transform -translate-y-1/2 z-10">
-                <ion-icon class="arrow" name="caret-forward-outline"></ion-icon>
+            {{-- Navigation du carrousel optimisée --}}
+            @if(count($properties) > 1)
+            <div class="swiper-navigation">
+                {{-- Bouton précédent --}}
+                <button class="swiper-button-prev carousel-nav-btn"
+                    type="button"
+                    aria-label="Propriété précédente">
+                    <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                </button>
+
+                {{-- Bouton suivant --}}
+                <button class="swiper-button-next carousel-nav-btn"
+                    type="button"
+                    aria-label="Propriété suivante">
+                    <i class="fas fa-chevron-right" aria-hidden="true"></i>
+                </button>
             </div>
-            {{-- Bouton précédent --}}
-            <div class="swiper-button-prev absolute left-0 top-1/2 transform -translate-y-1/2 z-10">
-                <ion-icon class="arrow" name="caret-back-outline"></ion-icon>
+
+            {{-- Pagination dots --}}
+            <div class="swiper-pagination mt-6"></div>
+            @endif
+
+            {{-- Indicateur de chargement --}}
+            <div class="carousel-loading hidden">
+                <div class="flex justify-center items-center py-8">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                </div>
             </div>
         </div>
         @endif

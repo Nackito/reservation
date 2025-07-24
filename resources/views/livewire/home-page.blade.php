@@ -202,14 +202,14 @@
 
                 {{-- Contenu de la carte --}}
                 <div class="p-4">
-                    <a href="{{ route('booking-manager', ['propertyId' => $property->id]) }}"
-                        {{-- Nom de la propriété avec lien --}}
-                        <h3 class="text-lg font-semibold text-gray-800 mb-2">
-                        class="hover:text-blue-600 transition-colors duration-200"
-                        aria-label="Réserver {{ $property->name }}">
-                        {{ $property->name ?? 'Nom non disponible' }}
-                        </h3>
-                    </a>
+                    {{-- Nom de la propriété avec lien --}}
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">
+                        <a href="{{ route('booking-manager', ['propertyId' => $property->id]) }}"
+                            class="hover:text-blue-600 transition-colors duration-200"
+                            aria-label="Réserver {{ $property->name }}">
+                            {{ $property->name ?? 'Nom non disponible' }}
+                        </a>
+                    </h3>
 
                     {{-- Localisation : ville et quartier --}}
                     <p class="text-gray-600 mb-2">

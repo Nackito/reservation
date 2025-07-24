@@ -17,8 +17,8 @@
 --}}
 
 <div>
-    {{-- Section de bienvenue avec dégradé bleu --}}
-    <div class="bg-gradient-to-r from-blue-600 to-blue-800 text-white">
+    {{-- Section de bienvenue avec image d'arrière-plan --}}
+    <div class="relative bg-cover bg-center bg-no-repeat text-white" style="background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('{{ asset('images/photo5.jpg') }}');">
         <div class="container mx-auto py-16 px-4">
             {{-- Titre et sous-titre de bienvenue --}}
             <div class="text-center mb-8">

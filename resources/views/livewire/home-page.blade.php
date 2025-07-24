@@ -184,7 +184,7 @@
             {{-- Boucle sur chaque propriété trouvée --}}
             @foreach($properties as $property)
             {{-- Carte de propriété avec effet hover --}}
-            <div class="bg-white shadow-lg rounded-lg overflow-hidden hover:shadow-xl transition duration-200">
+            <div class="shadow-lg rounded-lg overflow-hidden hover:shadow-xl transition duration-200">
                 {{-- Image de la propriété avec lien : première image ou image par défaut --}}
                 <a href="{{ route('booking-manager', ['propertyId' => $property->id]) }}"
                     class="block"
@@ -276,7 +276,7 @@
                 @foreach($properties as $index => $property)
                 <div class="swiper-slide" data-swiper-slide-index="{{ $index }}">
                     {{-- Carte de propriété optimisée dans le carrousel --}}
-                    <div class="property-card bg-white shadow-md rounded-lg overflow-hidden w-full h-full hover:shadow-lg transition-shadow duration-300">
+                    <div class="property-card shadow-md rounded-lg overflow-hidden w-full h-full hover:shadow-lg transition-shadow duration-300">
 
                         {{-- Container d'image avec lazy loading et lien vers booking --}}
                         <div class="property-image-container relative overflow-hidden">

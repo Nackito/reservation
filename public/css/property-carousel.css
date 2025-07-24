@@ -6,7 +6,7 @@
 
 /* Conteneur principal du carrousel */
 .property-carousel {
-    padding: 0 2rem;
+    padding: 2rem;
 }
 
 /* Cartes de propriétés */
@@ -16,12 +16,16 @@
     transition: all 0.3s ease;
     position: relative;
     animation: slideInUp 0.6s ease-out;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+        0 2px 4px -1px rgba(0, 0, 0, 0.06), 0 1px 3px 0 rgba(0, 0, 0, 0.1);
 }
 
 .property-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    transform: translateY(-6px);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25),
+        0 20px 25px -5px rgba(0, 0, 0, 0.1),
         0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    border-color: #d1d5db;
 }
 
 /* Container d'image avec aspect ratio fixe */
@@ -29,6 +33,9 @@
     height: 200px;
     position: relative;
     background-color: #f3f4f6;
+    overflow: hidden;
+    border-radius: 12px 12px 0 0;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
 }
 
 .property-image {
@@ -94,15 +101,19 @@
     border: none;
     font-weight: 500;
     letter-spacing: 0.025em;
+    box-shadow: 0 2px 4px -1px rgba(37, 99, 235, 0.3);
 }
 
 .property-cta:hover {
     background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
-    transform: translateY(-1px);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px -2px rgba(37, 99, 235, 0.4),
+        0 2px 4px -1px rgba(37, 99, 235, 0.2);
 }
 
 .property-cta:focus {
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3),
+        0 2px 4px -1px rgba(37, 99, 235, 0.3);
 }
 
 /* Utilitaires line-clamp pour le texte tronqué */
@@ -188,11 +199,19 @@
 /* Responsive design */
 @media (max-width: 768px) {
     .property-carousel {
-        padding: 0 1rem;
+        padding: 1.5rem 1rem;
     }
 
     .property-card {
         height: 380px; /* Hauteur ajustée pour mobile avec un seul bouton */
+        box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1),
+            0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    }
+
+    .property-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15),
+            0 10px 10px -5px rgba(0, 0, 0, 0.04);
     }
 
     .property-image-container {
@@ -220,7 +239,7 @@
 
 @media (max-width: 480px) {
     .property-carousel {
-        padding: 0 0.5rem;
+        padding: 1rem 0.5rem;
     }
 
     .carousel-nav-btn {

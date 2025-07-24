@@ -25,6 +25,9 @@
     <!-- CSS personnalisé pour le carrousel de propriétés -->
     <link rel="stylesheet" href="{{ asset('css/property-carousel.css') }}">
 
+    <!-- CSS global pour l'application -->
+    <link rel="stylesheet" href="{{ asset('css/global-styles.css') }}">
+
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <!-- Fonts -->
@@ -37,7 +40,7 @@
     @livewireStyles
 </head>
 
-<body class="bg-slate-200 dark:bg-slate-700">
+<body class="bg-white">
     @livewire('partials.navbar')
 
     <!-- Page Heading -->

@@ -25,6 +25,9 @@
     <!-- CSS personnalisé pour le carrousel de propriétés -->
     <link rel="stylesheet" href="{{ asset('css/property-carousel.css') }}">
 
+    <!-- CSS personnalisé pour le carrousel des villes -->
+    <link rel="stylesheet" href="{{ asset('css/cities-carousel.css') }}">
+
     <!-- CSS global pour l'application -->
     <link rel="stylesheet" href="{{ asset('css/global-styles.css') }}">
 
@@ -40,14 +43,14 @@
     @livewireStyles
 </head>
 
-<body class="bg-white">
+<body class="bg-white min-h-screen flex flex-col">
     @livewire('partials.navbar')
 
     <!-- Page Heading -->
 
 
     <!-- Page Content -->
-    <main>
+    <main class="flex-grow">
         {{ $slot }}
 
     </main>
@@ -61,16 +64,17 @@
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const swiper = new Swiper('.swiper-container', {
+            // Carrousel des propriétés
+            const propertySwiper = new Swiper('.property-carousel', {
                 //loop: true, // Permet de boucler les slides
                 slidesPerView: 1, // Nombre de slides visibles
                 spaceBetween: 10, // Espace entre les slides
                 navigation: {
-                    nextEl: '.swiper-button-next',
-                    prevEl: '.swiper-button-prev',
+                    nextEl: '.property-carousel .swiper-button-next',
+                    prevEl: '.property-carousel .swiper-button-prev',
                 },
                 pagination: {
-                    el: '.swiper-pagination',
+                    el: '.property-carousel .swiper-pagination',
                     clickable: true,
                 },
                 breakpoints: {
@@ -85,6 +89,39 @@
                     1024: {
                         slidesPerView: 4,
                         spaceBetween: 40,
+                    },
+                },
+            });
+
+            // Carrousel des villes
+            const citiesSwiper = new Swiper('.cities-carousel', {
+                //loop: true, // Permet de boucler les slides
+                slidesPerView: 1, // Nombre de slides visibles
+                spaceBetween: 15, // Espace entre les slides
+                navigation: {
+                    nextEl: '.cities-carousel .swiper-button-next',
+                    prevEl: '.cities-carousel .swiper-button-prev',
+                },
+                pagination: {
+                    el: '.cities-carousel .swiper-pagination',
+                    clickable: true,
+                },
+                breakpoints: {
+                    480: {
+                        slidesPerView: 2,
+                        spaceBetween: 15,
+                    },
+                    640: {
+                        slidesPerView: 3,
+                        spaceBetween: 20,
+                    },
+                    768: {
+                        slidesPerView: 4,
+                        spaceBetween: 25,
+                    },
+                    1024: {
+                        slidesPerView: 5,
+                        spaceBetween: 30,
                     },
                 },
             });

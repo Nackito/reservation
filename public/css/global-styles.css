@@ -4,10 +4,17 @@
  * Utilisation: Layout principal de l'application
  */
 
-/* Background blanc pour toute l'application */
+/* Background blanc pour toute l'application avec sticky footer */
+html,
+body {
+    height: 100%;
+}
+
 body {
     background-color: #ffffff;
     min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
 /* Style pour les conteneurs principaux */
@@ -30,4 +37,9 @@ body {
 .carousel-section {
     background-color: #ffffff;
     padding: 2rem 0;
+}
+
+/* Assurer que le main prend tout l'espace disponible */
+main {
+    flex: 1;
 }

@@ -146,6 +146,17 @@ class HomePage extends Component
         $this->municipalitySuggestions = [];
     }
 
+    public function searchByCity($city)
+    {
+        $this->searchCity = $city;
+        $this->searchMunicipality = '';
+        $this->showResults = true;
+        $this->showCitySuggestions = false;
+        $this->citySuggestions = [];
+        $this->showMunicipalitySuggestions = false;
+        $this->municipalitySuggestions = [];
+    }
+
     public function render()
     {
         if ($this->showResults && ($this->searchCity || $this->searchMunicipality)) {
@@ -164,8 +175,19 @@ class HomePage extends Component
             $properties = Property::all();
         }
 
+        // Récupérer les villes populaires avec comptage des propriétés
+        $popularCities = Property::select('city')
+            ->selectRaw('COUNT(*) as properties_count')
+            ->whereNotNull('city')
+            ->where('city', '!=', '')
+            ->groupBy('city')
+            ->orderBy('properties_count', 'desc')
+            ->limit(8)
+            ->get();
+
         return view('livewire.home-page', [
             'properties' => $properties,
+            'popularCities' => $popularCities,
         ]);
     }
 }

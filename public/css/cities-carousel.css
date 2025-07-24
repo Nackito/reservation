@@ -1,0 +1,204 @@
+/* 
+   Styles pour le carrousel des villes
+   Optimisé pour l'affichage des cartes de villes populaires
+*/
+
+/* Conteneur principal du carrousel des villes */
+.cities-carousel {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    padding: 0 20px;
+}
+
+/* Cartes de ville */
+.city-card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    height: 280px;
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.city-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+/* Container d'image de ville */
+.city-image-container {
+    position: relative;
+    height: 180px;
+    overflow: hidden;
+}
+
+.city-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.city-card:hover .city-image {
+    transform: scale(1.05);
+}
+
+/* Contenu de la carte ville */
+.city-content {
+    padding: 16px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.city-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 8px;
+    line-height: 1.2;
+}
+
+/* Boutons de navigation pour les villes */
+.cities-nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #3b82f6;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.cities-nav-btn:hover {
+    background: #3b82f6;
+    color: white;
+    transform: translateY(-50%) scale(1.1);
+    box-shadow: 0 6px 25px rgba(59, 130, 246, 0.3);
+}
+
+.cities-nav-btn.swiper-button-prev {
+    left: -10px;
+}
+
+.cities-nav-btn.swiper-button-next {
+    right: -10px;
+}
+
+/* Pagination pour les villes */
+.cities-pagination {
+    text-align: center;
+    margin-top: 24px;
+}
+
+.cities-pagination .swiper-pagination-bullet {
+    width: 12px;
+    height: 12px;
+    background: #d1d5db;
+    opacity: 1;
+    margin: 0 6px;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.cities-pagination .swiper-pagination-bullet-active {
+    background: #3b82f6;
+    transform: scale(1.2);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+/* Responsive design pour les villes */
+@media (max-width: 768px) {
+    .cities-carousel {
+        padding: 0 10px;
+    }
+
+    .city-card {
+        height: 260px;
+    }
+
+    .city-image-container {
+        height: 160px;
+    }
+
+    .cities-nav-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 14px;
+    }
+
+    .cities-nav-btn.swiper-button-prev {
+        left: -5px;
+    }
+
+    .cities-nav-btn.swiper-button-next {
+        right: -5px;
+    }
+}
+
+@media (max-width: 480px) {
+    .city-card {
+        height: 240px;
+    }
+
+    .city-image-container {
+        height: 140px;
+    }
+
+    .city-content {
+        padding: 12px;
+    }
+
+    .city-title {
+        font-size: 1rem;
+    }
+}
+
+/* Animation de chargement pour les villes */
+.cities-carousel .carousel-loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 20;
+}
+
+/* Effets d'accessibilité */
+.city-card:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+.cities-nav-btn:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+/* Amélioration du contraste pour l'accessibilité */
+@media (prefers-reduced-motion: reduce) {
+    .city-card,
+    .city-image,
+    .cities-nav-btn {
+        transition: none;
+    }
+}

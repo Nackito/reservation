@@ -202,14 +202,14 @@
 
                 {{-- Contenu de la carte --}}
                 <div class="p-4">
-                    {{-- Nom de la propriété avec lien --}}
-                    <h3 class="text-lg font-semibold text-gray-800 mb-2">
-                        <a href="{{ route('booking-manager', ['propertyId' => $property->id]) }}"
-                            class="hover:text-blue-600 transition-colors duration-200"
-                            aria-label="Réserver {{ $property->name }}">
-                            {{ $property->name ?? 'Nom non disponible' }}
-                        </a>
-                    </h3>
+                    <a href="{{ route('booking-manager', ['propertyId' => $property->id]) }}"
+                        {{-- Nom de la propriété avec lien --}}
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">
+                        class="hover:text-blue-600 transition-colors duration-200"
+                        aria-label="Réserver {{ $property->name }}">
+                        {{ $property->name ?? 'Nom non disponible' }}
+                        </h3>
+                    </a>
 
                     {{-- Localisation : ville et quartier --}}
                     <p class="text-gray-600 mb-2">
@@ -231,12 +231,6 @@
                         <span class="text-lg font-bold text-blue-600">
                             {{ $property->price_per_night ?? 'Prix non disponible' }} €/nuit
                         </span>
-
-                        {{-- Bouton de réservation --}}
-                        <a href="{{ route('booking-manager', ['propertyId' => $property->id]) }}"
-                            class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition duration-200">
-                            Réserver
-                        </a>
                     </div>
                 </div>
             </div>
@@ -371,6 +365,84 @@
                 <div class="flex justify-center items-center py-8">
                     <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                 </div>
+            </div>
+        </div>
+
+        {{-- Section carrousel des villes populaires --}}
+        <div class="mt-16">
+            <div class="mb-6">
+                <h2 class="text-3xl font-bold text-gray-800 mb-2">Explorez par ville</h2>
+                <p class="text-gray-600">Découvrez les destinations les plus populaires en Côte d'Ivoire</p>
+            </div>
+
+            {{-- Conteneur Swiper pour les villes --}}
+            <div class="swiper-container cities-carousel max-w-full mx-auto relative"
+                data-swiper-slides="{{ count($popularCities) }}">
+
+                {{-- Wrapper contenant les slides des villes --}}
+                <div class="swiper-wrapper">
+                    @foreach($popularCities as $index => $cityData)
+                    <div class="swiper-slide" data-swiper-slide-index="{{ $index }}">
+                        {{-- Carte de ville --}}
+                        <div class="city-card bg-white shadow-md rounded-lg overflow-hidden w-full h-full hover:shadow-lg transition-shadow duration-300 cursor-pointer"
+                            wire:click="searchByCity('{{ $cityData->city }}')">
+
+                            {{-- Image de ville (placeholder pour le moment) --}}
+                            <div class="city-image-container relative overflow-hidden">
+                                <div class="city-image w-full h-48 bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
+                                    <div class="text-center text-white">
+                                        <i class="fas fa-city text-4xl mb-2"></i>
+                                        <h3 class="text-xl font-bold">{{ $cityData->city }}</h3>
+                                    </div>
+                                </div>
+
+                                {{-- Badge nombre de propriétés --}}
+                                <div class="absolute top-3 right-3 bg-white text-blue-600 px-3 py-1 rounded-full text-sm font-semibold shadow-lg">
+                                    {{ $cityData->properties_count }} propriété{{ $cityData->properties_count > 1 ? 's' : '' }}
+                                </div>
+                            </div>
+
+                            {{-- Contenu de la carte ville --}}
+                            <div class="city-content p-4">
+                                <h3 class="city-title text-lg font-semibold text-gray-800 mb-2">
+                                    {{ $cityData->city }}
+                                </h3>
+                                <p class="text-gray-600 text-sm mb-3">
+                                    {{ $cityData->properties_count }} hébergement{{ $cityData->properties_count > 1 ? 's' : '' }} disponible{{ $cityData->properties_count > 1 ? 's' : '' }}
+                                </p>
+                                <div class="city-cta">
+                                    <span class="inline-flex items-center text-blue-600 text-sm font-medium hover:text-blue-700 transition-colors duration-200">
+                                        <i class="fas fa-arrow-right mr-2"></i>
+                                        Découvrir
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+
+                {{-- Navigation du carrousel des villes --}}
+                @if(count($popularCities) > 1)
+                <div class="swiper-navigation">
+                    {{-- Bouton précédent --}}
+                    <button class="swiper-button-prev cities-nav-btn"
+                        type="button"
+                        aria-label="Ville précédente">
+                        <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                    </button>
+
+                    {{-- Bouton suivant --}}
+                    <button class="swiper-button-next cities-nav-btn"
+                        type="button"
+                        aria-label="Ville suivante">
+                        <i class="fas fa-chevron-right" aria-hidden="true"></i>
+                    </button>
+                </div>
+
+                {{-- Pagination dots pour les villes --}}
+                <div class="swiper-pagination cities-pagination mt-6"></div>
+                @endif
             </div>
         </div>
         @endif

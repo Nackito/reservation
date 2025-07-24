@@ -19,6 +19,9 @@
     <!-- CSS personnalisé pour l'autocomplétion -->
     <link rel="stylesheet" href="{{ asset('css/autocomplete.css') }}">
 
+    <!-- CSS personnalisé pour la section héro -->
+    <link rel="stylesheet" href="{{ asset('css/hero-section.css') }}">
+
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <!-- Fonts -->

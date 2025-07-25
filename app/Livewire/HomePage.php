@@ -18,6 +18,15 @@ class HomePage extends Component
     public $municipalitySuggestions = [];
     public $showMunicipalitySuggestions = false;
 
+    // Filtres de recherche avancés
+    public $propertyType = '';
+    public $minPrice = '';
+    public $maxPrice = '';
+    public $minRooms = '';
+    public $maxRooms = '';
+    public $selectedAmenities = [];
+    public $showFilters = false;
+
     public $ivorianCities = [
         'Abidjan',
         'Bouaké',
@@ -144,6 +153,22 @@ class HomePage extends Component
         $this->citySuggestions = [];
         $this->showMunicipalitySuggestions = false;
         $this->municipalitySuggestions = [];
+        $this->clearFilters();
+    }
+
+    public function toggleFilters()
+    {
+        $this->showFilters = !$this->showFilters;
+    }
+
+    public function clearFilters()
+    {
+        $this->propertyType = '';
+        $this->minPrice = '';
+        $this->maxPrice = '';
+        $this->minRooms = '';
+        $this->maxRooms = '';
+        $this->selectedAmenities = [];
     }
 
     public function searchByCity($city)
@@ -159,7 +184,7 @@ class HomePage extends Component
 
     public function render()
     {
-        if ($this->showResults && ($this->searchCity || $this->searchMunicipality)) {
+        if ($this->showResults && ($this->searchCity || $this->searchMunicipality || $this->propertyType || $this->minPrice || $this->maxPrice || $this->minRooms || $this->maxRooms || !empty($this->selectedAmenities))) {
             $query = Property::query();
 
             if ($this->searchCity) {
@@ -168,6 +193,34 @@ class HomePage extends Component
 
             if ($this->searchMunicipality) {
                 $query->where('municipality', 'like', '%' . $this->searchMunicipality . '%');
+            }
+
+            // Filtres avancés
+            if ($this->propertyType) {
+                $query->where('property_type', $this->propertyType);
+            }
+
+            if ($this->minPrice) {
+                $query->where('price_per_night', '>=', $this->minPrice);
+            }
+
+            if ($this->maxPrice) {
+                $query->where('price_per_night', '<=', $this->maxPrice);
+            }
+
+            if ($this->minRooms) {
+                $query->where('number_of_rooms', '>=', $this->minRooms);
+            }
+
+            if ($this->maxRooms) {
+                $query->where('number_of_rooms', '<=', $this->maxRooms);
+            }
+
+            // Filtre des commodités
+            if (!empty($this->selectedAmenities)) {
+                foreach ($this->selectedAmenities as $amenity) {
+                    $query->whereJsonContains('features', $amenity);
+                }
             }
 
             $properties = $query->get();
@@ -185,9 +238,53 @@ class HomePage extends Component
             ->limit(8)
             ->get();
 
+        // Récupérer les types de propriétés disponibles pour le filtre
+        $propertyTypes = Property::select('property_type')
+            ->whereNotNull('property_type')
+            ->where('property_type', '!=', '')
+            ->distinct()
+            ->pluck('property_type');
+
+        // Récupérer toutes les commodités disponibles
+        $allFeatures = Property::whereNotNull('features')
+            ->where('features', '!=', '[]')
+            ->pluck('features')
+            ->flatten()
+            ->unique()
+            ->filter()
+            ->sort()
+            ->values();
+
+        // Récupérer les hébergements les plus visités par ville (basé sur le nombre de réservations)
+        $topPropertiesByCity = [];
+        $topCities = Property::select('city')
+            ->selectRaw('COUNT(*) as properties_count')
+            ->whereNotNull('city')
+            ->where('city', '!=', '')
+            ->groupBy('city')
+            ->orderBy('properties_count', 'desc')
+            ->limit(5)
+            ->pluck('city');
+
+        foreach ($topCities as $city) {
+            $topProperties = Property::where('city', $city)
+                ->withCount('bookings')
+                ->orderByDesc('bookings_count')
+                ->orderByDesc('created_at') // En cas d'égalité, les plus récents d'abord
+                ->limit(3)
+                ->get();
+
+            if ($topProperties->isNotEmpty()) {
+                $topPropertiesByCity[$city] = $topProperties;
+            }
+        }
+
         return view('livewire.home-page', [
             'properties' => $properties,
             'popularCities' => $popularCities,
+            'propertyTypes' => $propertyTypes,
+            'availableAmenities' => $allFeatures,
+            'topPropertiesByCity' => $topPropertiesByCity,
         ]);
     }
 }

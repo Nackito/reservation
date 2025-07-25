@@ -28,6 +28,12 @@
     <!-- CSS personnalisé pour le carrousel des villes -->
     <link rel="stylesheet" href="{{ asset('css/cities-carousel.css') }}">
 
+    <!-- CSS personnalisé pour les filtres de recherche -->
+    <link rel="stylesheet" href="{{ asset('css/filters.css') }}">
+
+    <!-- CSS personnalisé pour les propriétés populaires -->
+    <link rel="stylesheet" href="{{ asset('css/popular-properties.css') }}">
+
     <!-- CSS global pour l'application -->
     <link rel="stylesheet" href="{{ asset('css/global-styles.css') }}">
 

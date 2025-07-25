@@ -1,0 +1,368 @@
+/* 
+   Styles pour les hébergements les plus visités
+   Section des propriétés populaires par ville
+*/
+
+/* Conteneur principal de la section */
+.popular-properties-section {
+    margin-top: 64px;
+}
+
+.popular-properties-section h2 {
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 8px;
+}
+
+.popular-properties-section p {
+    color: #6b7280;
+    margin-bottom: 32px;
+}
+
+/* En-tête de chaque ville */
+.city-section {
+    margin-bottom: 48px;
+}
+
+.city-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.city-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1f2937;
+    display: flex;
+    align-items: center;
+}
+
+.city-title i {
+    color: #3b82f6;
+    margin-right: 12px;
+    font-size: 1.25rem;
+}
+
+.city-count {
+    margin-left: 8px;
+    font-size: 0.875rem;
+    font-weight: 400;
+    color: #9ca3af;
+}
+
+.view-all-btn {
+    color: #3b82f6;
+    font-size: 0.875rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    transition: color 0.2s ease;
+    text-decoration: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.view-all-btn:hover {
+    color: #1d4ed8;
+}
+
+.view-all-btn i {
+    margin-left: 4px;
+    transition: transform 0.2s ease;
+}
+
+.view-all-btn:hover i {
+    transform: translateX(2px);
+}
+
+/* Cartes de propriétés populaires */
+.popular-property-card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+        0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s ease;
+    position: relative;
+    animation: fadeInUp 0.6s ease-out;
+}
+
+.popular-property-card:hover {
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+        0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    transform: translateY(-2px);
+}
+
+/* Badges sur les cartes */
+.popular-badge {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    z-index: 10;
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+}
+
+.popular-badge i {
+    margin-right: 4px;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.8;
+    }
+}
+
+.bookings-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 10;
+    background: #3b82f6;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+}
+
+.bookings-badge i {
+    margin-right: 4px;
+}
+
+/* Image de la propriété */
+.popular-property-card img {
+    width: 100%;
+    height: 192px;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.popular-property-card:hover img {
+    transform: scale(1.05);
+}
+
+/* Contenu de la carte */
+.popular-property-content {
+    padding: 16px;
+}
+
+.popular-property-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 8px;
+    line-height: 1.4;
+}
+
+.popular-property-title a {
+    color: inherit;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.popular-property-title a:hover {
+    color: #3b82f6;
+}
+
+.popular-property-location {
+    color: #6b7280;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    font-size: 0.875rem;
+}
+
+.popular-property-location i {
+    margin-right: 4px;
+    color: #9ca3af;
+}
+
+/* Badges de type et chambres */
+.property-info-badges {
+    margin-bottom: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.property-type-badge {
+    background: #dbeafe;
+    color: #1e40af;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.property-rooms-badge {
+    background: #f3f4f6;
+    color: #374151;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+/* Badges des commodités */
+.amenities-badges {
+    margin-bottom: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.amenity-mini-badge {
+    background: #f9fafb;
+    color: #6b7280;
+    padding: 2px 6px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+}
+
+.amenity-mini-badge i {
+    margin-right: 2px;
+    font-size: 0.625rem;
+}
+
+.amenity-more-badge {
+    background: #dbeafe;
+    color: #3b82f6;
+    font-weight: 500;
+}
+
+/* Pied de carte avec prix et bouton */
+.popular-property-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid #f3f4f6;
+}
+
+.popular-property-price {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #3b82f6;
+}
+
+.popular-property-book-btn {
+    background: #3b82f6;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.popular-property-book-btn:hover {
+    background: #1d4ed8;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+}
+
+.popular-property-book-btn i {
+    margin-right: 4px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .city-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .city-title {
+        font-size: 1.25rem;
+    }
+
+    .popular-property-footer {
+        flex-direction: column;
+        gap: 12px;
+        align-items: stretch;
+    }
+
+    .popular-property-book-btn {
+        justify-content: center;
+        width: 100%;
+    }
+
+    .popular-properties-section {
+        margin-top: 48px;
+    }
+
+    .city-section {
+        margin-bottom: 32px;
+    }
+}
+
+@media (max-width: 480px) {
+    .popular-badge,
+    .bookings-badge {
+        font-size: 0.625rem;
+        padding: 3px 8px;
+    }
+
+    .popular-property-card img {
+        height: 160px;
+    }
+
+    .popular-property-content {
+        padding: 12px;
+    }
+
+    .popular-property-title {
+        font-size: 1rem;
+    }
+}
+
+/* Animation d'entrée - ajoutée à la carte principale */
+@keyframes fadeInUp {
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Effet de focus pour l'accessibilité */
+.popular-property-card:focus-within {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+.view-all-btn:focus,
+.popular-property-book-btn:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}

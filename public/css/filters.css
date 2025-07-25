@@ -1,0 +1,347 @@
+/* 
+   Styles pour les filtres de recherche avancés
+   Optimisé pour l'affichage et l'interaction des filtres
+*/
+
+/* Section des filtres */
+.filters-section {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 24px;
+    transition: all 0.3s ease;
+}
+
+.filters-section h3 {
+    color: #374151;
+    font-size: 1.125rem;
+    font-weight: 500;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+}
+
+.filters-section h3 i {
+    color: #3b82f6;
+    margin-right: 8px;
+}
+
+/* Grid des filtres */
+.filters-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+}
+
+@media (min-width: 768px) {
+    .filters-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1024px) {
+    .filters-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+/* Champs de filtre */
+.filter-field {
+    display: flex;
+    flex-direction: column;
+}
+
+.filter-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+}
+
+.filter-label i {
+    margin-right: 4px;
+    color: #6b7280;
+}
+
+.filter-input,
+.filter-select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    color: #111827;
+    background: white;
+    transition: all 0.2s ease;
+}
+
+.filter-input:focus,
+.filter-select:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.filter-input:hover,
+.filter-select:hover {
+    border-color: #9ca3af;
+}
+
+/* Badges des filtres actifs */
+.filter-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.filter-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.filter-badge i {
+    margin-right: 4px;
+    font-size: 0.75rem;
+}
+
+.filter-badge-blue {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.filter-badge-green {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.filter-badge-purple {
+    background: #e9d5ff;
+    color: #7c2d12;
+}
+
+.filter-badge-gray {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+/* Actions des filtres */
+.filters-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.clear-filters-btn {
+    color: #6b7280;
+    font-size: 0.875rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    transition: color 0.2s ease;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.clear-filters-btn:hover {
+    color: #374151;
+}
+
+.clear-filters-btn i {
+    margin-right: 4px;
+}
+
+.filters-info {
+    font-size: 0.875rem;
+    color: #9ca3af;
+    display: flex;
+    align-items: center;
+}
+
+.filters-info i {
+    margin-right: 4px;
+}
+
+/* Bouton d'affichage des filtres */
+.filters-toggle-btn {
+    background: #f3f4f6;
+    color: #374151;
+    border: 1px solid #d1d5db;
+    transition: all 0.2s ease;
+}
+
+.filters-toggle-btn:hover {
+    background: #e5e7eb;
+    border-color: #9ca3af;
+}
+
+.filters-toggle-btn:active {
+    background: #d1d5db;
+}
+
+/* Animation d'apparition des filtres */
+.filters-section-animated {
+    animation: fadeInDown 0.3s ease-out;
+}
+
+@keyframes fadeInDown {
+    0% {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .filters-actions {
+        flex-direction: column;
+        gap: 12px;
+        text-align: center;
+    }
+
+    .filter-badges {
+        justify-content: center;
+    }
+
+    .filters-section {
+        padding: 16px;
+        margin-top: 16px;
+    }
+}
+
+/* Amélioration de l'accessibilité */
+.filter-input:focus,
+.filter-select:focus,
+.clear-filters-btn:focus,
+.filters-toggle-btn:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+/* Section des commodités */
+.amenities-section {
+    margin-top: 24px;
+}
+
+.amenities-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+}
+
+@media (min-width: 768px) {
+    .amenities-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (min-width: 1024px) {
+    .amenities-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+@media (min-width: 1280px) {
+    .amenities-grid {
+        grid-template-columns: repeat(6, 1fr);
+    }
+}
+
+.amenity-checkbox {
+    display: flex;
+    align-items: center;
+    padding: 8px;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.amenity-checkbox:hover {
+    background: #f9fafb;
+    border-color: #d1d5db;
+}
+
+.amenity-checkbox input:checked + .amenity-label {
+    background: #dbeafe;
+    border-color: #3b82f6;
+}
+
+.amenity-checkbox input:checked + .amenity-label .amenity-text {
+    color: #1e40af;
+    font-weight: 500;
+}
+
+.amenity-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    cursor: pointer;
+}
+
+.amenity-text {
+    font-size: 0.875rem;
+    color: #374151;
+    transition: all 0.15s ease;
+}
+
+/* Badges des commodités sur les cartes */
+.amenity-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 6px;
+    background: #f3f4f6;
+    color: #6b7280;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 400;
+    margin: 2px;
+}
+
+.amenity-badge i {
+    margin-right: 2px;
+    font-size: 0.625rem;
+}
+
+.amenity-badge-more {
+    background: #dbeafe;
+    color: #3b82f6;
+    font-weight: 500;
+}
+
+/* États des champs désactivés */
+.filter-input:disabled,
+.filter-select:disabled {
+    background: #f9fafb;
+    color: #9ca3af;
+    cursor: not-allowed;
+}
+
+/* Indicateur de chargement pour les filtres */
+.filters-loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.filters-loading .filter-input,
+.filters-loading .filter-select {
+    background: #f9fafb;
+}

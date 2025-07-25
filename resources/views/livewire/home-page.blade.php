@@ -220,6 +220,16 @@
                         @endif
                     </p>
 
+                    {{-- Type de logement --}}
+                    @if($property->property_type)
+                    <div class="mb-2">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            <i class="fas fa-home mr-1"></i>
+                            {{ ucfirst($property->property_type) }}
+                        </span>
+                    </div>
+                    @endif
+
                     {{-- Description tronquée --}}
                     <p class="text-gray-500 mb-4">
                         {{ Str::words($property->description ?? 'Description non disponible', 15, '...') }}
@@ -314,6 +324,16 @@
                                         {{ $property->city ?? 'Ville non disponible' }}@if($property->district), {{ $property->district }}@endif
                                     </span>
                                 </div>
+
+                                {{-- Type de logement dans le carrousel --}}
+                                @if($property->property_type)
+                                <div class="mt-2">
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                        <i class="fas fa-home mr-1"></i>
+                                        {{ ucfirst($property->property_type) }}
+                                    </span>
+                                </div>
+                                @endif
                             </div>
 
                             {{-- Description avec limitation de lignes --}}

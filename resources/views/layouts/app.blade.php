@@ -69,68 +69,142 @@
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Carrousel des propriétés
-            const propertySwiper = new Swiper('.property-carousel', {
-                //loop: true, // Permet de boucler les slides
-                slidesPerView: 1, // Nombre de slides visibles
-                spaceBetween: 10, // Espace entre les slides
-                navigation: {
-                    nextEl: '.property-carousel .swiper-button-next',
-                    prevEl: '.property-carousel .swiper-button-prev',
-                },
-                pagination: {
-                    el: '.property-carousel .swiper-pagination',
-                    clickable: true,
-                },
-                breakpoints: {
-                    640: {
-                        slidesPerView: 2,
-                        spaceBetween: 20,
-                    },
-                    768: {
-                        slidesPerView: 3,
-                        spaceBetween: 30,
-                    },
-                    1024: {
-                        slidesPerView: 4,
-                        spaceBetween: 40,
-                    },
-                },
-            });
+        let propertySwiper = null;
+        let citiesSwiper = null;
 
-            // Carrousel des villes
-            const citiesSwiper = new Swiper('.cities-carousel', {
-                //loop: true, // Permet de boucler les slides
-                slidesPerView: 1, // Nombre de slides visibles
-                spaceBetween: 15, // Espace entre les slides
-                navigation: {
-                    nextEl: '.cities-carousel .swiper-button-next',
-                    prevEl: '.cities-carousel .swiper-button-prev',
-                },
-                pagination: {
-                    el: '.cities-carousel .swiper-pagination',
-                    clickable: true,
-                },
-                breakpoints: {
-                    480: {
-                        slidesPerView: 2,
+        function destroyCarousels() {
+            console.log('Destroying carousels...');
+            if (propertySwiper) {
+                propertySwiper.destroy(true, true);
+                propertySwiper = null;
+            }
+            if (citiesSwiper) {
+                citiesSwiper.destroy(true, true);
+                citiesSwiper = null;
+            }
+        }
+
+        function initializeCarousels() {
+            console.log('Initializing carousels...');
+
+            // Détruire d'abord les instances existantes
+            destroyCarousels();
+
+            // Attendre que le DOM soit vraiment prêt
+            setTimeout(function() {
+                // Réinitialiser le carrousel des propriétés
+                const propertyCarousel = document.querySelector('.property-carousel');
+                if (propertyCarousel) {
+                    console.log('Creating property carousel...');
+                    propertySwiper = new Swiper('.property-carousel', {
+                        slidesPerView: 1,
+                        spaceBetween: 10,
+                        observer: true,
+                        observeParents: true,
+                        watchOverflow: true,
+                        navigation: {
+                            nextEl: '.property-carousel .swiper-button-next',
+                            prevEl: '.property-carousel .swiper-button-prev',
+                        },
+                        pagination: {
+                            el: '.property-carousel .swiper-pagination',
+                            clickable: true,
+                        },
+                        breakpoints: {
+                            640: {
+                                slidesPerView: 2,
+                                spaceBetween: 20,
+                            },
+                            768: {
+                                slidesPerView: 3,
+                                spaceBetween: 30,
+                            },
+                            1024: {
+                                slidesPerView: 4,
+                                spaceBetween: 40,
+                            },
+                        },
+                        on: {
+                            init: function() {
+                                console.log('Property carousel initialized');
+                            }
+                        }
+                    });
+                }
+
+                // Réinitialiser le carrousel des villes
+                const citiesCarousel = document.querySelector('.cities-carousel');
+                if (citiesCarousel) {
+                    console.log('Creating cities carousel...');
+                    citiesSwiper = new Swiper('.cities-carousel', {
+                        slidesPerView: 1,
                         spaceBetween: 15,
-                    },
-                    640: {
-                        slidesPerView: 3,
-                        spaceBetween: 20,
-                    },
-                    768: {
-                        slidesPerView: 4,
-                        spaceBetween: 25,
-                    },
-                    1024: {
-                        slidesPerView: 5,
-                        spaceBetween: 30,
-                    },
-                },
+                        observer: true,
+                        observeParents: true,
+                        watchOverflow: true,
+                        navigation: {
+                            nextEl: '.cities-carousel .swiper-button-next',
+                            prevEl: '.cities-carousel .swiper-button-prev',
+                        },
+                        pagination: {
+                            el: '.cities-carousel .swiper-pagination',
+                            clickable: true,
+                        },
+                        breakpoints: {
+                            480: {
+                                slidesPerView: 2,
+                                spaceBetween: 15,
+                            },
+                            640: {
+                                slidesPerView: 3,
+                                spaceBetween: 20,
+                            },
+                            768: {
+                                slidesPerView: 4,
+                                spaceBetween: 25,
+                            },
+                            1024: {
+                                slidesPerView: 5,
+                                spaceBetween: 30,
+                            },
+                        },
+                        on: {
+                            init: function() {
+                                console.log('Cities carousel initialized');
+                            }
+                        }
+                    });
+                }
+            }, 300);
+        }
+
+        // Initialiser les carrousels au chargement de la page
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, initializing carousels...');
+            initializeCarousels();
+        });
+
+        // Gestion des événements Livewire
+        document.addEventListener('livewire:init', () => {
+            console.log('Livewire initialized');
+            Livewire.on('refresh-carousels', () => {
+                console.log('Received refresh-carousels event');
+                setTimeout(() => {
+                    initializeCarousels();
+                }, 500);
             });
+        });
+
+        // Support pour Livewire v2 (fallback)
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof window.livewire !== 'undefined') {
+                window.livewire.on('refresh-carousels', () => {
+                    console.log('Received refresh-carousels event (v2)');
+                    setTimeout(() => {
+                        initializeCarousels();
+                    }, 500);
+                });
+            }
         });
     </script>
     <!-- Flatpickr JS -->

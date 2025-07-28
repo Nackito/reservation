@@ -122,18 +122,8 @@
                         </div>
                     </div>
 
-                    {{-- Actions : filtres et effacement --}}
+                    {{-- Actions : effacement de la recherche --}}
                     <div class="flex gap-2">
-                        {{-- Bouton d'affichage des filtres --}}
-                        <button
-                            type="button"
-                            wire:click="toggleFilters"
-                            class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 px-4 rounded-lg transition duration-200 flex items-center justify-center"
-                            title="Filtres avancés">
-                            <i class="fas fa-filter mr-2"></i>
-                            Filtres
-                        </button>
-
                         {{--
                             Bouton d'effacement de la recherche
                             Affiché seulement quand il y a des résultats de recherche actifs
@@ -142,10 +132,17 @@
                         <button
                             type="button"
                             wire:click="clearSearch"
-                            class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 px-4 rounded-lg transition duration-200"
+                            class="w-full bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 px-4 rounded-lg transition duration-200 flex items-center justify-center"
                             title="Effacer la recherche">
-                            <i class="fas fa-times"></i>
+                            <i class="fas fa-times mr-2"></i>
+                            Effacer la recherche
                         </button>
+                        @else
+                        {{-- Message informatif quand pas de recherche active --}}
+                        <div class="w-full text-center py-3 text-gray-500 text-sm">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Les filtres apparaîtront après votre recherche
+                        </div>
                         @endif
                     </div>
                 </div>
@@ -667,7 +664,8 @@
 
         {{-- Conteneur Swiper optimisé pour le carrousel des propriétés --}}
         <div class="swiper-container property-carousel max-w-full mx-auto relative"
-            data-swiper-slides="{{ count($properties) }}">
+            data-swiper-slides="{{ count($properties) }}"
+            wire:key="property-carousel-{{ md5(json_encode($properties->pluck('id')->toArray())) }}">
 
             {{-- Wrapper contenant les slides --}}
             <div class="swiper-wrapper">
@@ -842,7 +840,8 @@
 
             {{-- Conteneur Swiper pour les villes --}}
             <div class="swiper-container cities-carousel max-w-full mx-auto relative"
-                data-swiper-slides="{{ count($popularCities) }}">
+                data-swiper-slides="{{ count($popularCities) }}"
+                wire:key="cities-carousel-{{ md5(json_encode($popularCities->pluck('city')->toArray())) }}">
 
                 {{-- Wrapper contenant les slides des villes --}}
                 <div class="swiper-wrapper">

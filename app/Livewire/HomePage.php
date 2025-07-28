@@ -97,8 +97,13 @@ class HomePage extends Component
             $this->showCitySuggestions = false;
             $this->citySuggestions = [];
 
-            // Si la recherche est vide, revenir à l'affichage par défaut
-            if (empty($this->searchMunicipality) && empty($this->propertyType) && empty($this->minPrice) && empty($this->maxPrice) && empty($this->minRooms) && empty($this->selectedAmenities)) {
+            // Ne pas changer showResults si clearSearch est en cours
+            // Vérifier si tous les critères de recherche sont vides
+            if (
+                empty($this->searchMunicipality) && empty($this->propertyType) &&
+                empty($this->minPrice) && empty($this->maxPrice) &&
+                empty($this->minRooms) && empty($this->selectedAmenities)
+            ) {
                 $this->showResults = false;
             }
         }
@@ -123,8 +128,13 @@ class HomePage extends Component
             $this->showMunicipalitySuggestions = false;
             $this->municipalitySuggestions = [];
 
-            // Si la recherche est vide, revenir à l'affichage par défaut
-            if (empty($this->searchCity) && empty($this->propertyType) && empty($this->minPrice) && empty($this->maxPrice) && empty($this->minRooms) && empty($this->selectedAmenities)) {
+            // Ne pas changer showResults si clearSearch est en cours
+            // Vérifier si tous les critères de recherche sont vides
+            if (
+                empty($this->searchCity) && empty($this->propertyType) &&
+                empty($this->minPrice) && empty($this->maxPrice) &&
+                empty($this->minRooms) && empty($this->selectedAmenities)
+            ) {
                 $this->showResults = false;
             }
         }
@@ -162,14 +172,32 @@ class HomePage extends Component
 
     public function clearSearch()
     {
-        $this->searchCity = '';
-        $this->searchMunicipality = '';
+        // Désactiver d'abord l'affichage des résultats pour éviter les conflits
         $this->showResults = false;
+
+        // Vider les suggestions en premier
         $this->showCitySuggestions = false;
         $this->citySuggestions = [];
         $this->showMunicipalitySuggestions = false;
         $this->municipalitySuggestions = [];
-        $this->clearFilters();
+
+        // Vider les filtres avant les champs de recherche
+        $this->propertyType = '';
+        $this->minPrice = '';
+        $this->maxPrice = '';
+        $this->minRooms = '';
+        $this->maxRooms = '';
+        $this->selectedAmenities = [];
+
+        // Vider les champs de recherche en dernier
+        $this->searchCity = '';
+        $this->searchMunicipality = '';
+
+        // Masquer les filtres mobiles si affichés
+        $this->showFilters = false;
+
+        // Déclencher l'événement pour réinitialiser les carrousels
+        $this->dispatch('refresh-carousels');
     }
 
     public function toggleFilters()

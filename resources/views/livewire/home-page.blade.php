@@ -673,7 +673,7 @@
                 @foreach($properties as $index => $property)
                 <div class="swiper-slide" data-swiper-slide-index="{{ $index }}">
                     {{-- Carte de propriété optimisée dans le carrousel --}}
-                    <div class="property-card shadow-md rounded-lg overflow-hidden w-full h-full hover:shadow-lg transition-shadow duration-300">
+                    <div class="property-card shadow-md rounded-lg overflow-hidden max-w-md w-full h-full hover:shadow-lg transition-shadow duration-300 mx-auto">
 
                         {{-- Container d'image avec lazy loading et lien vers booking --}}
                         <div class="property-image-container relative overflow-hidden">
@@ -700,7 +700,7 @@
                                 {{ $property->price_per_night ?? 'N/A' }} €/nuit
                             </div>
                         </div> {{-- Contenu de la carte optimisé --}}
-                        <div class="property-content p-4 flex flex-col h-96 overflow-hidden">
+                        <div class="property-content p-4 flex flex-col h-80 overflow-hidden">
                             {{-- En-tête avec nom et localisation --}}
                             <div class="property-header mb-3">
                                 <h3 class="property-title text-lg font-semibold text-gray-800 mb-1 line-clamp-1">
@@ -788,12 +788,23 @@
 
                             {{-- Pied de carte avec bouton de réservation --}}
                             <div class="property-footer mt-auto pt-2 flex-shrink-0">
-                                <a href="{{ route('booking-manager', ['propertyId' => $property->id]) }}"
-                                    class="property-cta inline-flex items-center justify-center w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2.5 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                                    aria-label="Réserver {{ $property->name }}">
-                                    <i class="fas fa-calendar-check mr-2" aria-hidden="true"></i>
-                                    Réserver maintenant
-                                </a>
+                                {{-- Affichage de la note de l'hébergement (étoiles) --}}
+                                @php
+                                $rating = $property->average_rating ?? 0;
+                                $maxStars = 5;
+                                @endphp
+                                <div class="flex items-center gap-1">
+                                    @for ($i = 1; $i <= $maxStars; $i++)
+                                        @if ($i <=floor($rating))
+                                        <i class="fas fa-star text-yellow-400"></i>
+                                        @elseif ($i - $rating > 0 && $i - $rating < 1)
+                                            <i class="fas fa-star-half-alt text-yellow-400"></i>
+                                            @else
+                                            <i class="far fa-star text-yellow-300"></i>
+                                            @endif
+                                            @endfor
+                                            <span class="ml-2 text-sm text-gray-600">{{ number_format($rating, 1) }}/5</span>
+                                </div>
                             </div>
                         </div>
                     </div>

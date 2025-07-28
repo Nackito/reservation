@@ -700,7 +700,7 @@
                                 {{ $property->price_per_night ?? 'N/A' }} €/nuit
                             </div>
                         </div> {{-- Contenu de la carte optimisé --}}
-                        <div class="property-content p-4 flex flex-col h-full">
+                        <div class="property-content p-4 flex flex-col h-96 overflow-hidden">
                             {{-- En-tête avec nom et localisation --}}
                             <div class="property-header mb-3">
                                 <h3 class="property-title text-lg font-semibold text-gray-800 mb-1 line-clamp-1">
@@ -744,7 +744,7 @@
                             </div>
 
                             {{-- Description avec limitation de lignes --}}
-                            <div class="property-description flex-grow mb-3">
+                            <div class="property-description mb-2 max-h-10 overflow-hidden flex-shrink-0">
                                 <p class="text-gray-500 text-sm line-clamp-2">
                                     {{ $property->description ?? 'Description non disponible' }}
                                 </p>
@@ -752,7 +752,7 @@
 
                             {{-- Commodités principales pour le carrousel --}}
                             @if($property->features && count($property->features) > 0)
-                            <div class="mb-3 flex flex-wrap gap-1">
+                            <div class="mb-2 flex flex-wrap gap-1 min-h-[24px] flex-shrink-0">
                                 @foreach(array_slice($property->features, 0, 2) as $feature)
                                 <span class="inline-flex items-center px-1.5 py-0.5 bg-gray-50 text-gray-600 rounded text-xs">
                                     @switch(strtolower($feature))
@@ -787,7 +787,7 @@
                             @endif
 
                             {{-- Pied de carte avec bouton de réservation --}}
-                            <div class="property-footer mt-auto">
+                            <div class="property-footer mt-auto pt-2 flex-shrink-0">
                                 <a href="{{ route('booking-manager', ['propertyId' => $property->id]) }}"
                                     class="property-cta inline-flex items-center justify-center w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2.5 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                                     aria-label="Réserver {{ $property->name }}">

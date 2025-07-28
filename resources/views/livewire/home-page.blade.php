@@ -157,16 +157,35 @@
                         La recherche se fait automatiquement pendant que vous tapez
                     </p>
                 </div>
+            </div>
+        </div>
+    </div>
 
-                {{-- Section des filtres avancés --}}
-                @if($showFilters)
-                <div class="mt-6 p-4 bg-gray-50 rounded-lg border">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4 flex items-center">
-                        <i class="fas fa-sliders-h mr-2 text-blue-600"></i>
-                        Filtres avancés
-                    </h3>
+    {{-- Section d'affichage des résultats de recherche ou des propriétés populaires --}}
+    <div class="container mx-auto mt-8 px-4">
+        {{-- Condition : affichage différent selon si une recherche est active --}}
+        @if($showResults)
+        {{-- Layout avec sidebar pour les filtres --}}
+        <div class="flex flex-col lg:flex-row gap-6">
+            {{-- Sidebar des filtres (à gauche) --}}
+            <div class="lg:w-1/4 xl:w-1/5">
+                {{-- Filtres permanents dans la sidebar --}}
+                <div class="bg-white rounded-lg shadow-lg p-6 sticky top-24">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <i class="fas fa-sliders-h mr-2 text-blue-600"></i>
+                            Filtres
+                        </h3>
+                        <button
+                            wire:click="clearFilters"
+                            class="text-sm text-gray-500 hover:text-gray-700 flex items-center transition duration-200">
+                            <i class="fas fa-times mr-1"></i>
+                            Effacer
+                        </button>
+                    </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {{-- Filtres de recherche --}}
+                    <div class="space-y-6">
                         {{-- Filtre type de propriété --}}
                         <div>
                             <label for="propertyType" class="block text-sm font-medium text-gray-700 mb-2">
@@ -175,7 +194,7 @@
                             <select
                                 id="propertyType"
                                 wire:model.live="propertyType"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900">
+                                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900">
                                 <option value="">Tous les types</option>
                                 @foreach($propertyTypes as $type)
                                 <option value="{{ $type }}">{{ ucfirst($type) }}</option>
@@ -183,32 +202,25 @@
                             </select>
                         </div>
 
-                        {{-- Filtre prix minimum --}}
+                        {{-- Filtre prix --}}
                         <div>
-                            <label for="minPrice" class="block text-sm font-medium text-gray-700 mb-2">
-                                <i class="fas fa-euro-sign mr-1"></i>Prix min./nuit
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-euro-sign mr-1"></i>Prix par nuit
                             </label>
-                            <input
-                                type="number"
-                                id="minPrice"
-                                wire:model.live="minPrice"
-                                placeholder="Prix minimum"
-                                min="0"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900">
-                        </div>
-
-                        {{-- Filtre prix maximum --}}
-                        <div>
-                            <label for="maxPrice" class="block text-sm font-medium text-gray-700 mb-2">
-                                <i class="fas fa-euro-sign mr-1"></i>Prix max./nuit
-                            </label>
-                            <input
-                                type="number"
-                                id="maxPrice"
-                                wire:model.live="maxPrice"
-                                placeholder="Prix maximum"
-                                min="0"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900">
+                            <div class="grid grid-cols-2 gap-2">
+                                <input
+                                    type="number"
+                                    wire:model.live="minPrice"
+                                    placeholder="Min"
+                                    min="0"
+                                    class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900">
+                                <input
+                                    type="number"
+                                    wire:model.live="maxPrice"
+                                    placeholder="Max"
+                                    min="0"
+                                    class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900">
+                            </div>
                         </div>
 
                         {{-- Filtre nombre de chambres --}}
@@ -219,7 +231,7 @@
                             <select
                                 id="minRooms"
                                 wire:model.live="minRooms"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900">
+                                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900">
                                 <option value="">Peu importe</option>
                                 <option value="1">1+ chambre</option>
                                 <option value="2">2+ chambres</option>
@@ -228,311 +240,424 @@
                                 <option value="5">5+ chambres</option>
                             </select>
                         </div>
-                    </div>
 
-                    {{-- Section des commodités --}}
-                    <div class="mt-6">
-                        <h4 class="text-md font-medium text-gray-900 mb-3 flex items-center">
-                            <i class="fas fa-star mr-2 text-yellow-600"></i>
-                            Commodités
-                        </h4>
-                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2">
-                            @foreach($availableAmenities as $amenity)
-                            <label class="flex items-center space-x-2 p-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition duration-150">
-                                <input
-                                    type="checkbox"
-                                    wire:model.live="selectedAmenities"
-                                    value="{{ $amenity }}"
-                                    class="text-blue-600 border-gray-300 rounded focus:ring-blue-500 focus:ring-2">
-                                <span class="text-sm text-gray-700">
-                                    @switch(strtolower($amenity))
-                                    @case('wifi')
-                                    @case('wi-fi')
-                                    <i class="fas fa-wifi text-blue-500 mr-1"></i>
-                                    @break
-                                    @case('piscine')
-                                    @case('pool')
-                                    <i class="fas fa-swimming-pool text-blue-500 mr-1"></i>
-                                    @break
-                                    @case('parking')
-                                    <i class="fas fa-parking text-blue-500 mr-1"></i>
-                                    @break
-                                    @case('climatisation')
-                                    @case('air conditioning')
-                                    @case('ac')
-                                    <i class="fas fa-snowflake text-blue-500 mr-1"></i>
-                                    @break
-                                    @case('cuisine')
-                                    @case('kitchen')
-                                    @case('kitchenette')
-                                    <i class="fas fa-utensils text-blue-500 mr-1"></i>
-                                    @break
-                                    @case('télévision')
-                                    @case('tv')
-                                    @case('television')
-                                    <i class="fas fa-tv text-blue-500 mr-1"></i>
-                                    @break
-                                    @case('jardin')
-                                    @case('garden')
-                                    <i class="fas fa-leaf text-green-500 mr-1"></i>
-                                    @break
-                                    @case('balcon')
-                                    @case('balcony')
-                                    @case('terrasse')
-                                    @case('terrace')
-                                    <i class="fas fa-door-open text-blue-500 mr-1"></i>
-                                    @break
-                                    @case('salle de sport')
-                                    @case('gym')
-                                    @case('fitness')
-                                    <i class="fas fa-dumbbell text-blue-500 mr-1"></i>
-                                    @break
-                                    @case('ascenseur')
-                                    @case('elevator')
-                                    @case('lift')
-                                    <i class="fas fa-elevator text-blue-500 mr-1"></i>
-                                    @break
-                                    @case('sécurité')
-                                    @case('security')
-                                    @case('gardien')
-                                    <i class="fas fa-shield-alt text-blue-500 mr-1"></i>
-                                    @break
-                                    @default
-                                    <i class="fas fa-check text-green-500 mr-1"></i>
-                                    @endswitch
-                                    {{ ucfirst($amenity) }}
-                                </span>
+                        {{-- Commodités --}}
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-3">
+                                <i class="fas fa-star mr-1 text-yellow-600"></i>Commodités
                             </label>
-                            @endforeach
+                            <div class="space-y-2 max-h-48 overflow-y-auto">
+                                @foreach($availableAmenities as $amenity)
+                                <label class="flex items-center space-x-2 p-2 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition duration-150">
+                                    <input
+                                        type="checkbox"
+                                        wire:model.live="selectedAmenities"
+                                        value="{{ $amenity }}"
+                                        class="text-blue-600 border-gray-300 rounded focus:ring-blue-500 focus:ring-2">
+                                    <span class="text-sm text-gray-700 flex items-center">
+                                        @switch(strtolower($amenity))
+                                        @case('wifi')
+                                        @case('wi-fi')
+                                        <i class="fas fa-wifi text-blue-500 mr-2"></i>
+                                        @break
+                                        @case('piscine')
+                                        @case('pool')
+                                        <i class="fas fa-swimming-pool text-blue-500 mr-2"></i>
+                                        @break
+                                        @case('parking')
+                                        <i class="fas fa-parking text-blue-500 mr-2"></i>
+                                        @break
+                                        @case('climatisation')
+                                        @case('air conditioning')
+                                        @case('ac')
+                                        <i class="fas fa-snowflake text-blue-500 mr-2"></i>
+                                        @break
+                                        @case('cuisine')
+                                        @case('kitchen')
+                                        @case('kitchenette')
+                                        <i class="fas fa-utensils text-blue-500 mr-2"></i>
+                                        @break
+                                        @case('télévision')
+                                        @case('tv')
+                                        @case('television')
+                                        <i class="fas fa-tv text-blue-500 mr-2"></i>
+                                        @break
+                                        @case('jardin')
+                                        @case('garden')
+                                        <i class="fas fa-leaf text-green-500 mr-2"></i>
+                                        @break
+                                        @case('balcon')
+                                        @case('balcony')
+                                        @case('terrasse')
+                                        @case('terrace')
+                                        <i class="fas fa-door-open text-blue-500 mr-2"></i>
+                                        @break
+                                        @case('salle de sport')
+                                        @case('gym')
+                                        @case('fitness')
+                                        <i class="fas fa-dumbbell text-blue-500 mr-2"></i>
+                                        @break
+                                        @case('ascenseur')
+                                        @case('elevator')
+                                        @case('lift')
+                                        <i class="fas fa-elevator text-blue-500 mr-2"></i>
+                                        @break
+                                        @case('sécurité')
+                                        @case('security')
+                                        @case('gardien')
+                                        <i class="fas fa-shield-alt text-blue-500 mr-2"></i>
+                                        @break
+                                        @default
+                                        <i class="fas fa-check text-green-500 mr-2"></i>
+                                        @endswitch
+                                        {{ ucfirst($amenity) }}
+                                    </span>
+                                </label>
+                                @endforeach
+                            </div>
                         </div>
                     </div>
 
-                    {{-- Boutons d'action des filtres --}}
-                    <div class="flex justify-between items-center mt-4 pt-4 border-t border-gray-200">
-                        <button
-                            type="button"
-                            wire:click="clearFilters"
-                            class="text-gray-600 hover:text-gray-800 text-sm font-medium flex items-center transition duration-200">
-                            <i class="fas fa-eraser mr-1"></i>
-                            Effacer les filtres
-                        </button>
-
-                        <div class="text-sm text-gray-500">
+                    {{-- Info sur les filtres automatiques --}}
+                    <div class="mt-4 pt-4 border-t border-gray-200">
+                        <div class="text-xs text-gray-500 text-center">
                             <i class="fas fa-info-circle mr-1"></i>
                             Les filtres s'appliquent automatiquement
                         </div>
                     </div>
                 </div>
-                @endif
             </div>
-        </div>
-    </div>
 
-    {{-- Section d'affichage des résultats de recherche ou des propriétés populaires --}}
-    <div class="container mx-auto mt-8 px-4">
-        {{-- Condition : affichage différent selon si une recherche est active --}}
-        @if($showResults)
-        {{-- En-tête des résultats de recherche avec critères dynamiques --}}
-        <div class="mb-6">
-            <h2 class="text-3xl font-bold text-gray-800 mb-2">
-                Résultats de recherche
-                {{-- Affichage conditionnel des critères de recherche --}}
-                @if($searchCity || $searchMunicipality)
-                pour
-                @if($searchCity)
-                <span class="text-blue-600">"{{ $searchCity }}"</span>
-                @endif
-                @if($searchCity && $searchMunicipality)
-                ,
-                @endif
-                @if($searchMunicipality)
-                <span class="text-blue-600">"{{ $searchMunicipality }}"</span>
-                @endif
-                @endif
-            </h2>
-
-            {{-- Affichage des filtres actifs --}}
-            @if($propertyType || $minPrice || $maxPrice || $minRooms || !empty($selectedAmenities))
-            <div class="mb-3 flex flex-wrap gap-2">
-                @if($propertyType)
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
-                    <i class="fas fa-home mr-1"></i>
-                    {{ ucfirst($propertyType) }}
-                </span>
-                @endif
-
-                @if($minPrice)
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800">
-                    <i class="fas fa-euro-sign mr-1"></i>
-                    Min: {{ $minPrice }}€
-                </span>
-                @endif
-
-                @if($maxPrice)
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800">
-                    <i class="fas fa-euro-sign mr-1"></i>
-                    Max: {{ $maxPrice }}€
-                </span>
-                @endif
-
-                @if($minRooms)
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-purple-100 text-purple-800">
-                    <i class="fas fa-bed mr-1"></i>
-                    {{ $minRooms }}+ chambres
-                </span>
-                @endif
-
-                @if(!empty($selectedAmenities))
-                @foreach($selectedAmenities as $amenity)
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-yellow-100 text-yellow-800">
-                    <i class="fas fa-star mr-1"></i>
-                    {{ ucfirst($amenity) }}
-                </span>
-                @endforeach
-                @endif
-            </div>
-            @endif
-
-            {{-- Compteur de propriétés trouvées --}}
-            <p class="text-gray-600 text-lg">{{ count($properties) }} propriété(s) trouvée(s)</p>
-        </div>
-
-        {{-- Grid des propriétés trouvées ou message d'absence de résultats --}}
-        @if(count($properties) > 0)
-        {{-- Grille responsive des propriétés : 1 colonne mobile, 2 tablette, 3 desktop --}}
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {{-- Boucle sur chaque propriété trouvée --}}
-            @foreach($properties as $property)
-            {{-- Carte de propriété avec effet hover --}}
-            <div class="shadow-lg rounded-lg overflow-hidden hover:shadow-xl transition duration-200">
-                {{-- Image de la propriété avec lien : première image ou image par défaut --}}
-                <a href="{{ route('booking-manager', ['propertyId' => $property->id]) }}"
-                    class="block"
-                    aria-label="Réserver {{ $property->name }}">
-                    @if($property->firstImage())
-                    <img src="{{ asset('storage/' . $property->firstImage()->image_path) }}"
-                        alt="{{ $property->name }}"
-                        class="w-full h-48 object-cover hover:scale-105 transition-transform duration-300">
-                    @else
-                    <img src="{{ asset('images/default-image.jpg') }}"
-                        alt="{{ $property->name ?? 'propriété' }}"
-                        class="w-full h-48 object-cover hover:scale-105 transition-transform duration-300">
-                    @endif
-                </a>
-
-                {{-- Contenu de la carte --}}
-                <div class="p-4">
-                    {{-- Nom de la propriété avec lien --}}
-                    <h3 class="text-lg font-semibold text-gray-800 mb-2">
-                        <a href="{{ route('booking-manager', ['propertyId' => $property->id]) }}"
-                            class="hover:text-blue-600 transition-colors duration-200"
-                            aria-label="Réserver {{ $property->name }}">
-                            {{ $property->name ?? 'Nom non disponible' }}
-                        </a>
-                    </h3>
-
-                    {{-- Localisation : ville et quartier --}}
-                    <p class="text-gray-600 mb-2">
-                        <i class="fas fa-map-marker-alt mr-1"></i>
-                        {{ $property->city ?? 'Ville non disponible' }}
-                        @if($property->municipality)
-                        , {{ $property->municipality }}
+            {{-- Contenu principal (à droite) --}}
+            <div class="lg:w-3/4 xl:w-4/5">
+                {{-- En-tête des résultats de recherche avec critères dynamiques --}}
+                <div class="mb-6">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-2">
+                        Résultats de recherche
+                        {{-- Affichage conditionnel des critères de recherche --}}
+                        @if($searchCity || $searchMunicipality)
+                        pour
+                        @if($searchCity)
+                        <span class="text-blue-600">"{{ $searchCity }}"</span>
                         @endif
-                    </p>
+                        @if($searchCity && $searchMunicipality)
+                        ,
+                        @endif
+                        @if($searchMunicipality)
+                        <span class="text-blue-600">"{{ $searchMunicipality }}"</span>
+                        @endif
+                        @endif
+                    </h2>
 
-                    {{-- Type de logement --}}
-                    @if($property->property_type)
-                    <div class="mb-2">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    {{-- Affichage des filtres actifs --}}
+                    @if($propertyType || $minPrice || $maxPrice || $minRooms || !empty($selectedAmenities))
+                    <div class="mb-3 flex flex-wrap gap-2">
+                        @if($propertyType)
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
                             <i class="fas fa-home mr-1"></i>
-                            {{ ucfirst($property->property_type) }}
-                        </span>
-                        {{-- Nombre de chambres --}}
-                        @if($property->number_of_rooms)
-                        <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                            <i class="fas fa-bed mr-1"></i>
-                            {{ $property->number_of_rooms }} chambre{{ $property->number_of_rooms > 1 ? 's' : '' }}
+                            {{ ucfirst($propertyType) }}
                         </span>
                         @endif
-                    </div>
-                    @elseif($property->number_of_rooms)
-                    <div class="mb-2">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                            <i class="fas fa-bed mr-1"></i>
-                            {{ $property->number_of_rooms }} chambre{{ $property->number_of_rooms > 1 ? 's' : '' }}
+
+                        @if($minPrice)
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800">
+                            <i class="fas fa-euro-sign mr-1"></i>
+                            Min: {{ $minPrice }}€
                         </span>
-                    </div>
-                    @endif
+                        @endif
 
-                    {{-- Description tronquée --}}
-                    <p class="text-gray-500 mb-3">
-                        {{ Str::words($property->description ?? 'Description non disponible', 15, '...') }}
-                    </p>
+                        @if($maxPrice)
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800">
+                            <i class="fas fa-euro-sign mr-1"></i>
+                            Max: {{ $maxPrice }}€
+                        </span>
+                        @endif
 
-                    {{-- Commodités principales --}}
-                    @if($property->features && count($property->features) > 0)
-                    <div class="mb-3 flex flex-wrap gap-1">
-                        @foreach(array_slice($property->features, 0, 3) as $feature)
-                        <span class="inline-flex items-center px-2 py-1 bg-gray-50 text-gray-600 rounded text-xs">
-                            @switch(strtolower($feature))
-                            @case('wifi')
-                            @case('wi-fi')
-                            <i class="fas fa-wifi mr-1"></i>
-                            @break
-                            @case('piscine')
-                            @case('pool')
-                            <i class="fas fa-swimming-pool mr-1"></i>
-                            @break
-                            @case('parking')
-                            <i class="fas fa-parking mr-1"></i>
-                            @break
-                            @case('climatisation')
-                            @case('air conditioning')
-                            @case('ac')
-                            <i class="fas fa-snowflake mr-1"></i>
-                            @break
-                            @default
-                            <i class="fas fa-check mr-1"></i>
-                            @endswitch
-                            {{ ucfirst($feature) }}
+                        @if($minRooms)
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-purple-100 text-purple-800">
+                            <i class="fas fa-bed mr-1"></i>
+                            {{ $minRooms }}+ chambres
+                        </span>
+                        @endif
+
+                        @if(!empty($selectedAmenities))
+                        @foreach($selectedAmenities as $amenity)
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-yellow-100 text-yellow-800">
+                            <i class="fas fa-star mr-1"></i>
+                            {{ ucfirst($amenity) }}
                         </span>
                         @endforeach
-                        @if(count($property->features) > 3)
-                        <span class="inline-flex items-center px-2 py-1 bg-blue-50 text-blue-600 rounded text-xs">
-                            +{{ count($property->features) - 3 }} autres
-                        </span>
                         @endif
                     </div>
                     @endif
 
-                    {{-- Ligne de bas : prix et bouton de réservation --}}
-                    <div class="flex justify-between items-center">
-                        {{-- Prix par nuit --}}
-                        <span class="text-lg font-bold text-blue-600">
-                            {{ $property->price_per_night ?? 'Prix non disponible' }} €/nuit
-                        </span>
+                    {{-- Actions de tri et vue mobile --}}
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
+                        {{-- Compteur de propriétés trouvées --}}
+                        <p class="text-gray-600 text-lg mb-2 sm:mb-0">{{ count($properties) }} propriété(s) trouvée(s)</p>
+
+                        {{-- Bouton pour afficher les filtres sur mobile --}}
+                        <div class="lg:hidden">
+                            <button
+                                wire:click="toggleFilters"
+                                class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200">
+                                <i class="fas fa-filter mr-2"></i>
+                                Filtres
+                                @if($showFilters)
+                                <i class="fas fa-chevron-up ml-2"></i>
+                                @else
+                                <i class="fas fa-chevron-down ml-2"></i>
+                                @endif
+                            </button>
+                        </div>
                     </div>
                 </div>
+
+                {{-- Filtres mobiles (masqués par défaut) --}}
+                @if($showFilters)
+                <div class="lg:hidden mb-6">
+                    <div class="bg-white rounded-lg shadow-lg p-4 border">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                            <i class="fas fa-sliders-h mr-2 text-blue-600"></i>
+                            Filtres
+                        </h3>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {{-- Filtre type de propriété --}}
+                            <div>
+                                <label for="propertyTypeMobile" class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-home mr-1"></i>Type de logement
+                                </label>
+                                <select
+                                    id="propertyTypeMobile"
+                                    wire:model.live="propertyType"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900">
+                                    <option value="">Tous les types</option>
+                                    @foreach($propertyTypes as $type)
+                                    <option value="{{ $type }}">{{ ucfirst($type) }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            {{-- Filtre prix minimum --}}
+                            <div>
+                                <label for="minPriceMobile" class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-euro-sign mr-1"></i>Prix min./nuit
+                                </label>
+                                <input
+                                    type="number"
+                                    id="minPriceMobile"
+                                    wire:model.live="minPrice"
+                                    placeholder="Prix minimum"
+                                    min="0"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900">
+                            </div>
+
+                            {{-- Filtre prix maximum --}}
+                            <div>
+                                <label for="maxPriceMobile" class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-euro-sign mr-1"></i>Prix max./nuit
+                                </label>
+                                <input
+                                    type="number"
+                                    id="maxPriceMobile"
+                                    wire:model.live="maxPrice"
+                                    placeholder="Prix maximum"
+                                    min="0"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900">
+                            </div>
+
+                            {{-- Filtre nombre de chambres --}}
+                            <div>
+                                <label for="minRoomsMobile" class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-bed mr-1"></i>Chambres
+                                </label>
+                                <select
+                                    id="minRoomsMobile"
+                                    wire:model.live="minRooms"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900">
+                                    <option value="">Peu importe</option>
+                                    <option value="1">1+ chambre</option>
+                                    <option value="2">2+ chambres</option>
+                                    <option value="3">3+ chambres</option>
+                                    <option value="4">4+ chambres</option>
+                                    <option value="5">5+ chambres</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        {{-- Commodités pour mobile --}}
+                        <div class="mt-4">
+                            <h4 class="text-md font-medium text-gray-900 mb-3 flex items-center">
+                                <i class="fas fa-star mr-2 text-yellow-600"></i>
+                                Commodités
+                            </h4>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-32 overflow-y-auto">
+                                @foreach($availableAmenities as $amenity)
+                                <label class="flex items-center space-x-2 p-2 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 cursor-pointer transition duration-150">
+                                    <input
+                                        type="checkbox"
+                                        wire:model.live="selectedAmenities"
+                                        value="{{ $amenity }}"
+                                        class="text-blue-600 border-gray-300 rounded focus:ring-blue-500 focus:ring-2">
+                                    <span class="text-xs text-gray-700">{{ ucfirst($amenity) }}</span>
+                                </label>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        {{-- Boutons d'action des filtres mobiles --}}
+                        <div class="flex justify-between items-center mt-4 pt-4 border-t border-gray-200">
+                            <button
+                                type="button"
+                                wire:click="clearFilters"
+                                class="text-gray-600 hover:text-gray-800 text-sm font-medium flex items-center transition duration-200">
+                                <i class="fas fa-eraser mr-1"></i>
+                                Effacer les filtres
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                @endif
+
+                {{-- Grid des propriétés trouvées ou message d'absence de résultats --}}
+                @if(count($properties) > 0)
+                {{-- Grille responsive des propriétés : 1 colonne mobile, 2 tablette, 2 ou 3 desktop selon la sidebar --}}
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {{-- Boucle sur chaque propriété trouvée --}}
+                    @foreach($properties as $property)
+                    {{-- Carte de propriété avec effet hover --}}
+                    <div class="shadow-lg rounded-lg overflow-hidden hover:shadow-xl transition duration-200">
+                        {{-- Image de la propriété avec lien : première image ou image par défaut --}}
+                        <a href="{{ route('booking-manager', ['propertyId' => $property->id]) }}"
+                            class="block"
+                            aria-label="Réserver {{ $property->name }}">
+                            @if($property->firstImage())
+                            <img src="{{ asset('storage/' . $property->firstImage()->image_path) }}"
+                                alt="{{ $property->name }}"
+                                class="w-full h-48 object-cover hover:scale-105 transition-transform duration-300">
+                            @else
+                            <img src="{{ asset('images/default-image.jpg') }}"
+                                alt="{{ $property->name ?? 'propriété' }}"
+                                class="w-full h-48 object-cover hover:scale-105 transition-transform duration-300">
+                            @endif
+                        </a>
+
+                        {{-- Contenu de la carte --}}
+                        <div class="p-4">
+                            {{-- Nom de la propriété avec lien --}}
+                            <h3 class="text-lg font-semibold text-gray-800 mb-2">
+                                <a href="{{ route('booking-manager', ['propertyId' => $property->id]) }}"
+                                    class="hover:text-blue-600 transition-colors duration-200"
+                                    aria-label="Réserver {{ $property->name }}">
+                                    {{ $property->name ?? 'Nom non disponible' }}
+                                </a>
+                            </h3>
+
+                            {{-- Localisation : ville et quartier --}}
+                            <p class="text-gray-600 mb-2">
+                                <i class="fas fa-map-marker-alt mr-1"></i>
+                                {{ $property->city ?? 'Ville non disponible' }}
+                                @if($property->municipality)
+                                , {{ $property->municipality }}
+                                @endif
+                            </p>
+
+                            {{-- Type de logement --}}
+                            @if($property->property_type)
+                            <div class="mb-2">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                    <i class="fas fa-home mr-1"></i>
+                                    {{ ucfirst($property->property_type) }}
+                                </span>
+                                {{-- Nombre de chambres --}}
+                                @if($property->number_of_rooms)
+                                <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                    <i class="fas fa-bed mr-1"></i>
+                                    {{ $property->number_of_rooms }} chambre{{ $property->number_of_rooms > 1 ? 's' : '' }}
+                                </span>
+                                @endif
+                            </div>
+                            @elseif($property->number_of_rooms)
+                            <div class="mb-2">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                    <i class="fas fa-bed mr-1"></i>
+                                    {{ $property->number_of_rooms }} chambre{{ $property->number_of_rooms > 1 ? 's' : '' }}
+                                </span>
+                            </div>
+                            @endif
+
+                            {{-- Description tronquée --}}
+                            <p class="text-gray-500 mb-3">
+                                {{ Str::words($property->description ?? 'Description non disponible', 15, '...') }}
+                            </p>
+
+                            {{-- Commodités principales --}}
+                            @if($property->features && count($property->features) > 0)
+                            <div class="mb-3 flex flex-wrap gap-1">
+                                @foreach(array_slice($property->features, 0, 3) as $feature)
+                                <span class="inline-flex items-center px-2 py-1 bg-gray-50 text-gray-600 rounded text-xs">
+                                    @switch(strtolower($feature))
+                                    @case('wifi')
+                                    @case('wi-fi')
+                                    <i class="fas fa-wifi mr-1"></i>
+                                    @break
+                                    @case('piscine')
+                                    @case('pool')
+                                    <i class="fas fa-swimming-pool mr-1"></i>
+                                    @break
+                                    @case('parking')
+                                    <i class="fas fa-parking mr-1"></i>
+                                    @break
+                                    @case('climatisation')
+                                    @case('air conditioning')
+                                    @case('ac')
+                                    <i class="fas fa-snowflake mr-1"></i>
+                                    @break
+                                    @default
+                                    <i class="fas fa-check mr-1"></i>
+                                    @endswitch
+                                    {{ ucfirst($feature) }}
+                                </span>
+                                @endforeach
+                                @if(count($property->features) > 3)
+                                <span class="inline-flex items-center px-2 py-1 bg-blue-50 text-blue-600 rounded text-xs">
+                                    +{{ count($property->features) - 3 }} autres
+                                </span>
+                                @endif
+                            </div>
+                            @endif
+
+                            {{-- Ligne de bas : prix et bouton de réservation --}}
+                            <div class="flex justify-between items-center">
+                                {{-- Prix par nuit --}}
+                                <span class="text-lg font-bold text-blue-600">
+                                    {{ $property->price_per_night ?? 'Prix non disponible' }} €/nuit
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+                @else
+                {{-- Message affiché quand aucune propriété ne correspond aux critères --}}
+                <div class="text-center py-12">
+                    <div class="text-gray-400 mb-4">
+                        <i class="fas fa-search text-6xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-600 mb-2">Aucune propriété trouvée</h3>
+                    <p class="text-gray-500 mb-4">
+                        Essayez de modifier vos critères de recherche ou explorez toutes nos propriétés
+                    </p>
+                    {{-- Bouton pour effacer la recherche et voir toutes les propriétés --}}
+                    <button wire:click="clearSearch"
+                        class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition duration-200">
+                        Voir toutes les propriétés
+                    </button>
+                </div>
+                @endif
             </div>
-            @endforeach
         </div>
-        @else
-        {{-- Message affiché quand aucune propriété ne correspond aux critères --}}
-        <div class="text-center py-12">
-            <div class="text-gray-400 mb-4">
-                <i class="fas fa-search text-6xl"></i>
-            </div>
-            <h3 class="text-xl font-semibold text-gray-600 mb-2">Aucune propriété trouvée</h3>
-            <p class="text-gray-500 mb-4">
-                Essayez de modifier vos critères de recherche ou explorez toutes nos propriétés
-            </p>
-            {{-- Bouton pour effacer la recherche et voir toutes les propriétés --}}
-            <button wire:click="clearSearch"
-                class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition duration-200">
-                Voir toutes les propriétés
-            </button>
-        </div>
-        @endif
         @else
         {{-- Affichage par défaut : propriétés populaires avec carrousel Swiper optimisé --}}
         <div class="mb-6">

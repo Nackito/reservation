@@ -27,13 +27,13 @@
             </div>
 
             {{--
-                Formulaire de recherche avec autocomplétion
+                Formulaire de recherche avec autocomplétion et recherche automatique
                 - Recherche par ville avec suggestions prédéfinies + BDD
                 - Recherche par quartier/municipality depuis la BDD
-                - Boutons de recherche et d'effacement conditionnels
+                - Recherche automatique en temps réel
             --}}
             <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-6">
-                <form wire:submit.prevent="search" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
 
                     {{-- Champ de recherche par ville --}}
                     <div>
@@ -43,7 +43,7 @@
                         <div class="relative">
                             {{--
                                 Input de recherche ville avec modèle Livewire en temps réel
-                                wire:model.live déclenche la recherche à chaque caractère saisi
+                                wire:model.live déclenche automatiquement la recherche
                             --}}
                             <input
                                 type="text"
@@ -122,21 +122,13 @@
                         </div>
                     </div>
 
-                    {{-- Boutons d'action : recherche et effacement --}}
+                    {{-- Actions : filtres et effacement --}}
                     <div class="flex gap-2">
-                        {{-- Bouton de recherche principal --}}
-                        <button
-                            type="submit"
-                            class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200 flex items-center justify-center">
-                            <i class="fas fa-search mr-2"></i>
-                            Rechercher
-                        </button>
-
                         {{-- Bouton d'affichage des filtres --}}
                         <button
                             type="button"
                             wire:click="toggleFilters"
-                            class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 px-4 rounded-lg transition duration-200 flex items-center justify-center"
+                            class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 px-4 rounded-lg transition duration-200 flex items-center justify-center"
                             title="Filtres avancés">
                             <i class="fas fa-filter mr-2"></i>
                             Filtres
@@ -156,7 +148,15 @@
                         </button>
                         @endif
                     </div>
-                </form>
+                </div>
+
+                {{-- Info sur la recherche automatique --}}
+                <div class="mt-3 text-center">
+                    <p class="text-sm text-gray-500">
+                        <i class="fas fa-magic mr-1"></i>
+                        La recherche se fait automatiquement pendant que vous tapez
+                    </p>
+                </div>
 
                 {{-- Section des filtres avancés --}}
                 @if($showFilters)

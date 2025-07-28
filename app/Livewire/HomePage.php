@@ -90,9 +90,17 @@ class HomePage extends Component
                 ->toArray();
 
             $this->showCitySuggestions = !empty($this->citySuggestions);
+
+            // Déclencher automatiquement la recherche
+            $this->showResults = true;
         } else {
             $this->showCitySuggestions = false;
             $this->citySuggestions = [];
+
+            // Si la recherche est vide, revenir à l'affichage par défaut
+            if (empty($this->searchMunicipality) && empty($this->propertyType) && empty($this->minPrice) && empty($this->maxPrice) && empty($this->minRooms) && empty($this->selectedAmenities)) {
+                $this->showResults = false;
+            }
         }
     }
 
@@ -108,9 +116,17 @@ class HomePage extends Component
                 ->toArray();
 
             $this->showMunicipalitySuggestions = !empty($this->municipalitySuggestions);
+
+            // Déclencher automatiquement la recherche
+            $this->showResults = true;
         } else {
             $this->showMunicipalitySuggestions = false;
             $this->municipalitySuggestions = [];
+
+            // Si la recherche est vide, revenir à l'affichage par défaut
+            if (empty($this->searchCity) && empty($this->propertyType) && empty($this->minPrice) && empty($this->maxPrice) && empty($this->minRooms) && empty($this->selectedAmenities)) {
+                $this->showResults = false;
+            }
         }
     }
 
@@ -169,6 +185,42 @@ class HomePage extends Component
         $this->minRooms = '';
         $this->maxRooms = '';
         $this->selectedAmenities = [];
+
+        // Si aucun autre critère de recherche n'est actif, revenir à l'affichage par défaut
+        if (empty($this->searchCity) && empty($this->searchMunicipality)) {
+            $this->showResults = false;
+        }
+    }
+
+    // Méthodes pour déclencher automatiquement la recherche quand les filtres changent
+    public function updatedPropertyType()
+    {
+        $this->showResults = true;
+    }
+
+    public function updatedMinPrice()
+    {
+        $this->showResults = true;
+    }
+
+    public function updatedMaxPrice()
+    {
+        $this->showResults = true;
+    }
+
+    public function updatedMinRooms()
+    {
+        $this->showResults = true;
+    }
+
+    public function updatedMaxRooms()
+    {
+        $this->showResults = true;
+    }
+
+    public function updatedSelectedAmenities()
+    {
+        $this->showResults = true;
     }
 
     public function searchByCity($city)

@@ -1,4 +1,5 @@
 <div>
+    <!-- Début du composant Livewire : tout est enveloppé dans ce div racine -->
     <div class="container mx-auto py-8">
         <h1 class="block text-3xl font-bold text-gray-800 sm:text-4xl lg:text-6xl lg:leading-tight dark:text-white">Entrez vos dates</h1>
 
@@ -45,137 +46,152 @@
     <div class="container bg-white mx-auto mt-8">
         <!-- Overview section -->
         <div id="overview" class="bg-white shadow-md rounded-lg overflow-hidden w-61 h-90">
-            <div class="pl-4 pt-6">
-                <h2 class="text-2xl lg:text-3xl text-gray-800 font-inter font-extrabold">{{ $property->name ?? 'Nom non disponible' }}</h2>
-                <p class="text-lg lg:text-xl text-gray-700">
-                    <i class="fas fa-map-marker-alt text-blue-500 mr-2"></i>
-                    {{ $property->city ?? 'Ville non disponible' }}, {{ $property->municipality }}, {{ $property->district ?? 'Quartier non disponible' }}
-                </p>
-            </div>
-
-            <div class="container mx-auto mt-8 grid grid-cols-1 lg:grid-cols-3 gap-4">
-                <!-- Section des images (2/3) -->
-                <div id="PropertyImage" class="lg:col-span-2 pl-4 pr-4">
-                    <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                        @foreach($property->images as $index => $image)
-                        @if ($index < 3)
-                            <div class="image-container {{ $index % 3 === 0 ? 'large' : 'small' }}">
-                            <img src="{{ asset('storage/' . $image->image_path) }}" alt="Image de la propriété" class="w-full h-auto object-cover rounded-lg">
-                            @if($index === 2 && $property->images->count() > 3)
-                            <div class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center text-white text-lg font-bold cursor-pointer" onclick="openGallery()">
-                                +{{ $property->images->count() - 3 }}
-                            </div>
-                            @endif
-                    </div>
-                    @endif
-                    @endforeach
+            <div class="flex justify-between items-start pl-4 pt-6 pr-4">
+                <div>
+                    <h2 class="text-2xl lg:text-3xl text-gray-800 font-inter font-extrabold">{{ $property->name ?? 'Nom non disponible' }}</h2>
+                    <p class="text-lg lg:text-xl text-gray-700">
+                        <i class="fas fa-map-marker-alt text-blue-500 mr-2"></i>
+                        {{ $property->city ?? 'Ville non disponible' }}, {{ $property->municipality }}, {{ $property->district ?? 'Quartier non disponible' }}
+                    </p>
                 </div>
-            </div>
-
-            <!-- Section "House rules" (1/3) -->
-            <div class="p-4 flex flex-col justify-between h-full">
-                <div id="house-rules" class="bg-white shadow-md rounded-lg p-4 ">
-                    <h2 class="text-2xl font-bold text-gray-800 dark:text-dark">Les équipements de l'établissement</h2>
-                    <ul class="list-none mt-4 text-gray-600 dark:text-gray-400">
-                        @forelse($property->features as $feature)
-                        <li class="flex items-center mb-2">
-                            @php
-                            $iconClass = $featureIcons[$feature] ?? 'fa-circle'; // Icône par défaut si aucune correspondance
-                            @endphp
-                            <i class="fas {{ $iconClass }} text-blue-500 mr-2"></i>
-                            <span>{{ $feature }}</span>
-                        </li>
-                        @empty
-                        <li>Aucun équipement disponible pour cet établissement.</li>
-                        @endforelse
-                    </ul>
-                    <div class="p-4">
-                        <p class="text-gray-600 text-right font-bold mt-5">{{ $property->price_per_night ?? 'Prix non disponible' }} € par nuit</p>
-                        <div class="mt-4">
-                            <a href="#Reservation" class="border border-blue-500 bg-white-500 text-blue-500 text-center py-2 px-4 rounded block w-full">Réserver cette résidence</a>
-                        </div>
-                    </div>
+                <div class="flex gap-2 mt-1">
+                    <!-- Bouton J'aime (wishlist) -->
+                    @auth
+                    <button wire:click="addToWishlist" type="button" class="flex items-center px-3 py-2 bg-pink-100 hover:bg-pink-200 text-pink-600 rounded-lg shadow transition" title="Ajouter à ma liste de souhait">
+                        <i class="fas fa-heart mr-1"></i>
+                        J'aime
+                    </button>
+                    @endauth
+                    <!-- Bouton de partage -->
+                    <button onclick="shareProperty()" class="flex items-center px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-lg shadow transition" title="Partager">
+                        <i class="fas fa-share-alt mr-1"></i>
+                        Partager
+                    </button>
                 </div>
             </div>
         </div>
 
-        <div id="photoGalleryModal" class="fixed inset-0 z-50 hidden bg-black bg-opacity-75 flex items-center justify-center">
-            <div class="relative bg-white rounded-lg shadow-lg w-11/12 lg:w-3/4 max-h-screen overflow-y-auto">
-                <button class="absolute top-2 right-2 text-gray-500 hover:text-gray-700" onclick="closeGallery()">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-                <div class="p-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                    @foreach($property->images as $image)
-                    <div class="image-container">
+        <div class="container mx-auto mt-8 grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <!-- Section des images (2/3) -->
+            <div id="PropertyImage" class="lg:col-span-2 pl-4 pr-4">
+                <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    @foreach($property->images as $index => $image)
+                    @if ($index < 3)
+                        <div class="image-container {{ $index % 3 === 0 ? 'large' : 'small' }}">
                         <img src="{{ asset('storage/' . $image->image_path) }}" alt="Image de la propriété" class="w-full h-auto object-cover rounded-lg">
+                        @if($index === 2 && $property->images->count() > 3)
+                        <div class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center text-white text-lg font-bold cursor-pointer" onclick="openGallery()">
+                            +{{ $property->images->count() - 3 }}
+                        </div>
+                        @endif
+                </div>
+                @endif
+                @endforeach
+            </div>
+        </div>
+
+        <!-- Section "House rules" (1/3) -->
+        <div class="p-4 flex flex-col justify-between h-full">
+            <div id="house-rules" class="bg-white shadow-md rounded-lg p-4 ">
+                <h2 class="text-2xl font-bold text-gray-800 dark:text-dark">Les équipements de l'établissement</h2>
+                <ul class="list-none mt-4 text-gray-600 dark:text-gray-400">
+                    @forelse($property->features as $feature)
+                    <li class="flex items-center mb-2">
+                        @php
+                        $iconClass = $featureIcons[$feature] ?? 'fa-circle'; // Icône par défaut si aucune correspondance
+                        @endphp
+                        <i class="fas {{ $iconClass }} text-blue-500 mr-2"></i>
+                        <span>{{ $feature }}</span>
+                    </li>
+                    @empty
+                    <li>Aucun équipement disponible pour cet établissement.</li>
+                    @endforelse
+                </ul>
+                <div class="p-4">
+                    <p class="text-gray-600 text-right font-bold mt-5">{{ $property->price_per_night ?? 'Prix non disponible' }} € par nuit</p>
+                    <div class="mt-4">
+                        <a href="#Reservation" class="border border-blue-500 bg-white-500 text-blue-500 text-center py-2 px-4 rounded block w-full">Réserver cette résidence</a>
                     </div>
-                    @endforeach
                 </div>
             </div>
         </div>
-        <div class="p-4">
-            <p class="text-gray-500 mt-5">
-                {!! $property->description ?? 'Description non disponible' !!}
-            </p>
-            <p id="pricing" class="text-gray-600  mt-5">Vous pouvez disposez de ce logement à <span class="text-xl font-bold"> {{ $property->price_per_night }} euros par nuit</span></p>
+    </div>
+
+    <div id="photoGalleryModal" class="fixed inset-0 z-50 hidden bg-black bg-opacity-75 flex items-center justify-center">
+        <div class="relative bg-white rounded-lg shadow-lg w-11/12 lg:w-3/4 max-h-screen overflow-y-auto">
+            <button class="absolute top-2 right-2 text-gray-500 hover:text-gray-700" onclick="closeGallery()">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+            <div class="p-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                @foreach($property->images as $image)
+                <div class="image-container">
+                    <img src="{{ asset('storage/' . $image->image_path) }}" alt="Image de la propriété" class="w-full h-auto object-cover rounded-lg">
+                </div>
+                @endforeach
+            </div>
         </div>
     </div>
-
-    <!-- Info section -->
-    <div id="info" class="text-gray-500 mt-5 bg-white shadow-md rounded-lg p-4">
-        <p class="p-4">
-            Vous devrez présenter une pièce d'identité avec photo lors de le remise des clés. Veuillez noter que toutes les demandes spéciales seront satisfaites sous réserve de disponibilité et pourront entraîner des frais supplémentaires.
+    <div class="p-4">
+        <p class="text-gray-500 mt-5">
+            {!! $property->description ?? 'Description non disponible' !!}
         </p>
-        <p class="p-4">
-            <i class="fas fa-sign-in-alt text-blue-500 mr-2"></i> <!-- Icône pour l'arrivée -->
-            Arrivée : 15h00 - 20h00
-        </p>
-        <p class="p-4">
-            <i class="fas fa-sign-out-alt text-blue-500 mr-2"></i> <!-- Icône pour le départ -->
-            Départ : 10h00 - 12h00
-        </p>
-        <p class="p-4">
-            Politique d'annulation : Vous pouvez annuler gratuitement jusqu'à 24 heures avant votre arrivée. Passé ce délai, des frais d'annulation de 50% seront appliqués.
-        </p>
-        <p class="p-4">
-            Politique de remboursement : En cas d'annulation dans les 24 heures précédant votre arrivée, le montant total de la réservation sera facturé.
-        </p>
+        <p id="pricing" class="text-gray-600  mt-5">Vous pouvez disposez de ce logement à <span class="text-xl font-bold"> {{ $property->price_per_night }} euros par nuit</span></p>
     </div>
-
-    <!-- Reviews section -->
-    <div id="reviews" class="mt-8">
-        <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Avis des clients</h2>
-
-        @if($reviews->isEmpty())
-        <blockquote class="p-4 my-4 border-s-4 border-gray-300 bg-gray-50 dark:border-gray-500 dark:bg-gray-800">
-            <p class="text-xl italic font-medium leading-relaxed text-gray-900 dark:text-white">"Aucun avis pour cette propriété pour le moment."</p>
-        </blockquote>
-        @else
-        @foreach($reviews as $review)
-        <figure class="max-w-screen-md p-4 mb-4">
-            <div class="flex items-center mb-4">
-                @for($i = 1; $i <= 5; $i++)
-                    <svg class="w-5 h-5 {{ $i <= $review->rating ? 'text-yellow-500' : 'text-gray-300' }}" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.868 1.464 8.826L12 18.896l-7.4 4.104 1.464-8.826L0 9.306l8.332-1.151z" />
-                    </svg>
-                    @endfor
-            </div>
-            <blockquote class="text-xl italic font-semibold text-gray-900 dark:text-dark">
-                <p>"{{ $review->review }}"</p>
-            </blockquote>
-            <div class="flex items-center divide-x-2 rtl:divide-x-reverse divide-gray-300 dark:divide-gray-700">
-                <cite class="pe-3 font-medium text-gray-900 dark:text-gray">{{ $review->user->name ?? 'Utilisateur inconnu' }}</cite>
-                <cite class="ps-3 text-sm text-gray-500 dark:text-gray-400">Posté le : {{ $review->created_at->format('d/m/Y') }}</cite>
-            </div>
-        </figure>
-        @endforeach
-        @endif
-    </div>
-
-
 </div>
+
+<!-- Info section -->
+<div id="info" class="text-gray-500 mt-5 bg-white shadow-md rounded-lg p-4">
+    <p class="p-4">
+        Vous devrez présenter une pièce d'identité avec photo lors de le remise des clés. Veuillez noter que toutes les demandes spéciales seront satisfaites sous réserve de disponibilité et pourront entraîner des frais supplémentaires.
+    </p>
+    <p class="p-4">
+        <i class="fas fa-sign-in-alt text-blue-500 mr-2"></i> <!-- Icône pour l'arrivée -->
+        Arrivée : 15h00 - 20h00
+    </p>
+    <p class="p-4">
+        <i class="fas fa-sign-out-alt text-blue-500 mr-2"></i> <!-- Icône pour le départ -->
+        Départ : 10h00 - 12h00
+    </p>
+    <p class="p-4">
+        Politique d'annulation : Vous pouvez annuler gratuitement jusqu'à 24 heures avant votre arrivée. Passé ce délai, des frais d'annulation de 50% seront appliqués.
+    </p>
+    <p class="p-4">
+        Politique de remboursement : En cas d'annulation dans les 24 heures précédant votre arrivée, le montant total de la réservation sera facturé.
+    </p>
+</div>
+
+<!-- Reviews section -->
+<div id="reviews" class="mt-8">
+    <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Avis des clients</h2>
+
+    @if($reviews->isEmpty())
+    <blockquote class="p-4 my-4 border-s-4 border-gray-300 bg-gray-50 dark:border-gray-500 dark:bg-gray-800">
+        <p class="text-xl italic font-medium leading-relaxed text-gray-900 dark:text-white">"Aucun avis pour cette propriété pour le moment."</p>
+    </blockquote>
+    @else
+    @foreach($reviews as $review)
+    <figure class="max-w-screen-md p-4 mb-4">
+        <div class="flex items-center mb-4">
+            @for($i = 1; $i <= 5; $i++)
+                <svg class="w-5 h-5 {{ $i <= $review->rating ? 'text-yellow-500' : 'text-gray-300' }}" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.868 1.464 8.826L12 18.896l-7.4 4.104 1.464-8.826L0 9.306l8.332-1.151z" />
+                </svg>
+                @endfor
+        </div>
+        <blockquote class="text-xl italic font-semibold text-gray-900 dark:text-dark">
+            <p>"{{ $review->review }}"</p>
+        </blockquote>
+        <div class="flex items-center divide-x-2 rtl:divide-x-reverse divide-gray-300 dark:divide-gray-700">
+            <cite class="pe-3 font-medium text-gray-900 dark:text-gray">{{ $review->user->name ?? 'Utilisateur inconnu' }}</cite>
+            <cite class="ps-3 text-sm text-gray-500 dark:text-gray-400">Posté le : {{ $review->created_at->format('d/m/Y') }}</cite>
+        </div>
+    </figure>
+    @endforeach
+    @endif
+</div>
+
 
 <!-- Preline Modal -->
 <div id="confirmationModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
@@ -217,6 +233,15 @@
             document.getElementById('confirmationModal').classList.remove('hidden');
         });
     });
+    // Fonction de partage (copie du lien dans le presse-papier)
+    function shareProperty() {
+        const url = window.location.href;
+        navigator.clipboard.writeText(url).then(function() {
+            alert('Lien copié dans le presse-papier !');
+        }, function() {
+            alert('Impossible de copier le lien.');
+        });
+    }
 </script>
 <!-- script pour le swiper -->
 <script>
@@ -252,5 +277,5 @@
         document.getElementById('photoGalleryModal').classList.add('hidden');
     }
 </script>
-
+<!-- Fin du composant Livewire : tout est dans le même div racine -->
 </div>

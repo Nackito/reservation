@@ -117,6 +117,7 @@ class BookingManager extends Component
         LivewireAlert::title('Le prix total est de ' . $this->totalPrice . '€')->show();
     }
 
+
     public function addBooking()
     {
         if (!Auth::check()) {
@@ -151,6 +152,26 @@ class BookingManager extends Component
         LivewireAlert::title('Réservation ajoutée avec succès!')->success()->show();
         // Redirection après l'alerte
         return redirect()->route('home');
+    }
+
+    public function addToWishlist()
+    {
+        if (!Auth::check()) {
+            return redirect()->route('login');
+        }
+        $user = Auth::user();
+        $property = Property::find($this->propertyId);
+        if (!$property) {
+            LivewireAlert::title('Propriété introuvable')->error()->show();
+            return;
+        }
+        // On suppose qu'il existe une relation wishlists() sur User ou un modèle Wishlist
+        if ($user->wishlists()->where('property_id', $property->id)->exists()) {
+            LivewireAlert::title('Déjà dans votre liste de souhaits')->info()->show();
+            return;
+        }
+        $user->wishlists()->create(['property_id' => $property->id]);
+        LivewireAlert::title('Ajouté à votre liste de souhaits !')->success()->show();
     }
 
     public function render()

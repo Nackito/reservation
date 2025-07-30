@@ -57,9 +57,14 @@
                 <div class="flex gap-2 mt-1">
                     <!-- Bouton J'aime (wishlist) -->
                     @auth
-                    <button wire:click="addToWishlist" type="button" class="flex items-center px-3 py-2 bg-pink-100 hover:bg-pink-200 text-pink-600 rounded-lg shadow transition" title="Ajouter à ma liste de souhait">
-                        <i class="fas fa-heart mr-1"></i>
-                        J'aime
+                    @php
+                    $isWished = Auth::user()->wishlists()->where('property_id', $property->id)->exists();
+                    @endphp
+                    <button wire:click="toggleWishlist" type="button"
+                        class="flex items-center px-3 py-2 {{ $isWished ? 'bg-pink-500 text-white' : 'bg-pink-100 text-pink-600' }} hover:bg-pink-200 rounded-lg shadow transition"
+                        title="{{ $isWished ? 'Retirer de ma liste de souhait' : 'Ajouter à ma liste de souhait' }}">
+                        <i class="fas fa-heart mr-1 {{ $isWished ? '' : 'text-pink-600' }}"></i>
+                        {{ $isWished ? 'Retirer' : "J'aime" }}
                     </button>
                     @endauth
                     <!-- Bouton de partage -->

@@ -154,7 +154,7 @@ class BookingManager extends Component
         return redirect()->route('home');
     }
 
-    public function addToWishlist()
+    public function toggleWishlist()
     {
         if (!Auth::check()) {
             return redirect()->route('login');
@@ -168,26 +168,26 @@ class BookingManager extends Component
             return;
         }
 
-        // Vérifie que la relation existe bien sur User
         if (!method_exists($user, 'wishlists')) {
             LivewireAlert::title('Relation wishlists manquante sur User')->error()->show();
             return;
         }
 
-        // Vérifie si la propriété est déjà dans la wishlist
-        if ($user->wishlists()->where('property_id', $property->id)->exists()) {
-            LivewireAlert::title('Déjà dans votre liste de souhaits')->info()->show();
-            return;
-        }
-
-        // Ajoute à la wishlist
-        try {
-            $user->wishlists()->create([
-                'property_id' => $property->id,
-            ]);
-            LivewireAlert::title('Ajouté à votre liste de souhaits !')->success()->show();
-        } catch (\Exception $e) {
-            LivewireAlert::title('Erreur lors de l\'ajout à la wishlist')->error()->show();
+        $wishlist = $user->wishlists()->where('property_id', $property->id)->first();
+        if ($wishlist) {
+            // Retirer de la wishlist
+            $wishlist->delete();
+            LivewireAlert::title('Retiré de votre liste de souhaits')->info()->show();
+        } else {
+            // Ajouter à la wishlist
+            try {
+                $user->wishlists()->create([
+                    'property_id' => $property->id,
+                ]);
+                LivewireAlert::title('Ajouté à votre liste de souhaits !')->success()->show();
+            } catch (\Exception $e) {
+                LivewireAlert::title('Erreur lors de la modification de la wishlist')->error()->show();
+            }
         }
     }
 

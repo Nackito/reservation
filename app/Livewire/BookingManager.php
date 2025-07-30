@@ -159,19 +159,36 @@ class BookingManager extends Component
         if (!Auth::check()) {
             return redirect()->route('login');
         }
+
         $user = Auth::user();
         $property = Property::find($this->propertyId);
+
         if (!$property) {
             LivewireAlert::title('Propriété introuvable')->error()->show();
             return;
         }
-        // On suppose qu'il existe une relation wishlists() sur User ou un modèle Wishlist
+
+        // Vérifie que la relation existe bien sur User
+        if (!method_exists($user, 'wishlists')) {
+            LivewireAlert::title('Relation wishlists manquante sur User')->error()->show();
+            return;
+        }
+
+        // Vérifie si la propriété est déjà dans la wishlist
         if ($user->wishlists()->where('property_id', $property->id)->exists()) {
             LivewireAlert::title('Déjà dans votre liste de souhaits')->info()->show();
             return;
         }
-        $user->wishlists()->create(['property_id' => $property->id]);
-        LivewireAlert::title('Ajouté à votre liste de souhaits !')->success()->show();
+
+        // Ajoute à la wishlist
+        try {
+            $user->wishlists()->create([
+                'property_id' => $property->id,
+            ]);
+            LivewireAlert::title('Ajouté à votre liste de souhaits !')->success()->show();
+        } catch (\Exception $e) {
+            LivewireAlert::title('Erreur lors de l\'ajout à la wishlist')->error()->show();
+        }
     }
 
     public function render()

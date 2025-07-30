@@ -28,21 +28,12 @@ Route::get('/reservation-details/{propertyId}', ReservationDetails::class)->name
 //})->name('dashboard');
 
 
-/*Route::get('/', [HomeController::class, 'index'])->name('home');
-Route::middleware(['auth'])->group(function () {
-    Route::get('/dashboard', function () {
-        return redirect('/admin');
-    })->name('dashboard');
-
-    Route::get('/properties', PropertyManager::class)->name('properties.index');
-    Route::get('/mes_reservations', UserReservations::class)->name('user-reservations');
-    Route::get('/booking-manager/{propertyId}', BookingManager::class)->name('booking-manager');
-});
 
 Route::middleware('auth')->group(function () {
+    Route::get('/wishlist', App\Livewire\WishlistPage::class)->name('wishlist.index');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-});*/
+});
 
 require __DIR__ . '/auth.php';

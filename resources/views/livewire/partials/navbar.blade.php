@@ -54,6 +54,10 @@
                             Mes réservations
                         </a>
 
+                        <a class="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-pink-600 hover:bg-pink-100 focus:ring-2 focus:ring-pink-500 dark:text-pink-400 dark:hover:bg-gray-700 dark:hover:text-pink-300 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-pink-600" href="{{ route('wishlist.index') }}">
+                            <i class="fas fa-heart mr-2"></i>Mes souhaits
+                        </a>
+
                         {{ Auth::user()->name }}
                         <svg class="ms-2 w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M20.84 18.36a9 9 0 1 0-17.68 0" />

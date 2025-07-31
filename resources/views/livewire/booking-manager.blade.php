@@ -72,6 +72,39 @@
                         <i class="fas fa-share-alt mr-1"></i>
                         Partager
                     </button>
+                    <!-- Bouton de contact employé -->
+                    <button onclick="openContactModal()" class="flex items-center px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg shadow transition" title="Contacter un employé de la plateforme">
+                        <i class="fas fa-headset mr-1"></i>
+                        Contacter un employé
+                    </button>
+                    <!-- Modal de contact employé -->
+                    <div id="contactEmployeeModal" class="fixed inset-0 z-50 hidden bg-black bg-opacity-60 flex items-center justify-center">
+                        <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6 relative">
+                            <button class="absolute top-2 right-2 text-gray-400 hover:text-gray-700" onclick="closeContactModal()">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                            <h2 class="text-2xl font-bold mb-4 text-gray-800">Contacter un employé</h2>
+                            <form method="POST" action="{{ route('contact.hebergement') }}">
+                                @csrf
+                                <div class="mb-4">
+                                    <label for="message" class="block text-gray-700 font-semibold mb-2">Votre message</label>
+                                    <textarea id="message" name="message" rows="4" class="w-full border rounded p-2" required></textarea>
+                                </div>
+                                <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition">Envoyer</button>
+                            </form>
+                        </div>
+                    </div>
+                    <script>
+                        function openContactModal() {
+                            document.getElementById('contactEmployeeModal').classList.remove('hidden');
+                        }
+
+                        function closeContactModal() {
+                            document.getElementById('contactEmployeeModal').classList.add('hidden');
+                        }
+                    </script>
                 </div>
             </div>
         </div>

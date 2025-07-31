@@ -1,7 +1,6 @@
 <div>
     <!-- Début du composant Livewire : tout est enveloppé dans ce div racine -->
     <div class="container mx-auto py-8">
-        <h1 class="block text-3xl font-bold text-gray-800 sm:text-4xl lg:text-6xl lg:leading-tight dark:text-white">Entrez vos dates</h1>
 
         <form wire:submit.prevent="addBooking" class="mb-4">
             <div class="flex mt-4 flex-col sm:flex-row gap-2 sm:gap-3 items-center bg-white rounded-lg p-2 dark:bg-gray-800">
@@ -13,7 +12,7 @@
                 </div>
 
                 <div class="w-full">
-                    <input type="date" id="Reservation" wire:model="checkInDate" class="py-3 px-4 block w-full border-transparent rounded-lg text-sm 
+                    <input type="date" wire:model="checkInDate" class="py-3 px-4 block w-full border-transparent rounded-lg text-sm 
                     focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 
                     disabled:pointer-events-none dark:bg-slate-900 dark:border-transparent 
                     dark:text-gray-400 dark:focus:ring-gray-600" min="{{ now()->format('Y-m-d') }}">
@@ -259,8 +258,42 @@
     </div>
 </div>
 
+<!-- Reservation form -->
+<div class="container mx-auto mt-8">
+    <h1 class="block text-3xl font-bold text-gray-800 sm:text-4xl lg:text-2xl lg:leading-tight dark:text-black">Entrez vos dates</h1>
+
+    <form wire:submit.prevent="addBooking" class="mb-4">
+        <div class="flex mt-4 flex-col sm:flex-row gap-2 sm:gap-3 items-center bg-white rounded-lg p-2 dark:bg-gray-800">
+            <div class="w-full">
+                <p class="py-3 px-4 block w-full border-transparent rounded-lg text-sm 
+                    focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 
+                    disabled:pointer-events-none dark:bg-slate-900 dark:border-transparent 
+                    dark:text-gray-400 dark:focus:ring-gray-600" readonly> {{ $propertyName }} </p>
+            </div>
+
+            <div class="w-full">
+                <input type="date" id="Reservation" wire:model="checkInDate" class="py-3 px-4 block w-full border-transparent rounded-lg text-sm 
+                    focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 
+                    disabled:pointer-events-none dark:bg-slate-900 dark:border-transparent 
+                    dark:text-gray-400 dark:focus:ring-gray-600" min="{{ now()->format('Y-m-d') }}">
+                @error('checkInDate') <span class="text-red-500">{{ $message }}</span> @enderror
+            </div>
+            <div class="w-full">
+                <input type="date" wire:model="checkOutDate" wire:change="calculateTotalPrice" class="py-3 px-4 block w-full border-transparent rounded-lg text-sm 
+                    focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 
+                    disabled:pointer-events-none dark:bg-slate-900 dark:border-transparent 
+                    dark:text-gray-400 dark:focus:ring-gray-600" min="{{ $checkInDate }}">
+                @error('checkOutDate') <span class="text-red-500">{{ $message }}</span> @enderror
+            </div>
+            <button type="submit" wire:submit.prevent="addBooking" id="confirm-booking" class="bg-blue-500 text-white py-2 px-4 rounded">
+                Confirmer
+            </button>
+        </div>
+    </form>
+</div>
+
 <!-- Reviews section -->
-<div class="container bg-white mx-auto mt-8">
+<div class="container bg-white mx-auto mt-8 mb-8">
     <div id="reviews" class="mt-8">
         <div class="mb-6">
             <span class="block text-xl font-semibold text-gray-800">Ce que les personnes ayant séjourné ici ont adoré :</span>

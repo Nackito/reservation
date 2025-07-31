@@ -71,6 +71,27 @@
                         <span class="hidden sm:inline ml-1">{{ $isWished ? 'Retirer' : "J'aime" }}</span>
                     </button>
                     <script>
+                        function showContactLoginNotification() {
+                            if (window.Swal) {
+                                Swal.fire({
+                                    title: 'Connexion requise',
+                                    text: 'Vous devez être connecté pour envoyer un message. Voulez-vous vous connecter maintenant ?',
+                                    icon: 'info',
+                                    showCancelButton: true,
+                                    confirmButtonText: 'Se connecter',
+                                    cancelButtonText: 'Annuler',
+                                }).then((result) => {
+                                    if (result.isConfirmed) {
+                                        window.location.href = '/login';
+                                    }
+                                });
+                            } else {
+                                if (confirm('Vous devez être connecté pour envoyer un message. Voulez-vous vous connecter maintenant ?')) {
+                                    window.location.href = '/login';
+                                }
+                            }
+                        }
+
                         function showLoginNotification() {
                             if (window.Swal) {
                                 Swal.fire({
@@ -122,11 +143,18 @@
                             </div>
                         </div>
                     </div>
-                    <!-- Bouton de contact employé -->
+                    <!-- Bouton de contact employé (connexion requise) -->
+                    @if(Auth::check())
                     <button onclick="openContactModal()" class="flex items-center justify-center px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg shadow transition" title="Contacter un employé de la plateforme">
                         <i class="fas fa-headset text-lg"></i>
                         <span class="hidden sm:inline ml-1">Contacter un employé</span>
                     </button>
+                    @else
+                    <button onclick="showContactLoginNotification()" class="flex items-center justify-center px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg shadow transition" title="Connectez-vous pour contacter un employé">
+                        <i class="fas fa-headset text-lg"></i>
+                        <span class="hidden sm:inline ml-1">Contacter un employé</span>
+                    </button>
+                    @endif
                     <!-- Modal de contact employé -->
                     <div id="contactEmployeeModal" class="fixed inset-0 z-50 hidden bg-black bg-opacity-60 flex items-center justify-center">
                         <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6 relative">

@@ -34,11 +34,11 @@
 
     <!-- NavBar -->
     <div class="relative">
-        <nav id="menu" class="hidden lg:flex flex-col lg:flex-row justify-center space-x-4 bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
-            <a href="#overview" class="nav-link text-gray-700 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 font-semibold">Vue d'ensemble</a>
-            <a href="#pricing" class="nav-link text-gray-700 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 font-semibold">Tarifs</a>
-            <a href="#info" class="nav-link text-gray-700 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 font-semibold">À savoir</a>
-            <a href="#reviews" class="nav-link text-gray-700 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 font-semibold">Avis des clients</a>
+        <nav id="menu" class="hidden lg:flex flex-col lg:flex-row justify-center gap-y-2 gap-x-10 bg-white dark:bg-gray-800 py-6 px-8 shadow-lg">
+            <a href="#overview" class="nav-link text-lg px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 font-semibold transition">Vue d'ensemble</a>
+            <a href="#pricing" class="nav-link text-lg px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 font-semibold transition">Tarifs</a>
+            <a href="#info" class="nav-link text-lg px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 font-semibold transition">À savoir</a>
+            <a href="#reviews" class="nav-link text-lg px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 font-semibold transition">Avis des clients</a>
         </nav>
     </div>
 

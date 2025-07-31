@@ -98,6 +98,31 @@
                         <i class="fas fa-share-alt mr-1"></i>
                         Partager
                     </button>
+                    <!-- Modal de partage -->
+                    <div id="shareModal" class="fixed inset-0 z-50 hidden bg-black bg-opacity-60 flex items-center justify-center">
+                        <div class="bg-white rounded-lg shadow-lg w-full max-w-sm p-6 relative">
+                            <button class="absolute top-2 right-2 text-gray-400 hover:text-gray-700" onclick="closeShareModal()">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                            <h2 class="text-xl font-bold mb-4 text-gray-800">Partager cette page</h2>
+                            <div class="flex flex-col gap-3">
+                                <button onclick="copyShareLink()" class="flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-700">
+                                    <i class="fas fa-link mr-2"></i> Copier le lien
+                                </button>
+                                <a href="#" onclick="shareWhatsapp(event)" class="flex items-center px-4 py-2 bg-green-100 hover:bg-green-200 rounded-lg text-green-700">
+                                    <i class="fab fa-whatsapp mr-2"></i> Partager sur WhatsApp
+                                </a>
+                                <a href="#" onclick="shareFacebook(event)" class="flex items-center px-4 py-2 bg-blue-100 hover:bg-blue-200 rounded-lg text-blue-700">
+                                    <i class="fab fa-facebook mr-2"></i> Partager sur Facebook
+                                </a>
+                                <a href="#" onclick="shareInstagram(event)" class="flex items-center px-4 py-2 bg-pink-100 hover:bg-pink-200 rounded-lg text-pink-600">
+                                    <i class="fab fa-instagram mr-2"></i> Partager sur Instagram
+                                </a>
+                            </div>
+                        </div>
+                    </div>
                     <!-- Bouton de contact employé -->
                     <button onclick="openContactModal()" class="flex items-center px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg shadow transition" title="Contacter un employé de la plateforme">
                         <i class="fas fa-headset mr-1"></i>
@@ -297,14 +322,51 @@
             document.getElementById('confirmationModal').classList.remove('hidden');
         });
     });
-    // Fonction de partage (copie du lien dans le presse-papier)
+    // Fonction d'ouverture du modal de partage
     function shareProperty() {
+        document.getElementById('shareModal').classList.remove('hidden');
+    }
+
+    function closeShareModal() {
+        document.getElementById('shareModal').classList.add('hidden');
+    }
+
+    function copyShareLink() {
         const url = window.location.href;
         navigator.clipboard.writeText(url).then(function() {
-            alert('Lien copié dans le presse-papier !');
+            if (window.Swal) {
+                Swal.fire('Lien copié !', 'Le lien de la page a été copié dans le presse-papier.', 'success');
+            } else {
+                alert('Lien copié dans le presse-papier !');
+            }
         }, function() {
-            alert('Impossible de copier le lien.');
+            if (window.Swal) {
+                Swal.fire('Erreur', 'Impossible de copier le lien.', 'error');
+            } else {
+                alert('Impossible de copier le lien.');
+            }
         });
+    }
+
+    function shareWhatsapp(e) {
+        e.preventDefault();
+        const url = encodeURIComponent(window.location.href);
+        window.open('https://wa.me/?text=' + url, '_blank');
+    }
+
+    function shareFacebook(e) {
+        e.preventDefault();
+        const url = encodeURIComponent(window.location.href);
+        window.open('https://www.facebook.com/sharer/sharer.php?u=' + url, '_blank');
+    }
+
+    function shareInstagram(e) {
+        e.preventDefault();
+        if (window.Swal) {
+            Swal.fire('Partage Instagram', 'Instagram ne permet pas le partage direct de liens. Copiez le lien et partagez-le dans votre story ou bio.', 'info');
+        } else {
+            alert('Instagram ne permet pas le partage direct de liens. Copiez le lien et partagez-le dans votre story ou bio.');
+        }
     }
 </script>
 <!-- script pour le swiper -->

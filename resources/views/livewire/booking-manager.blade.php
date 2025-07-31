@@ -12,14 +12,14 @@
                 </div>
 
                 <div class="w-full">
-                    <input type="date" wire:model="checkInDate" class="py-3 px-4 block w-full border-transparent rounded-lg text-sm 
+                    <input type="date" wire:model="checkInDate" id="ReservationCheckIn" class="py-3 px-4 block w-full border-transparent rounded-lg text-sm 
                     focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 
                     disabled:pointer-events-none dark:bg-slate-900 dark:border-transparent 
                     dark:text-gray-400 dark:focus:ring-gray-600" min="{{ now()->format('Y-m-d') }}">
                     @error('checkInDate') <span class="text-red-500">{{ $message }}</span> @enderror
                 </div>
                 <div class="w-full">
-                    <input type="date" wire:model="checkOutDate" wire:change="calculateTotalPrice" class="py-3 px-4 block w-full border-transparent rounded-lg text-sm 
+                    <input type="date" wire:model="checkOutDate" id="ReservationCheckOut" wire:change="calculateTotalPrice" class="py-3 px-4 block w-full border-transparent rounded-lg text-sm 
                     focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 
                     disabled:pointer-events-none dark:bg-slate-900 dark:border-transparent 
                     dark:text-gray-400 dark:focus:ring-gray-600" min="{{ $checkInDate }}">
@@ -326,20 +326,37 @@
                     dark:text-gray-400 dark:focus:ring-gray-600" readonly> {{ $propertyName }} </p>
             </div>
 
-            <div class="w-full">
-                <input type="date" id="Reservation" wire:model="checkInDate" class="py-3 px-4 block w-full border-transparent rounded-lg text-sm 
+            <div class="w-full" id="Reservation">
+                <input type="date" id="ReservationCheckIn" wire:model="checkInDate" class="py-3 px-4 block w-full border-transparent rounded-lg text-sm cursor-pointer
                     focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 
                     disabled:pointer-events-none dark:bg-slate-900 dark:border-transparent 
                     dark:text-gray-400 dark:focus:ring-gray-600" min="{{ now()->format('Y-m-d') }}">
                 @error('checkInDate') <span class="text-red-500">{{ $message }}</span> @enderror
             </div>
             <div class="w-full">
-                <input type="date" wire:model="checkOutDate" wire:change="calculateTotalPrice" class="py-3 px-4 block w-full border-transparent rounded-lg text-sm 
+                <input type="date" id="ReservationCheckOut" wire:model="checkOutDate" wire:change="calculateTotalPrice" class="py-3 px-4 block w-full border-transparent rounded-lg text-sm cursor-pointer
                     focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 
                     disabled:pointer-events-none dark:bg-slate-900 dark:border-transparent 
                     dark:text-gray-400 dark:focus:ring-gray-600" min="{{ $checkInDate }}">
                 @error('checkOutDate') <span class="text-red-500">{{ $message }}</span> @enderror
             </div>
+            <script>
+                // Force l'ouverture du calendrier natif sur tout clic dans le champ
+                document.addEventListener('DOMContentLoaded', function() {
+                    var checkIn = document.getElementById('ReservationCheckIn');
+                    var checkOut = document.getElementById('ReservationCheckOut');
+                    if (checkIn) {
+                        checkIn.addEventListener('click', function(e) {
+                            this.showPicker && this.showPicker();
+                        });
+                    }
+                    if (checkOut) {
+                        checkOut.addEventListener('click', function(e) {
+                            this.showPicker && this.showPicker();
+                        });
+                    }
+                });
+            </script>
             @if(Auth::check())
             <button type="submit" wire:submit.prevent="addBooking" id="confirm-booking" class="bg-blue-500 text-white py-2 px-4 rounded">
                 Confirmer

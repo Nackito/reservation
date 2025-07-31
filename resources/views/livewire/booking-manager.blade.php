@@ -262,7 +262,9 @@
 <!-- Reviews section -->
 <div class="container bg-white mx-auto mt-8">
     <div id="reviews" class="mt-8">
-        <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-6">Avis des clients</h2>
+        <div class="mb-6">
+            <span class="block text-xl font-semibold text-gray-800">Ce que les personnes ayant séjourné ici ont adoré :</span>
+        </div>
 
         @if($reviews->isEmpty())
         <div class="flex justify-center">

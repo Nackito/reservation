@@ -56,17 +56,43 @@
                 </div>
                 <div class="flex gap-2 mt-1">
                     <!-- Bouton J'aime (wishlist) -->
-                    @auth
                     @php
-                    $isWished = Auth::user()->wishlists()->where('property_id', $property->id)->exists();
+                    $isWished = Auth::check() ? Auth::user()->wishlists()->where('property_id', $property->id)->exists() : false;
                     @endphp
-                    <button wire:click="toggleWishlist" type="button"
+                    <button
+                        @if(Auth::check())
+                        wire:click="toggleWishlist"
+                        @else
+                        onclick="showLoginNotification()"
+                        @endif
+                        type="button"
                         class="flex items-center px-3 py-2 {{ $isWished ? 'bg-pink-500 text-white' : 'bg-pink-100 text-pink-600' }} hover:bg-pink-200 rounded-lg shadow transition"
-                        title="{{ $isWished ? 'Retirer de ma liste de souhait' : 'Ajouter à ma liste de souhait' }}">
+                        title="{{ Auth::check() ? ($isWished ? 'Retirer de ma liste de souhait' : 'Ajouter à ma liste de souhait') : 'Connectez-vous pour ajouter à votre liste de souhait' }}">
                         <i class="fas fa-heart mr-1 {{ $isWished ? '' : 'text-pink-600' }}"></i>
                         {{ $isWished ? 'Retirer' : "J'aime" }}
                     </button>
-                    @endauth
+                    <script>
+                        function showLoginNotification() {
+                            if (window.Swal) {
+                                Swal.fire({
+                                    title: 'Connexion requise',
+                                    text: 'Vous devez être connecté pour ajouter un établissement à votre liste de souhait. Voulez-vous vous connecter maintenant ?',
+                                    icon: 'info',
+                                    showCancelButton: true,
+                                    confirmButtonText: 'Se connecter',
+                                    cancelButtonText: 'Annuler',
+                                }).then((result) => {
+                                    if (result.isConfirmed) {
+                                        window.location.href = '/login';
+                                    }
+                                });
+                            } else {
+                                if (confirm('Vous devez être connecté pour ajouter un établissement à votre liste de souhait. Voulez-vous vous connecter maintenant ?')) {
+                                    window.location.href = '/login';
+                                }
+                            }
+                        }
+                    </script>
                     <!-- Bouton de partage -->
                     <button onclick="shareProperty()" class="flex items-center px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-lg shadow transition" title="Partager">
                         <i class="fas fa-share-alt mr-1"></i>

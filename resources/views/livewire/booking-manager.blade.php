@@ -166,10 +166,10 @@
                 <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     @foreach($property->images as $index => $image)
                     @if ($index < 3)
-                        <div class="image-container {{ $index % 3 === 0 ? 'large' : 'small' }}">
-                        <img src="{{ asset('storage/' . $image->image_path) }}" alt="Image de la propriété" class="w-full h-auto object-cover rounded-lg">
+                        <div class="image-container relative {{ $index % 3 === 0 ? 'large' : 'small' }}">
+                        <img src="{{ asset('storage/' . $image->image_path) }}" alt="Image de la propriété" class="w-full h-auto object-cover rounded-lg cursor-pointer" onclick="openGallery({{ $index }})">
                         @if($index === 2 && $property->images->count() > 3)
-                        <div class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center text-white text-lg font-bold cursor-pointer" onclick="openGallery()">
+                        <div class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center text-white text-lg font-bold cursor-pointer rounded-lg" onclick="openGallery({{ $index }})">
                             +{{ $property->images->count() - 3 }}
                         </div>
                         @endif
@@ -213,12 +213,15 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                 </svg>
             </button>
-            <div class="p-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                @foreach($property->images as $image)
-                <div class="image-container">
-                    <img src="{{ asset('storage/' . $image->image_path) }}" alt="Image de la propriété" class="w-full h-auto object-cover rounded-lg">
+            <div class="p-4 flex flex-col items-center">
+                <div id="galleryMainImageContainer" class="mb-4">
+                    <img id="galleryMainImage" src="{{ asset('storage/' . ($property->images[0]->image_path ?? '')) }}" alt="Image principale" class="w-full max-h-96 object-contain rounded-lg">
                 </div>
-                @endforeach
+                <div class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2">
+                    @foreach($property->images as $idx => $image)
+                    <img src="{{ asset('storage/' . $image->image_path) }}" alt="Miniature" class="w-20 h-20 object-cover rounded-lg cursor-pointer border-2 border-transparent hover:border-blue-500" onclick="setGalleryImage({{ $idx }})">
+                    @endforeach
+                </div>
             </div>
         </div>
     </div>
@@ -394,14 +397,31 @@
     });
 </script>
 <!-- script pour le modal de la galerie -->
+@php
+$galleryImages = collect($property->images)->map(function($img) {
+return asset('storage/' . $img->image_path);
+});
+@endphp
 <script>
-    function openGallery() {
+    // Injection du tableau d'images pour la galerie (compatible tous éditeurs)
+    let galleryImages = @json($galleryImages);
+
+    function openGallery(index = 0) {
         document.getElementById('photoGalleryModal').classList.remove('hidden');
+        setGalleryImage(index);
     }
 
     function closeGallery() {
         document.getElementById('photoGalleryModal').classList.add('hidden');
     }
+
+    function setGalleryImage(idx) {
+        const mainImg = document.getElementById('galleryMainImage');
+        if (mainImg && galleryImages[idx]) {
+            mainImg.src = galleryImages[idx];
+        }
+    }
+</script>
 </script>
 <!-- Fin du composant Livewire : tout est dans le même div racine -->
 </div>

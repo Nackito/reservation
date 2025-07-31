@@ -25,9 +25,15 @@
                     dark:text-gray-400 dark:focus:ring-gray-600" min="{{ $checkInDate }}">
                     @error('checkOutDate') <span class="text-red-500">{{ $message }}</span> @enderror
                 </div>
+                @if(Auth::check())
                 <button type="submit" wire:submit.prevent="addBooking" id="confirm-booking" class="bg-blue-500 text-white py-2 px-4 rounded">
                     Confirmer
                 </button>
+                @else
+                <button type="button" onclick="showReservationLoginNotification()" class="bg-blue-500 text-white py-2 px-4 rounded">
+                    Confirmer
+                </button>
+                @endif
             </div>
         </form>
     </div>
@@ -76,6 +82,27 @@
                                 Swal.fire({
                                     title: 'Connexion requise',
                                     text: 'Vous devez être connecté pour envoyer un message. Voulez-vous vous connecter maintenant ?',
+                                    icon: 'info',
+                                    showCancelButton: true,
+                                    confirmButtonText: 'Se connecter',
+                                    cancelButtonText: 'Annuler',
+                                }).then((result) => {
+                                    if (result.isConfirmed) {
+                                        window.location.href = '/login';
+                                    }
+                                });
+                            } else {
+                                if (confirm('Vous devez être connecté pour envoyer un message. Voulez-vous vous connecter maintenant ?')) {
+                                    window.location.href = '/login';
+                                }
+                            }
+                        }
+
+                        function showReservationLoginNotification() {
+                            if (window.Swal) {
+                                Swal.fire({
+                                    title: 'Connexion requise',
+                                    text: 'Vous devez être connecté pour effectuer une réservation. Voulez-vous vous connecter maintenant ?',
                                     icon: 'info',
                                     showCancelButton: true,
                                     confirmButtonText: 'Se connecter',
@@ -313,9 +340,15 @@
                     dark:text-gray-400 dark:focus:ring-gray-600" min="{{ $checkInDate }}">
                 @error('checkOutDate') <span class="text-red-500">{{ $message }}</span> @enderror
             </div>
+            @if(Auth::check())
             <button type="submit" wire:submit.prevent="addBooking" id="confirm-booking" class="bg-blue-500 text-white py-2 px-4 rounded">
                 Confirmer
             </button>
+            @else
+            <button type="button" onclick="showReservationLoginNotification()" class="bg-blue-500 text-white py-2 px-4 rounded">
+                Confirmer
+            </button>
+            @endif
         </div>
     </form>
 </div>

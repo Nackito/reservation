@@ -219,7 +219,10 @@
                 </div>
                 <div class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2">
                     @foreach($property->images as $idx => $image)
-                    <img src="{{ asset('storage/' . $image->image_path) }}" alt="Miniature" class="w-20 h-20 object-cover rounded-lg cursor-pointer border-2 border-transparent hover:border-blue-500" onclick="setGalleryImage({{ $idx }})">
+                    <img src="{{ asset('storage/' . $image->image_path) }}"
+                        alt="{{ $property->name ?? 'Propriété' }} chambre ou espace principal avec décoration moderne et ambiance accueillante dans un environnement résidentiel lumineux et confortable"
+                        class="w-20 h-20 object-cover rounded-lg cursor-pointer border-2 border-transparent hover:border-blue-500"
+                        onclick="setGalleryImage({{ $idx }})">
                     @endforeach
                 </div>
             </div>
@@ -234,194 +237,191 @@
 </div>
 
 <!-- Info section -->
-<div id="info" class="text-gray-500 mt-5 bg-white shadow-md rounded-lg p-4">
-    <p class="p-4">
-        Vous devrez présenter une pièce d'identité avec photo lors de le remise des clés. Veuillez noter que toutes les demandes spéciales seront satisfaites sous réserve de disponibilité et pourront entraîner des frais supplémentaires.
-    </p>
-    <p class="p-4">
-        <i class="fas fa-sign-in-alt text-blue-500 mr-2"></i> <!-- Icône pour l'arrivée -->
-        Arrivée : 15h00 - 20h00
-    </p>
-    <p class="p-4">
-        <i class="fas fa-sign-out-alt text-blue-500 mr-2"></i> <!-- Icône pour le départ -->
-        Départ : 10h00 - 12h00
-    </p>
-    <p class="p-4">
-        Politique d'annulation : Vous pouvez annuler gratuitement jusqu'à 24 heures avant votre arrivée. Passé ce délai, des frais d'annulation de 50% seront appliqués.
-    </p>
-    <p class="p-4">
-        Politique de remboursement : En cas d'annulation dans les 24 heures précédant votre arrivée, le montant total de la réservation sera facturé.
-    </p>
-</div>
-
-<!-- Reviews section -->
-<div id="reviews" class="mt-8">
-    <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Avis des clients</h2>
-
-    @if($reviews->isEmpty())
-    <blockquote class="p-4 my-4 border-s-4 border-gray-300 bg-gray-50 dark:border-gray-500 dark:bg-gray-800">
-        <p class="text-xl italic font-medium leading-relaxed text-gray-900 dark:text-white">"Aucun avis pour cette propriété pour le moment."</p>
-    </blockquote>
-    @else
-    @foreach($reviews as $review)
-    <figure class="max-w-screen-md p-4 mb-4">
-        <div class="flex items-center mb-4">
-            @for($i = 1; $i <= 5; $i++)
-                <svg class="w-5 h-5 {{ $i <= $review->rating ? 'text-yellow-500' : 'text-gray-300' }}" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.868 1.464 8.826L12 18.896l-7.4 4.104 1.464-8.826L0 9.306l8.332-1.151z" />
-                </svg>
-                @endfor
-        </div>
-        <blockquote class="text-xl italic font-semibold text-gray-900 dark:text-dark">
-            <p>"{{ $review->review }}"</p>
-        </blockquote>
-        <div class="flex items-center divide-x-2 rtl:divide-x-reverse divide-gray-300 dark:divide-gray-700">
-            <cite class="pe-3 font-medium text-gray-900 dark:text-gray">{{ $review->user->name ?? 'Utilisateur inconnu' }}</cite>
-            <cite class="ps-3 text-sm text-gray-500 dark:text-gray-400">Posté le : {{ $review->created_at->format('d/m/Y') }}</cite>
-        </div>
-    </figure>
-    @endforeach
-    @endif
-</div>
-
-
-<!-- Preline Modal -->
-<div id="confirmationModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
-    <div class="flex items-center justify-center min-h-screen px-4">
-        <div class="relative w-full max-w-lg p-4 mx-auto bg-white rounded-lg shadow-lg">
-            <div class="flex justify-between items-center pb-3">
-                <h3 class="text-lg font-semibold">Confirmation de réservation</h3>
-                <button class="text-gray-400 hover:text-gray-600" onclick="closeModal()">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
-            <div class="mt-2">
-                <p class="text-gray-700 dark:text-white">Vous allez payer <span id="totalPrice"></span> € pour cette réservation. Voulez-vous confirmer ?</p>
-            </div>
-            <div class="flex justify-end pt-4">
-                <button class="bg-gray-500 text-white px-4 py-2 rounded mr-2" onclick="closeModal()">Annuler</button>
-                <button class="bg-blue-500 text-white px-4 py-2 rounded" onclick="confirmBooking()">Confirmer</button>
-            </div>
-        </div>
+<div class="container bg-white mx-auto mt-8">
+    <div id="info" class="text-gray-500 mt-5 bg-white shadow-md rounded-lg p-4">
+        <p class="p-4">
+            Vous devrez présenter une pièce d'identité avec photo lors de le remise des clés. Veuillez noter que toutes les demandes spéciales seront satisfaites sous réserve de disponibilité et pourront entraîner des frais supplémentaires.
+        </p>
+        <p class="p-4">
+            <i class="fas fa-sign-in-alt text-blue-500 mr-2"></i> <!-- Icône pour l'arrivée -->
+            Arrivée : 15h00 - 20h00
+        </p>
+        <p class="p-4">
+            <i class="fas fa-sign-out-alt text-blue-500 mr-2"></i> <!-- Icône pour le départ -->
+            Départ : 10h00 - 12h00
+        </p>
+        <p class="p-4">
+            Politique d'annulation : Vous pouvez annuler gratuitement jusqu'à 24 heures avant votre arrivée. Passé ce délai, des frais d'annulation de 50% seront appliqués.
+        </p>
+        <p class="p-4">
+            Politique de remboursement : En cas d'annulation dans les 24 heures précédant votre arrivée, le montant total de la réservation sera facturé.
+        </p>
     </div>
 </div>
 
-<!-- Modal de confirmation -->
-<script>
-    function closeModal() {
-        document.getElementById('confirmationModal').classList.add('hidden');
-    }
+<!-- Reviews section -->
+<div class="container bg-white mx-auto mt-8">
+    <div id="reviews" class="mt-8">
+        <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-6">Avis des clients</h2>
 
-    function confirmBooking() {
-        document.getElementById('confirm-booking').click();
-        closeModal();
-    }
+        @if($reviews->isEmpty())
+        <div class="flex justify-center">
+            <div class="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-6 w-full max-w-lg shadow">
+                <p class="text-xl italic font-medium text-gray-700 dark:text-white text-center">Aucun avis pour cette propriété pour le moment.</p>
+            </div>
+        </div>
+        @else
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            @foreach($reviews as $review)
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col gap-3 border border-gray-100 dark:border-gray-700">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-2xl font-bold text-blue-600">
+                        <span>
+                            @if(isset($review->user->name))
+                            {{ strtoupper(mb_substr($review->user->name, 0, 1)) }}
+                            @else
+                            <i class="fas fa-user"></i>
+                            @endif
+                        </span>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-1">
+                            @for($i = 1; $i <= 5; $i++)
+                                <svg class="w-5 h-5 {{ $i <= $review->rating ? 'text-yellow-400' : 'text-gray-300' }}" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.868 1.464 8.826L12 18.896l-7.4 4.104 1.464-8.826L0 9.306l8.332-1.151z" />
+                                </svg>
+                                @endfor
+                        </div>
+                        <div class="text-sm text-gray-700 dark:text-gray-300 font-semibold">
+                            {{ $review->user->name ?? 'Utilisateur inconnu' }}
+                        </div>
+                        <div class="text-xs text-gray-400">Posté le {{ $review->created_at->format('d/m/Y') }}</div>
+                    </div>
+                </div>
+                <div class="flex-1">
+                    <p class="text-gray-800 dark:text-gray-100 text-base leading-relaxed">{{ $review->review }}</p>
+                </div>
+            </div>
+            @endforeach
+        </div>
+        @endif
+    </div>
 
-    document.addEventListener('DOMContentLoaded', function() {
-        window.addEventListener('show-confirmation', event => {
-            document.getElementById('totalPrice').textContent = event.detail.totalPrice;
-            document.getElementById('confirmationModal').classList.remove('hidden');
-        });
-    });
-    // Fonction d'ouverture du modal de partage
-    function shareProperty() {
-        document.getElementById('shareModal').classList.remove('hidden');
-    }
 
-    function closeShareModal() {
-        document.getElementById('shareModal').classList.add('hidden');
-    }
+    <!-- Preline Modal -->
+    <div id="confirmationModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen px-4">
+            <div class="relative w-full max-w-lg p-4 mx-auto bg-white rounded-lg shadow-lg">
+                <div class="flex justify-between items-center pb-3">
+                    <h3 class="text-lg font-semibold">Confirmation de réservation</h3>
+                    <button class="text-gray-400 hover:text-gray-600" onclick="closeModal()">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="mt-2">
+                    <p class="text-gray-700 dark:text-white">Vous allez payer <span id="totalPrice"></span> € pour cette réservation. Voulez-vous confirmer ?</p>
+                </div>
+                <div class="flex justify-end pt-4">
+                    <button class="bg-gray-500 text-white px-4 py-2 rounded mr-2" onclick="closeModal()">Annuler</button>
+                    <button class="bg-blue-500 text-white px-4 py-2 rounded" onclick="confirmBooking()">Confirmer</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    function copyShareLink() {
-        const url = window.location.href;
-        navigator.clipboard.writeText(url).then(function() {
-            if (window.Swal) {
-                Swal.fire('Lien copié !', 'Le lien de la page a été copié dans le presse-papier.', 'success');
-            } else {
-                alert('Lien copié dans le presse-papier !');
-            }
-        }, function() {
-            if (window.Swal) {
-                Swal.fire('Erreur', 'Impossible de copier le lien.', 'error');
-            } else {
-                alert('Impossible de copier le lien.');
-            }
-        });
-    }
-
-    function shareWhatsapp(e) {
-        e.preventDefault();
-        const url = encodeURIComponent(window.location.href);
-        window.open('https://wa.me/?text=' + url, '_blank');
-    }
-
-    function shareFacebook(e) {
-        e.preventDefault();
-        const url = encodeURIComponent(window.location.href);
-        window.open('https://www.facebook.com/sharer/sharer.php?u=' + url, '_blank');
-    }
-
-    function shareInstagram(e) {
-        e.preventDefault();
-        if (window.Swal) {
-            Swal.fire('Partage Instagram', 'Instagram ne permet pas le partage direct de liens. Copiez le lien et partagez-le dans votre story ou bio.', 'info');
-        } else {
-            alert('Instagram ne permet pas le partage direct de liens. Copiez le lien et partagez-le dans votre story ou bio.');
+    <!-- Modal de confirmation -->
+    <script>
+        function closeModal() {
+            document.getElementById('confirmationModal').classList.add('hidden');
         }
-    }
-</script>
-<!-- script pour le swiper -->
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Initialisation du Swiper des miniatures
-        const swiperThumbs = new Swiper('.mySwiper2', {
-            spaceBetween: 10,
-            slidesPerView: 4,
-            freeMode: true,
-            watchSlidesProgress: true, // Permet de suivre la progression des miniatures
-        });
 
-        // Initialisation du Swiper principal
-        const swiperMain = new Swiper('.mySwiper', {
-            spaceBetween: 10,
-            navigation: {
-                nextEl: '.swiper-button-next',
-                prevEl: '.swiper-button-prev',
-            },
-            thumbs: {
-                swiper: swiperThumbs, // Connecte le Swiper principal aux miniatures
-            },
-        });
-    });
-</script>
-<!-- script pour le modal de la galerie -->
-@php
-$galleryImages = collect($property->images)->map(function($img) {
-return asset('storage/' . $img->image_path);
-});
-@endphp
-<script>
-    // Injection du tableau d'images pour la galerie (compatible tous éditeurs)
-    let galleryImages = @json($galleryImages);
-
-    function openGallery(index = 0) {
-        document.getElementById('photoGalleryModal').classList.remove('hidden');
-        setGalleryImage(index);
-    }
-
-    function closeGallery() {
-        document.getElementById('photoGalleryModal').classList.add('hidden');
-    }
-
-    function setGalleryImage(idx) {
-        const mainImg = document.getElementById('galleryMainImage');
-        if (mainImg && galleryImages[idx]) {
-            mainImg.src = galleryImages[idx];
+        function confirmBooking() {
+            document.getElementById('confirm-booking').click();
+            closeModal();
         }
-    }
-</script>
-</script>
-<!-- Fin du composant Livewire : tout est dans le même div racine -->
+
+        document.addEventListener('DOMContentLoaded', function() {
+            window.addEventListener('show-confirmation', event => {
+                document.getElementById('totalPrice').textContent = event.detail.totalPrice;
+                document.getElementById('confirmationModal').classList.remove('hidden');
+            });
+        });
+        // Fonction d'ouverture du modal de partage
+        function shareProperty() {
+            document.getElementById('shareModal').classList.remove('hidden');
+        }
+
+        function closeShareModal() {
+            document.getElementById('shareModal').classList.add('hidden');
+        }
+
+        function copyShareLink() {
+            const url = window.location.href;
+            navigator.clipboard.writeText(url).then(function() {
+                if (window.Swal) {
+                    Swal.fire('Lien copié !', 'Le lien de la page a été copié dans le presse-papier.', 'success');
+                } else {
+                    alert('Lien copié dans le presse-papier !');
+                }
+            }, function() {
+                if (window.Swal) {
+                    Swal.fire('Erreur', 'Impossible de copier le lien.', 'error');
+                } else {
+                    alert('Impossible de copier le lien.');
+                }
+            });
+        }
+    </script>
+    <!-- script pour le swiper -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialisation du Swiper des miniatures
+            const swiperThumbs = new Swiper('.mySwiper2', {
+                spaceBetween: 10,
+                slidesPerView: 4,
+                freeMode: true,
+                watchSlidesProgress: true, // Permet de suivre la progression des miniatures
+            });
+
+            // Initialisation du Swiper principal
+            const swiperMain = new Swiper('.mySwiper', {
+                spaceBetween: 10,
+                navigation: {
+                    nextEl: '.swiper-button-next',
+                    prevEl: '.swiper-button-prev',
+                },
+                thumbs: {
+                    swiper: swiperThumbs, // Connecte le Swiper principal aux miniatures
+                },
+            });
+        });
+    </script>
+    <!-- script pour le modal de la galerie -->
+    @php
+    $galleryImages = collect($property->images)->map(function($img) {
+    return asset('storage/' . $img->image_path);
+    });
+    @endphp
+    <script>
+        // Injection du tableau d'images pour la galerie (compatible tous éditeurs)
+        let galleryImages = @json($galleryImages);
+
+        function openGallery(index = 0) {
+            document.getElementById('photoGalleryModal').classList.remove('hidden');
+            setGalleryImage(index);
+        }
+
+        function closeGallery() {
+            document.getElementById('photoGalleryModal').classList.add('hidden');
+        }
+
+        function setGalleryImage(idx) {
+            const mainImg = document.getElementById('galleryMainImage');
+            if (mainImg && galleryImages[idx]) {
+                mainImg.src = galleryImages[idx];
+            }
+        }
+    </script>
 </div>

@@ -65,10 +65,10 @@
                         onclick="showLoginNotification()"
                         @endif
                         type="button"
-                        class="flex items-center px-3 py-2 {{ $isWished ? 'bg-pink-500 text-white' : 'bg-pink-100 text-pink-600' }} hover:bg-pink-200 rounded-lg shadow transition"
+                        class="flex items-center justify-center px-3 py-2 {{ $isWished ? 'bg-pink-500 text-white' : 'bg-pink-100 text-pink-600' }} hover:bg-pink-200 rounded-lg shadow transition"
                         title="{{ Auth::check() ? ($isWished ? 'Retirer de ma liste de souhait' : 'Ajouter à ma liste de souhait') : 'Connectez-vous pour ajouter à votre liste de souhait' }}">
-                        <i class="fas fa-heart mr-1 {{ $isWished ? '' : 'text-pink-600' }}"></i>
-                        {{ $isWished ? 'Retirer' : "J'aime" }}
+                        <i class="fas fa-heart {{ $isWished ? '' : 'text-pink-600' }} text-lg"></i>
+                        <span class="hidden sm:inline ml-1">{{ $isWished ? 'Retirer' : "J'aime" }}</span>
                     </button>
                     <script>
                         function showLoginNotification() {
@@ -93,9 +93,9 @@
                         }
                     </script>
                     <!-- Bouton de partage -->
-                    <button onclick="shareProperty()" class="flex items-center px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-lg shadow transition" title="Partager">
-                        <i class="fas fa-share-alt mr-1"></i>
-                        Partager
+                    <button onclick="shareProperty()" class="flex items-center justify-center px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-lg shadow transition" title="Partager">
+                        <i class="fas fa-share-alt text-lg"></i>
+                        <span class="hidden sm:inline ml-1">Partager</span>
                     </button>
                     <!-- Modal de partage -->
                     <div id="shareModal" class="fixed inset-0 z-50 hidden bg-black bg-opacity-60 flex items-center justify-center">
@@ -123,9 +123,9 @@
                         </div>
                     </div>
                     <!-- Bouton de contact employé -->
-                    <button onclick="openContactModal()" class="flex items-center px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg shadow transition" title="Contacter un employé de la plateforme">
-                        <i class="fas fa-headset mr-1"></i>
-                        Contacter un employé
+                    <button onclick="openContactModal()" class="flex items-center justify-center px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg shadow transition" title="Contacter un employé de la plateforme">
+                        <i class="fas fa-headset text-lg"></i>
+                        <span class="hidden sm:inline ml-1">Contacter un employé</span>
                     </button>
                     <!-- Modal de contact employé -->
                     <div id="contactEmployeeModal" class="fixed inset-0 z-50 hidden bg-black bg-opacity-60 flex items-center justify-center">
@@ -260,7 +260,7 @@
 
 <!-- Reservation form -->
 <div class="container mx-auto mt-8">
-    <h1 class="block text-3xl font-bold text-gray-800 sm:text-4xl lg:text-2xl lg:leading-tight dark:text-black">Entrez vos dates</h1>
+    <h1 class="block text-3xl font-bold text-gray-800 sm:text-4xl lg:text-2xl lg:leading-tight dark:text-black mt-6 mb-4 sm:mt-0 sm:mb-6 px-4 sm:px-0">Entrez vos dates</h1>
 
     <form wire:submit.prevent="addBooking" class="mb-4">
         <div class="flex mt-4 flex-col sm:flex-row gap-2 sm:gap-3 items-center bg-white rounded-lg p-2 dark:bg-gray-800">
@@ -295,8 +295,8 @@
 <!-- Reviews section -->
 <div class="container bg-white mx-auto mt-8 mb-8">
     <div id="reviews" class="mt-8">
-        <div class="mb-6">
-            <span class="block text-xl font-semibold text-gray-800">Ce que les personnes ayant séjourné ici ont adoré :</span>
+        <div class="mb-6 px-4 sm:px-0">
+            <span class="block text-xl font-semibold text-gray-800 mt-6 mb-4 sm:mt-0 sm:mb-6">Ce que les personnes ayant séjourné ici ont adoré :</span>
         </div>
 
         @if($reviews->isEmpty())

@@ -12,14 +12,14 @@
                 </div>
 
                 <div class="w-full">
-                    <input type="date" wire:model="checkInDate" id="ReservationCheckIn" class="py-3 px-4 block w-full border-transparent rounded-lg text-sm 
+                    <input type="date" wire:model="checkInDate" id="ReservationCheckInBottom" class="py-3 px-4 block w-full border-transparent rounded-lg text-sm 
                     focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 
                     disabled:pointer-events-none dark:bg-slate-900 dark:border-transparent 
                     dark:text-gray-400 dark:focus:ring-gray-600" min="{{ now()->format('Y-m-d') }}">
                     @error('checkInDate') <span class="text-red-500">{{ $message }}</span> @enderror
                 </div>
                 <div class="w-full">
-                    <input type="date" wire:model="checkOutDate" id="ReservationCheckOut" wire:change="calculateTotalPrice" class="py-3 px-4 block w-full border-transparent rounded-lg text-sm 
+                    <input type="date" wire:model="checkOutDate" id="ReservationCheckOutBottom" wire:change="calculateTotalPrice" class="py-3 px-4 block w-full border-transparent rounded-lg text-sm 
                     focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 
                     disabled:pointer-events-none dark:bg-slate-900 dark:border-transparent 
                     dark:text-gray-400 dark:focus:ring-gray-600" min="{{ $checkInDate }}">
@@ -341,20 +341,22 @@
                 @error('checkOutDate') <span class="text-red-500">{{ $message }}</span> @enderror
             </div>
             <script>
-                // Force l'ouverture du calendrier natif sur tout clic dans le champ
+                // Force l'ouverture du calendrier natif sur tout clic dans le champ pour les deux formulaires
                 document.addEventListener('DOMContentLoaded', function() {
-                    var checkIn = document.getElementById('ReservationCheckIn');
-                    var checkOut = document.getElementById('ReservationCheckOut');
-                    if (checkIn) {
-                        checkIn.addEventListener('click', function(e) {
-                            this.showPicker && this.showPicker();
-                        });
-                    }
-                    if (checkOut) {
-                        checkOut.addEventListener('click', function(e) {
-                            this.showPicker && this.showPicker();
-                        });
-                    }
+                    const ids = [
+                        'ReservationCheckIn',
+                        'ReservationCheckOut',
+                        'ReservationCheckInBottom',
+                        'ReservationCheckOutBottom'
+                    ];
+                    ids.forEach(function(id) {
+                        var el = document.getElementById(id);
+                        if (el) {
+                            el.addEventListener('click', function(e) {
+                                this.showPicker && this.showPicker();
+                            });
+                        }
+                    });
                 });
             </script>
             @if(Auth::check())

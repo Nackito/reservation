@@ -82,6 +82,21 @@
                             @endif
                         </div>
                     </div>
+                    {{-- Champ de recherche par commune --}}
+                    <div>
+                        <label for="district" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-map mr-1"></i>Commune
+                        </label>
+                        <div class="relative">
+                            <input
+                                type="text"
+                                id="district"
+                                wire:model.live="searchDistrict"
+                                placeholder="Entrez une commune..."
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                                autocomplete="off">
+                        </div>
+                    </div>
 
                     {{-- Champ de recherche par quartier/municipality --}}
                     <div>

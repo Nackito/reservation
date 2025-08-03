@@ -11,13 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('categories', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->string('slug')->unique();
-            $table->string('image')->nullable();
-            $table->string('description')->nullable();
-            $table->timestamps();
+        Schema::table('properties', function (Blueprint $table) {
+            if (!Schema::hasColumn('properties', 'city')) {
+                $table->string('city')->nullable()->after('price_per_night');
+            }
         });
     }
 
@@ -26,6 +23,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('categories');
+        Schema::table('properties', function (Blueprint $table) {
+            $table->dropColumn('city');
+        });
     }
 };

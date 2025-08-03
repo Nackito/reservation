@@ -148,11 +148,15 @@ class BookingManager extends Component
             'total_price' => $this->totalPrice,
         ]);
 
-        // Envoi automatique d'un message à l'utilisateur connecté
+        // Envoi automatique d'un message personnalisé à l'utilisateur connecté
+        $user = Auth::user();
+        $date = Carbon::now()->format('d/m/Y H:i');
+        $status = 'En attente de confirmation';
+        $messageContent = "<strong>{$user->name}</strong> : Bonjour {$user->name},<br>Votre demande de réservation a bien été prise en compte, nous vérifions la disponibilité et reviendrons vers vous dans un instant.<br><span class='message-status'>Statut : {$status}</span><br><span class='message-date'>{$date}</span>";
         \App\Models\Message::create([
             'sender_id' => 1, // 1 = admin, à adapter si besoin
-            'receiver_id' => Auth::id(),
-            'content' => "Votre demande de réservation a bien été prise en compte, nous vérifions la disponibilité et reviendrons vers vous dans un instant.",
+            'receiver_id' => $user->id,
+            'content' => $messageContent,
         ]);
 
         $this->bookings = Booking::where('property_id', $this->propertyId)->get();

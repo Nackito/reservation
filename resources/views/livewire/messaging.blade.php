@@ -8,7 +8,7 @@
     @foreach($messages as $msg)
     <div class="mb-2">
       <span class="font-semibold">{{ $msg->sender->name }}:</span>
-      <span>{{ $msg->content }}</span>
+      <span>{!! $msg->content !!}</span>
       <span class="text-xs text-gray-400">({{ $msg->created_at->format('d/m/Y H:i') }})</span>
     </div>
     @endforeach

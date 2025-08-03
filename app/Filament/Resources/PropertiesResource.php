@@ -217,7 +217,9 @@ class PropertiesResource extends Resource
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('description')
-                    ->searchable(),
+                    ->searchable()
+                    ->limit(15)
+                    ->toggleable(),
 
                 ImageColumn::make('images.image_path')
                     ->label('Images')
@@ -282,8 +284,7 @@ class PropertiesResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()
-            ->where('user_id', Auth::id());
+        return parent::getEloquentQuery();
     }
 
     public static function getRelations(): array

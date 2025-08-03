@@ -1,5 +1,8 @@
 <div class="max-w-2xl mx-auto p-6">
-  <h2 class="text-2xl font-bold mb-4">Messagerie interne</h2>
+  <button onclick="window.history.back()" class="mb-4 flex items-center text-blue-600 hover:text-blue-800 font-semibold">
+    <i class="fas fa-arrow-left mr-2"></i>Retour
+  </button>
+  <h2 class="text-2xl font-bold mb-4">Messages</h2>
   <div class="bg-white rounded shadow p-4 mb-4">
     @foreach($messages as $msg)
     <div class="mb-2">

@@ -142,16 +142,23 @@ class BookingManager extends Component
 
         Booking::create([
             'property_id' => $this->propertyId,
-            'user_id' => Auth::id(), // Assurez-vous que l'utilisateur est authentifié
+            'user_id' => Auth::id(),
             'start_date' => $this->checkInDate,
             'end_date' => $this->checkOutDate,
             'total_price' => $this->totalPrice,
         ]);
 
+        // Envoi automatique d'un message à l'utilisateur connecté
+        \App\Models\Message::create([
+            'sender_id' => 1, // 1 = admin, à adapter si besoin
+            'receiver_id' => Auth::id(),
+            'content' => "Votre demande de réservation a bien été prise en compte, nous vérifions la disponibilité et reviendrons vers vous dans un instant.",
+        ]);
+
         $this->bookings = Booking::where('property_id', $this->propertyId)->get();
         LivewireAlert::title('Réservation ajoutée avec succès!')->success()->show();
-        // Redirection après l'alerte
-        return redirect()->route('home');
+        // Redirection vers la messagerie interne
+        return redirect()->route('messaging');
     }
 
     public function toggleWishlist()

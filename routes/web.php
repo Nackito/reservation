@@ -34,6 +34,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('/messagerie', App\Livewire\Messaging::class)->name('messaging');
+    // Ajout d'un lien vers la messagerie dans la vue du profil
 });
 
 require __DIR__ . '/auth.php';

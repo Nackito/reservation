@@ -35,6 +35,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::get('/messagerie', App\Livewire\Messaging::class)->name('messaging');
+    Route::get('/mon-espace', App\Livewire\UserMenu::class)->name('user.menu');
     // Ajout d'un lien vers la messagerie dans la vue du profil
 });
 

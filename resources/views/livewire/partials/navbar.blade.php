@@ -13,9 +13,14 @@
                         Connexion / Inscription
                     </a>
                     @else
-                    <a href="{{ route('user.menu') }}" class="flex items-center py-2 px-4 rounded-lg text-sm font-semibold border border-gray-300 text-gray-800 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-600">
-                        <span>{{ Auth::user()->name }}</span>
-                    </a>
+                    <div class="flex items-center md:hidden">
+                        <a href="{{ route('messaging') }}" class="flex items-center py-2 px-2 rounded-lg text-sm text-gray-800 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-600">
+                            <i class="fas fa-envelope text-blue-600 text-lg"></i>
+                        </a>
+                        <a href="{{ route('user.menu') }}" class="flex items-center py-2 px-4 rounded-lg text-sm font-semibold border border-gray-300 text-gray-800 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-600">
+                            <span>{{ Auth::user()->name }}</span>
+                        </a>
+                    </div>
                     @endguest
                 </div>
             </div>

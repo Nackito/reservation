@@ -96,9 +96,9 @@ class PropertiesResource extends Resource
 
                         Forms\Components\Select::make('property_type')
                             ->options([
-                                'apartment' => 'Apartment',
-                                'house' => 'House',
-                                'duplex house' => 'Duplex House',
+                                'apartment' => 'Appartement',
+                                'house' => 'Maison',
+                                'duplex house' => 'Maison Duplex',
                                 'studio' => 'Studio',
                             ])
                             ->required()

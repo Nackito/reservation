@@ -30,9 +30,14 @@ class UserResource extends Resource
         return $form
             ->schema([
                 Forms\Components\TextInput::make('name')
-                    ->label('Name')
+                    ->label('Nom')
                     ->required()
                     ->placeholder('John Doe'),
+
+                Forms\Components\TextInput::make('prenom')
+                    ->label('Prénom')
+                    ->required()
+                    ->placeholder('Jean'),
 
                 Forms\Components\TextInput::make('email')
                     ->label('Email')
@@ -40,6 +45,18 @@ class UserResource extends Resource
                     ->maxLength(255)
                     ->unique(ignoreRecord: true)
                     ->required(),
+
+                Forms\Components\Select::make('role')
+                    ->label('Rôle')
+                    ->options([
+                        'admin' => 'Admin',
+                        'user' => 'Utilisateur',
+                        'employe' => 'Employé',
+                        'proprietaire' => 'Propriétaire',
+                        'gestionnaire' => 'Gestionnaire',
+                    ])
+                    ->required()
+                    ->default('user'),
 
                 Forms\Components\DateTimePicker::make('email_verified_at')
                     ->label('Email Verified At')
@@ -51,7 +68,6 @@ class UserResource extends Resource
                     ->password()
                     ->autocomplete('new-password')
                     ->placeholder('********'),
-
 
                 Forms\Components\TextInput::make('password_confirmation')
                     ->label('Password Confirmation')

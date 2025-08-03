@@ -78,9 +78,10 @@ class PropertiesResource extends Resource
                 Group::make()->schema([
                     Section::make('Property Details')->schema([
                         Forms\Components\TextInput::make('price_per_night')
+                            ->label('Prix par nuit (FrCFA)')
                             ->required()
                             ->numeric()
-                            ->placeholder('100.00'),
+                            ->placeholder('10000'),
 
                         Forms\Components\TextInput::make('city')
                             ->required()

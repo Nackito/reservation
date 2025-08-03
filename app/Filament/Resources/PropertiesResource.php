@@ -112,8 +112,12 @@ class PropertiesResource extends Resource
                             ->placeholder('3')
                             ->visible(fn($get) => $get('property_type') !== 'studio'),
 
-                        Forms\Components\Hidden::make('user_id')
-                            ->default(fn() => Auth::id()),
+                        Forms\Components\Select::make('user_id')
+                            ->relationship('user', 'name')
+                            ->searchable()
+                            ->required()
+                            ->default(fn() => Auth::id())
+                            ->label('Utilisateur propriétaire'),
                     ]),
                     Section::make('Status')->schema([
                         Forms\Components\Select::make('status')

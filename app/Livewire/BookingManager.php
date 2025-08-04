@@ -47,43 +47,55 @@ class BookingManager extends Component
         'Réveil' => 'fa-clock',
         'Canal+' => 'fa-tv',
         'Netflix' => 'fa-tv',
-        'Youtube' => 'fa-brands-youtube',
-        'Playstation' => 'fa-gamepad',
-        'Eau chaude' => 'fa-water',
-        'Groupe électrogène' => 'fa-plug',
-        'Petit déjeuné' => 'fa-coffee',
-        'Sécurité 24/7' => 'fa-shield-alt',
-        'Ascenseur' => 'fa-elevator',
-        'Salle de bain privée' => 'fa-bath',
-        'Ventilateur' => 'fa-fan',
     ];
 
-    protected $rules = [
-        'checkInDate' => 'required|date',
-        'checkOutDate' => 'required|date|after:checkInDate',
-    ];
+    // The following code should be moved to a lifecycle method such as mount() or a custom method.
+    // Example: Move initialization logic to mount()
 
-    public function mount($propertyId)
+    public function mount()
     {
-        $this->propertyId = $propertyId;
-        $this->propertyName = Property::find($propertyId)->name; // Récupère le nom de la propriété par son ID
-        $this->checkInDate = Carbon::today()->toDateString(); // Définit la date d'entrée par défaut à aujourd'hui
-        $this->property = Property::find($propertyId); // Récupère la propriété par son ID
+        // Récupérer l'admin (premier utilisateur avec le rôle 'admin')
+        $admin = \App\Models\User::where('role', 'admin')->first();
+        $adminId = $admin ? $admin->id : null;
 
-        if (!$this->property) {
-            abort(404, 'Propriété non trouvée'); // Gère le cas où la propriété n'existe pas
+        if ($adminId && isset($this->propertyId)) {
+            // Vérifier si une conversation existe déjà entre le client et l'admin
+            $conversation = \App\Models\Conversation::where('user_id', auth()->id())
+                ->where('owner_id', $adminId)
+                ->first();
+            if (!$conversation && isset($this->booking)) {
+                $conversation = \App\Models\Conversation::create([
+                    'user_id' => auth()->id(),
+                    'owner_id' => $adminId,
+                    'booking_id' => $this->booking->id,
+                ]);
+            } elseif ($conversation && isset($this->booking)) {
+                // Mettre à jour la réservation liée si besoin
+                $conversation->booking_id = $this->booking->id;
+                $conversation->save();
+            }
+            // Créer le premier message automatique
+            \App\Models\Message::create([
+                'conversation_id' => $conversation->id,
+                'sender_id' => auth()->id(),
+                'content' => 'Nouvelle demande de réservation pour ' . ($this->property ? $this->property->name : '') . ' du ' . ($this->start_date ?? '') . ' au ' . ($this->end_date ?? ''),
+            ]);
         }
 
         // Convertir la description Markdown en HTML
-        $this->property->description = Str::markdown($this->property->description);
+        if ($this->property && $this->property->description) {
+            $this->property->description = Str::markdown($this->property->description);
+        }
 
-        $this->bookings = Booking::where('property_id', $propertyId)->get();
+        if (isset($this->propertyId)) {
+            $this->bookings = Booking::where('property_id', $this->propertyId)->get();
 
-        // Récupérer les avis approuvés liés à cette propriété
-        $this->reviews = Reviews::where('property_id', $propertyId)
-            ->where('approved', true) // Filtrer les avis approuvés
-            ->with('user') // Charger les utilisateurs qui ont laissé des avis
-            ->get();
+            // Récupérer les avis approuvés liés à cette propriété
+            $this->reviews = Reviews::where('property_id', $this->propertyId)
+                ->where('approved', true) // Filtrer les avis approuvés
+                ->with('user') // Charger les utilisateurs qui ont laissé des avis
+                ->get();
+        }
     }
 
     public function submitReview()
@@ -140,7 +152,7 @@ class BookingManager extends Component
             return;
         }
 
-        Booking::create([
+        $booking = Booking::create([
             'property_id' => $this->propertyId,
             'user_id' => Auth::id(),
             'start_date' => $this->checkInDate,
@@ -148,16 +160,33 @@ class BookingManager extends Component
             'total_price' => $this->totalPrice,
         ]);
 
-        // Envoi automatique d'un message personnalisé à l'utilisateur connecté
-        $user = Auth::user();
-        $date = Carbon::now()->format('d/m/Y H:i');
-        $status = 'En attente de confirmation';
-        $messageContent = "<strong>{$user->name}</strong> : Bonjour {$user->name},<br>Votre demande de réservation a bien été prise en compte, nous vérifions la disponibilité et reviendrons vers vous dans un instant.<br><span class='message-status'>Statut : {$status}</span><br><span class='message-date'>{$date}</span>";
-        \App\Models\Message::create([
-            'sender_id' => 1, // 1 = admin, à adapter si besoin
-            'receiver_id' => $user->id,
-            'content' => $messageContent,
-        ]);
+        // Création automatique de la conversation et du message avec l'admin
+        $admin = \App\Models\User::where('role', 'admin')->first();
+        $adminId = $admin ? $admin->id : null;
+        if ($adminId) {
+            // Vérifier si une conversation existe déjà entre le client et l'admin
+            $conversation = \App\Models\Conversation::where('user_id', Auth::id())
+                ->where('owner_id', $adminId)
+                ->first();
+            if (!$conversation) {
+                $conversation = \App\Models\Conversation::create([
+                    'user_id' => Auth::id(),
+                    'owner_id' => $adminId,
+                    'booking_id' => $booking->id,
+                ]);
+            } else {
+                // Mettre à jour la réservation liée si besoin
+                $conversation->booking_id = $booking->id;
+                $conversation->save();
+            }
+            // Créer le premier message automatique
+            $property = Property::find($this->propertyId);
+            \App\Models\Message::create([
+                'conversation_id' => $conversation->id,
+                'sender_id' => Auth::id(),
+                'content' => 'Nouvelle demande de réservation pour ' . ($property ? $property->name : '') . ' du ' . $this->checkInDate . ' au ' . $this->checkOutDate,
+            ]);
+        }
 
         $this->bookings = Booking::where('property_id', $this->propertyId)->get();
         LivewireAlert::title('Réservation ajoutée avec succès!')->success()->show();

@@ -65,13 +65,12 @@
                             <i class="fas fa-heart mr-2"></i>Mes souhaits
                         </a>
 
-                        <div class="relative inline-block text-left z-[9999]">
+                        <div x-data="{ open: false }" class="relative inline-block text-left z-[9999]">
                             <button type="button"
                                 class="flex items-center gap-2 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-300 focus:outline-none md:inline-flex hidden"
-                                id="user-menu-button"
-                                aria-expanded="false"
-                                aria-haspopup="true"
-                                onclick="document.getElementById('user-menu-dropdown').classList.toggle('hidden')">
+                                @click="open = !open"
+                                :aria-expanded="open"
+                                aria-haspopup="true">
                                 <span>{{ Auth::user()->name }}</span>
                                 <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -80,7 +79,14 @@
                             <a href="{{ route('user.menu') }}" class="flex items-center py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-300 focus:outline-none md:hidden">
                                 <span>{{ Auth::user()->name }}</span>
                             </a>
-                            <div id="user-menu-dropdown" class="user-menu-dropdown-fixed hidden md:block">
+                            <div x-show="open" @click.outside="open = false" class="user-menu-dropdown-fixed md:block absolute right-0 mt-2 w-48 origin-top-right bg-white dark:bg-gray-800 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50"
+                                style="display: none;"
+                                x-transition:enter="transition ease-out duration-100"
+                                x-transition:enter-start="transform opacity-0 scale-95"
+                                x-transition:enter-end="transform opacity-100 scale-100"
+                                x-transition:leave="transition ease-in duration-75"
+                                x-transition:leave-start="transform opacity-100 scale-100"
+                                x-transition:leave-end="transform opacity-0 scale-95">
                                 <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-sm bg-white text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">Profil</a>
                                 <a href="{{ route('messaging') }}" class="block px-4 py-2 text-sm bg-white text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">Messagerie</a>
                                 <a href="{{ route('logout') }}" class="block px-4 py-2 text-sm bg-white text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Se déconnecter</a>

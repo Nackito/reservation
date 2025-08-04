@@ -107,10 +107,7 @@ class BookingResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()
-            ->whereHas('property', function (Builder $query) {
-                $query->where('user_id', Auth::id());
-            });
+        return parent::getEloquentQuery();
     }
 
     public static function getRelations(): array

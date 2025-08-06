@@ -52,9 +52,19 @@ class AdminChatBox extends Component
       ->get();
   }
 
+  public function getConversationsProperty()
+  {
+    return Message::select('sender_id')
+      ->distinct()
+      ->with('sender')
+      ->where('receiver_id', Auth::id())
+      ->get();
+  }
+
   public function render()
   {
     return view('livewire.admin-chat-box', [
+      'conversations' => $this->conversations,
       'messages' => $this->messages,
     ]);
   }

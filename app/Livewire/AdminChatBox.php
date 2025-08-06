@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Filament\Pages\Chat;
 use Livewire\Component;
 use App\Models\Message;
 use App\Models\User;
@@ -10,28 +11,48 @@ use Illuminate\Support\Facades\Auth;
 class AdminChatBox extends Component
 {
   public $users;
-  public $selectedUserId;
+  //public $selectedUserId;
+  public $selectedUser;
   public $newMessage = '';
 
-  protected $rules = [
-    'newMessage' => 'required|string',
-  ];
+  //protected $rules = [
+  //'newMessage' => 'required|string',
+  //];
 
   public function mount()
   {
     // Charger tous les utilisateurs sauf l'admin
-    $this->users = User::where('email', '!=', Auth::user()->email)->get();
-    $first = $this->users->first();
-    $this->selectedUserId = $first?->id;
+    $this->users = User::whereNot("id", Auth::id())->get();
+    $this->selectedUser = $this->users->first();
+    //$first = $this->users->first();
+    //$this->selectedUserId = $first?->id;
+  }
+
+  public function selectUser($id)
+  {
+    $this->selectedUser = User::find($id);
+  }
+
+  public function submit()
+  {
+    if (!$this->newMessage) return;
+
+    Message::create([
+      'sender_id' => Auth::id(),
+      'receiver_id' => $this->selectedUser->id,
+      'content' => $this->newMessage,
+    ]);
+
+    $this->newMessage = '';
   }
 
   public function updatedSelectedUserId()
   {
     // Réinitialiser le message lors du changement d'utilisateur
-    $this->newMessage = '';
+    //$this->newMessage = '';
   }
 
-  public function sendMessage()
+  /*public function sendMessage()
   {
     $this->validate();
 
@@ -47,9 +68,14 @@ class AdminChatBox extends Component
   public function getMessagesProperty()
   {
     $adminId = Auth::id();
-    return Message::where('receiver_id', $adminId)
-      ->orderBy('created_at', 'desc')
-      ->get();
+    $userId = $this->selectedUserId;
+    return Message::where(function ($q) use ($adminId, $userId) {
+      $q->where('sender_id', $adminId)
+        ->where('receiver_id', $userId);
+    })->orWhere(function ($q) use ($adminId, $userId) {
+      $q->where('sender_id', $userId)
+        ->where('receiver_id', $adminId);
+    })->orderBy('created_at', 'asc')->get();
   }
 
   public function getConversationsProperty()
@@ -67,5 +93,5 @@ class AdminChatBox extends Component
       'conversations' => $this->conversations,
       'messages' => $this->messages,
     ]);
-  }
+  }*/
 }

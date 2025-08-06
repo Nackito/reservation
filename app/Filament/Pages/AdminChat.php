@@ -2,8 +2,10 @@
 
 namespace App\Filament\Pages;
 
+use Filament\Actions\Action;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Message;
 
 class AdminChat extends Page
 {
@@ -26,5 +28,38 @@ class AdminChat extends Page
         ->url(static::getUrl())
         ->isActiveWhen(fn(): bool => request()->routeIs(static::getRouteName())),
     ];
+  }
+
+
+  protected function getHeaderActions(): array
+  {
+    return [
+      Action::make('create')
+        ->label('Nouveau Chat')
+        ->action(fn() => redirect()->route('admin.chat.create')),
+
+      Action::make('delete')
+        ->label('Supprimer Chat')
+        ->requiresConfirmation()
+        ->action(fn() => $this->deleteSelectedChat()),
+    ];
+  }
+
+  private function deleteSelectedChat(): void
+  {
+    // Logique pour supprimer un chat sélectionné
+    // Exemple : Message::where('id', $this->selectedChatId)->delete();
+  }
+
+  public function getMessagesProperty()
+  {
+    $userId = Auth::id();
+    return Message::where(function ($q) use ($userId) {
+      $q->where('sender_id', $userId)
+        ->where('receiver_id', $this->selectedUserId);
+    })->orWhere(function ($q) use ($userId) {
+      $q->where('sender_id', $this->selectedUserId)
+        ->where('receiver_id', $userId);
+    })->orderBy('created_at')->get();
   }
 }

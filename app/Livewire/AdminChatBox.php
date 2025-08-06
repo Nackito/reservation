@@ -46,15 +46,10 @@ class AdminChatBox extends Component
 
   public function getMessagesProperty()
   {
-    $userId = Auth::id();
-
-    return Message::where(function ($q) use ($userId) {
-      $q->where('sender_id', $userId)
-        ->where('receiver_id', $this->selectedUserId);
-    })->orWhere(function ($q) use ($userId) {
-      $q->where('sender_id', $this->selectedUserId)
-        ->where('receiver_id', $userId);
-    })->orderBy('created_at')->get();
+    $adminId = Auth::id();
+    return Message::where('receiver_id', $adminId)
+      ->orderBy('created_at', 'desc')
+      ->get();
   }
 
   public function render()

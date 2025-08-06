@@ -1,7 +1,6 @@
 <?php
 
 return [
-
     /*
     |--------------------------------------------------------------------------
     | Broadcasting
@@ -15,7 +14,6 @@ return [
     */
 
     'broadcasting' => [
-
         // 'echo' => [
         //     'broadcaster' => 'pusher',
         //     'key' => env('VITE_PUSHER_APP_KEY'),
@@ -28,7 +26,6 @@ return [
         //     'encrypted' => true,
         //     'forceTLS' => true,
         // ],
-
     ],
 
     /*
@@ -86,4 +83,18 @@ return [
 
     'livewire_loading_delay' => 'default',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Panel Providers
+    |--------------------------------------------------------------------------
+    |
+    | Vous pouvez enregistrer ici vos PanelProvider personnalisés pour que
+    | Filament les charge. Sans cela, il utilisera son fournisseur par défaut.
+    |
+    */
+
+    'providers' => [
+        App\Providers\Filament\AdminPanelProvider::class,
+        App\Providers\Filament\AppPanelProvider::class,
+    ],
 ];

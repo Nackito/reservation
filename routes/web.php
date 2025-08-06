@@ -26,6 +26,12 @@ Route::get('/reservation-details/{propertyId}', ReservationDetails::class)->name
 //Route::get('/dashboard', function () {
 //    return redirect('/admin');
 //})->name('dashboard');
+// Chat utilisateur <-> admin
+Route::middleware(['auth'])->group(function () {
+    Route::get('chat', function () {
+        return view('chat');
+    })->name('user.chat');
+});
 
 
 

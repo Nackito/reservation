@@ -9,46 +9,50 @@ use Illuminate\Support\Facades\Auth;
 
 class ChatBox extends Component
 {
-  public $newMessage = '';
-  public $receiverId;
+  public $newMessage;
+  public $users;
+  public $selectedUser;
+  public $messages;
 
-  protected $rules = [
-    'newMessage' => 'required|string',
-  ];
-
-  public function mount($receiverId = null)
+  public function mount()
   {
-    // Si aucun destinataire spécifié, utiliser l'admin (par email)
-    if (! $receiverId) {
-      $admin = User::where('email', 'admin1@example.com')->first();
-      $this->receiverId = $admin?->id;
-    } else {
-      $this->receiverId = $receiverId;
-    }
+    $this->users = User::whereNot("id", Auth::id())->latest()->get();
+    $this->selectedUser = $this->users->first();
+    $this->loadMessages();
   }
 
-  // Messages chargés à chaque rendu
-
-  public function sendMessage()
+  public function loadMessages()
   {
-    $this->validate();
-    Message::create([
+    $this->messages = Message::query()
+      ->where(function ($q) {
+        $q->where('sender_id', Auth::id())
+          ->where('receiver_id', $this->selectedUser->id);
+      })
+      ->orWhere(function ($q) {
+        $q->where('sender_id', $this->selectedUser->id)
+          ->where('receiver_id', Auth::id());
+      })
+      ->latest()->get();
+  }
+
+  public function submit()
+  {
+    if (!$this->newMessage) return;
+
+    $message = Message::create([
       'sender_id' => Auth::id(),
-      'receiver_id' => $this->receiverId,
+      'receiver_id' => $this->selectedUser->id,
       'content' => $this->newMessage,
     ]);
+
+    $this->messages->push($message);
+
     $this->newMessage = '';
-    // Event si besoin
   }
 
-  public function render()
+  public function selectUser($id)
   {
-    $userId = Auth::id();
-    $messages = Message::where(function ($q) use ($userId) {
-      $q->where('sender_id', $userId)->where('receiver_id', $this->receiverId);
-    })->orWhere(function ($q) use ($userId) {
-      $q->where('sender_id', $this->receiverId)->where('receiver_id', $userId);
-    })->orderBy('created_at')->get();
-    return view('livewire.chat-box', compact('messages'));
+    $this->selectedUser = User::find($id);
+    $this->loadMessages();
   }
 }

@@ -23,7 +23,7 @@ class AdminChatBox extends Component
   public function mount()
   {
     // Charger tous les utilisateurs sauf l'admin
-    $this->users = User::whereNot("id", Auth::id())->get();
+    $this->users = User::whereNot("id", Auth::id())->latest()->get();
     $this->selectedUser = $this->users->first();
     $this->loadMessages();
 

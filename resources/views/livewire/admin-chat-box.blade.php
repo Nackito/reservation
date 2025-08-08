@@ -27,7 +27,7 @@
       <!-- Chat Messages -->
       <div class="flex-1 overflow-y-auto p-4 bg-gray-50 space-y-2">
         @foreach ($messages as $message)
-        <div class="flex justify-end">
+        <div class="flex {{ $message->sender_id === auth()->id() ? 'justify-end' : 'justify-start' }}">
           <div class="max-w-xs px-4 py-2 rounded-2xl shadow bg-blue-600 text-blue-100">
             {{ $message->content }}
           </div>

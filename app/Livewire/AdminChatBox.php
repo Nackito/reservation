@@ -13,7 +13,8 @@ class AdminChatBox extends Component
   public $users;
   //public $selectedUserId;
   public $selectedUser;
-  public $newMessage = '';
+  public $newMessage;
+  public $messages;
 
   //protected $rules = [
   //'newMessage' => 'required|string',
@@ -24,24 +25,42 @@ class AdminChatBox extends Component
     // Charger tous les utilisateurs sauf l'admin
     $this->users = User::whereNot("id", Auth::id())->get();
     $this->selectedUser = $this->users->first();
+    $this->loadMessages();
+
     //$first = $this->users->first();
     //$this->selectedUserId = $first?->id;
+  }
+  public function loadMessages()
+  {
+    $this->messages = Message::query()
+      ->where(function ($q) {
+        $q->where('sender_id', Auth::id())
+          ->where('receiver_id', $this->selectedUser->id);
+      })
+      ->orWhere(function ($q) {
+        $q->where('sender_id', $this->selectedUser->id)
+          ->where('receiver_id', Auth::id());
+      })
+      ->latest()->get();
   }
 
   public function selectUser($id)
   {
     $this->selectedUser = User::find($id);
+    $this->loadMessages();
   }
 
   public function submit()
   {
     if (!$this->newMessage) return;
 
-    Message::create([
+    $message = Message::create([
       'sender_id' => Auth::id(),
       'receiver_id' => $this->selectedUser->id,
       'content' => $this->newMessage,
     ]);
+
+    $this->messages->push($message);
 
     $this->newMessage = '';
   }

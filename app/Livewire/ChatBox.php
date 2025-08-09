@@ -5,6 +5,7 @@ namespace App\Livewire;
 use Livewire\Component;
 use App\Models\Message;
 use App\Models\User;
+use App\Events\MessageSent;
 use Illuminate\Support\Facades\Auth;
 
 class ChatBox extends Component
@@ -13,12 +14,14 @@ class ChatBox extends Component
   public $users;
   public $selectedUser;
   public $messages;
+  public $loginID;
 
   public function mount()
   {
     $this->users = User::whereNot("id", Auth::id())->latest()->get();
     $this->selectedUser = $this->users->first();
     $this->loadMessages();
+    $this->loginID = Auth::id();
   }
 
   public function loadMessages()
@@ -31,8 +34,7 @@ class ChatBox extends Component
       ->orWhere(function ($q) {
         $q->where('sender_id', $this->selectedUser->id)
           ->where('receiver_id', Auth::id());
-      })
-      ->latest()->get();
+      })->get();
   }
 
   public function submit()
@@ -48,11 +50,33 @@ class ChatBox extends Component
     $this->messages->push($message);
 
     $this->newMessage = '';
+
+    broadcast(new MessageSent($message));
+  }
+
+  public function getListeners()
+  {
+    return [
+      "echo-private:chat.{$this->loginID},MessageSent" => 'newChatMessageNotification',
+    ];
+  }
+
+  public function newChatMessageNotification($message)
+  {
+    if ($message['sender_id'] == $this->selectedUser->id) {
+      $messageObj = Message::find($message['id']);
+      $this->messages->push($messageObj);
+    }
   }
 
   public function selectUser($id)
   {
     $this->selectedUser = User::find($id);
     $this->loadMessages();
+  }
+
+  public function render()
+  {
+    return view('livewire.chat-box');
   }
 }

@@ -6,19 +6,16 @@ use App\Filament\Pages\Chat;
 use Livewire\Component;
 use App\Models\Message;
 use App\Models\User;
+use App\Events\MessageSent;
 use Illuminate\Support\Facades\Auth;
 
 class AdminChatBox extends Component
 {
   public $users;
-  //public $selectedUserId;
   public $selectedUser;
   public $newMessage;
   public $messages;
-
-  //protected $rules = [
-  //'newMessage' => 'required|string',
-  //];
+  public $loginID;
 
   public function mount()
   {
@@ -26,6 +23,7 @@ class AdminChatBox extends Component
     $this->users = User::whereNot("id", Auth::id())->latest()->get();
     $this->selectedUser = $this->users->first();
     $this->loadMessages();
+    $this->loginID = Auth::id();
 
     //$first = $this->users->first();
     //$this->selectedUserId = $first?->id;
@@ -40,8 +38,7 @@ class AdminChatBox extends Component
       ->orWhere(function ($q) {
         $q->where('sender_id', $this->selectedUser->id)
           ->where('receiver_id', Auth::id());
-      })
-      ->latest()->get();
+      })->get();
   }
 
   public function selectUser($id)
@@ -63,54 +60,27 @@ class AdminChatBox extends Component
     $this->messages->push($message);
 
     $this->newMessage = '';
+
+    broadcast(new MessageSent($message));
   }
 
-  public function updatedSelectedUserId()
+  public function getListeners()
   {
-    // Réinitialiser le message lors du changement d'utilisateur
-    //$this->newMessage = '';
+    return [
+      "echo-private:chat.{$this->loginID},MessageSent" => "newChatMessageNotification"
+    ];
   }
 
-  /*public function sendMessage()
+  public function newChatMessageNotification($message)
   {
-    $this->validate();
-
-    Message::create([
-      'sender_id' => Auth::id(),
-      'receiver_id' => $this->selectedUserId,
-      'content' => $this->newMessage,
-    ]);
-
-    $this->newMessage = '';
-  }
-
-  public function getMessagesProperty()
-  {
-    $adminId = Auth::id();
-    $userId = $this->selectedUserId;
-    return Message::where(function ($q) use ($adminId, $userId) {
-      $q->where('sender_id', $adminId)
-        ->where('receiver_id', $userId);
-    })->orWhere(function ($q) use ($adminId, $userId) {
-      $q->where('sender_id', $userId)
-        ->where('receiver_id', $adminId);
-    })->orderBy('created_at', 'asc')->get();
-  }
-
-  public function getConversationsProperty()
-  {
-    return Message::select('sender_id')
-      ->distinct()
-      ->with('sender')
-      ->where('receiver_id', Auth::id())
-      ->get();
+    if ($message['sender_id'] == $this->selectedUser->id) {
+      $messageObj = Message::find($message['id']);
+      $this->messages->push($messageObj);
+    }
   }
 
   public function render()
   {
-    return view('livewire.admin-chat-box', [
-      'conversations' => $this->conversations,
-      'messages' => $this->messages,
-    ]);
-  }*/
+    return view('livewire.admin-chat-box');
+  }
 }

@@ -11,3 +11,5 @@ Alpine.start();
 
 // index.js
 import "preline";
+
+import "./echo";

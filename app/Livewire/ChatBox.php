@@ -54,6 +54,11 @@ class ChatBox extends Component
     broadcast(new MessageSent($message));
   }
 
+  public function updatedNewMessage($value)
+  {
+    $this->dispatch('userTyping', userID: $this->loginID, userName: Auth::user()->name, selectedUserID: $this->selectedUser->id);
+  }
+
   public function getListeners()
   {
     return [

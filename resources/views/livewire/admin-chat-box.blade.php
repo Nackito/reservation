@@ -35,6 +35,8 @@
         @endforeach
       </div>
 
+      <div id="typing-indicator" class="px-4 pb-1 text-xs text-gray-400 italic"></div>
+
       <!-- Chat Input -->
       <form wire:submit="submit" class="p-4 border-t bg-white flex items-center gap-2">
         <input
@@ -49,3 +51,22 @@
       </form>
     </div>
   </div>
+
+  <script>
+    document.addEventListener('livewire:initialized', () => {
+      Livewire.on('userTyping', (event) => {
+        console.log(event);
+        window.Echo.private(`chat.${event.selectedUserID}`)
+          .whisper('typing', {
+            userID: event.userID,
+            userName: event.userName
+          });
+      });
+
+      window.Echo.private(`chat.{{ $loginID }}`)
+        .listenForWhisper('typing', (event) => {
+          var t = document.getElementById('typing-indicator');
+          t.innerText = `${event.userName} is typing...`;
+        });
+    });
+  </script>

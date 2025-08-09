@@ -14,8 +14,8 @@
                     </a>
                     @else
                     <div class="flex items-center md:hidden">
-                        <a href="{{ route('messaging') }}" class="flex items-center py-2 px-2 rounded-lg text-sm text-gray-800 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-600">
-                            <i class="fas fa-envelope text-blue-600 text-lg"></i>
+                        <a href="/chat" class="flex items-center py-2 px-2 rounded-lg text-sm text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-600">
+                            <i class="fas fa-comments text-blue-600 text-lg mr-2"></i>
                         </a>
                         <a href="{{ route('user.menu') }}" class="flex items-center py-2 px-4 rounded-lg text-sm font-semibold border border-gray-300 text-gray-800 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-600">
                             <span>{{ Auth::user()->name }}</span>
@@ -57,6 +57,11 @@
                         </div>
                         @endguest
                         @auth
+
+                        <a class="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-blue-600 hover:bg-blue-50 focus:ring-2 focus:ring-blue-500 dark:text-blue-400 dark:hover:bg-gray-700 dark:hover:text-blue-300 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-blue-600 md:flex hidden" href="/chat">
+                            <i class="fas fa-comments mr-2"></i>Messagerie
+                        </a>
+
                         <a class="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:ring-2 focus:ring-blue-500 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-300 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600 md:flex hidden" href="{{ route('user-reservations') }}">
                             Mes réservations
                         </a>
@@ -88,7 +93,7 @@
                                 x-transition:leave-start="transform opacity-100 scale-100"
                                 x-transition:leave-end="transform opacity-0 scale-95">
                                 <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-sm bg-white text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">Profil</a>
-                                <a href="{{ route('messaging') }}" class="block px-4 py-2 text-sm bg-white text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">Messagerie</a>
+                                <a href="/chat" class="block px-4 py-2 text-sm bg-white text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">Messagerie</a>
                                 <a href="{{ route('logout') }}" class="block px-4 py-2 text-sm bg-white text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Se déconnecter</a>
                                 <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
                                     @csrf

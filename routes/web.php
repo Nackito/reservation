@@ -23,10 +23,6 @@ Route::get('/property-manager', PropertyManager::class)->name('property-manager'
 Route::get('/booking-manager/{propertyId}', BookingManager::class)->name('booking-manager');
 Route::get('/user-reservations', UserReservations::class)->name('user-reservations');
 Route::get('/reservation-details/{propertyId}', ReservationDetails::class)->name('reservations.details');
-//Route::get('/dashboard', function () {
-//    return redirect('/admin');
-//})->name('dashboard');
-// Chat utilisateur <-> admin
 Route::middleware(['auth'])->group(function () {
     Route::get('chat', function () {
         return view('chat');

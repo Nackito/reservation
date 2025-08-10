@@ -215,7 +215,7 @@ class BookingManager extends Component
             return;
         }
 
-        $wishlist = User::wishlists()->where('property_id', $property->id)->first();
+        $wishlist = $user->wishlists()->where('property_id', $property->id)->first();
         if ($wishlist) {
             // Retirer de la wishlist
             $wishlist->delete();
@@ -223,7 +223,7 @@ class BookingManager extends Component
         } else {
             // Ajouter à la wishlist
             try {
-                User::wishlists()->create([
+                $user->wishlists()->create([
                     'property_id' => $property->id,
                 ]);
                 LivewireAlert::title('Ajouté à votre liste de souhaits !')->success()->show();

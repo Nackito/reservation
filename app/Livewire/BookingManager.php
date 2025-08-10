@@ -15,6 +15,11 @@ use Carbon\Carbon;
 
 class BookingManager extends Component
 {
+    // Règles de validation Livewire
+    public $rules = [
+        'checkInDate' => 'required|date|after_or_equal:today',
+        'checkOutDate' => 'required|date|after:checkInDate',
+    ];
     public $property;
     public $propertyName;
     public $firstImage;
@@ -58,10 +63,12 @@ class BookingManager extends Component
     {
         // Recupérer la propriété
         $this->property = Property::find($this->propertyId);
-        // Charger la propriété si l'ID est fourni
-        if (isset($this->propertyId)) {
-            $this->property = Property::find($this->propertyId);
+
+        // Définir la date d'entrée par défaut à aujourd'hui si non définie
+        if (empty($this->checkInDate)) {
+            $this->checkInDate = now()->format('Y-m-d');
         }
+
 
         /*// Récupérer l'admin (premier utilisateur avec le rôle 'admin')
         $admin = User::where('role', 'admin')->first();
@@ -167,6 +174,7 @@ class BookingManager extends Component
             'start_date' => $this->checkInDate,
             'end_date' => $this->checkOutDate,
             'total_price' => $this->totalPrice,
+            'status' => 'pending', // Statut en attente pour Filament/Admin
         ]);
 
         // Création automatique de la conversation et du message avec l'admin
@@ -190,17 +198,19 @@ class BookingManager extends Component
             }
             // Créer le premier message automatique
             $property = Property::find($this->propertyId);
-            \App\Models\Message::create([
+            Message::create([
                 'conversation_id' => $conversation->id,
                 'sender_id' => Auth::id(),
-                'content' => 'Nouvelle demande de réservation pour ' . ($property ? $property->name : '') . ' du ' . $this->checkInDate . ' au ' . $this->checkOutDate,
+                'receiver_id' => $adminId,
+                'content' => 'Nouvelle demande de réservation pour ' . ($property ? $property->name : '') . ' du ' . $this->checkInDate . ' au ' . $this->checkOutDate . '. Merci de confirmer la disponibilité.',
             ]);
         }
 
         $this->bookings = Booking::where('property_id', $this->propertyId)->get();
-        LivewireAlert::title('Réservation ajoutée avec succès!')->success()->show();
-        // Redirection vers la messagerie interne
-        return redirect()->route('messaging');
+        LivewireAlert::title('Votre demande de réservation a bien été envoyée !')
+            ->text('Nous reviendrons vers vous pour la confirmation. Vous pouvez suivre la discussion dans la messagerie interne.')
+            ->success()->show();
+        // Ne pas rediriger, l'utilisateur reste sur la page et attend la réponse de l'admin dans le chat.
     }
 
     public function toggleWishlist()

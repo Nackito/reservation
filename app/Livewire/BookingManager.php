@@ -177,29 +177,12 @@ class BookingManager extends Component
             'status' => 'pending', // Statut en attente pour Filament/Admin
         ]);
 
-        // Création automatique de la conversation et du message avec l'admin
+        // Envoi d'un message à l'admin dans le chat (compatible ChatBox)
         $admin = User::where('role', 'admin')->first();
         $adminId = $admin ? $admin->id : null;
         if ($adminId) {
-            // Vérifier si une conversation existe déjà entre le client et l'admin
-            $conversation = \App\Models\Conversation::where('user_id', Auth::id())
-                ->where('owner_id', $adminId)
-                ->first();
-            if (!$conversation) {
-                $conversation = \App\Models\Conversation::create([
-                    'user_id' => Auth::id(),
-                    'owner_id' => $adminId,
-                    'booking_id' => $booking->id,
-                ]);
-            } else {
-                // Mettre à jour la réservation liée si besoin
-                $conversation->booking_id = $booking->id;
-                $conversation->save();
-            }
-            // Créer le premier message automatique
             $property = Property::find($this->propertyId);
             Message::create([
-                'conversation_id' => $conversation->id,
                 'sender_id' => Auth::id(),
                 'receiver_id' => $adminId,
                 'content' => 'Nouvelle demande de réservation pour ' . ($property ? $property->name : '') . ' du ' . $this->checkInDate . ' au ' . $this->checkOutDate . '. Merci de confirmer la disponibilité.',

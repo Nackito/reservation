@@ -6,7 +6,9 @@ use Livewire\Component;
 use Illuminate\Support\Str;
 use App\Models\Property;
 use App\Models\Booking;
+use App\Models\Message;
 use App\Models\Reviews;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Jantinnerezo\LivewireAlert\Facades\LivewireAlert;
 use Carbon\Carbon;
@@ -54,18 +56,25 @@ class BookingManager extends Component
 
     public function mount()
     {
-        // Récupérer l'admin (premier utilisateur avec le rôle 'admin')
-        $admin = \App\Models\User::where('role', 'admin')->first();
+        // Recupérer la propriété
+        $this->property = Property::find($this->propertyId);
+        // Charger la propriété si l'ID est fourni
+        if (isset($this->propertyId)) {
+            $this->property = Property::find($this->propertyId);
+        }
+
+        /*// Récupérer l'admin (premier utilisateur avec le rôle 'admin')
+        $admin = User::where('role', 'admin')->first();
         $adminId = $admin ? $admin->id : null;
 
         if ($adminId && isset($this->propertyId)) {
             // Vérifier si une conversation existe déjà entre le client et l'admin
-            $conversation = \App\Models\Conversation::where('user_id', auth()->id())
+            $conversation = Message::where('user_id', Auth::id())
                 ->where('owner_id', $adminId)
                 ->first();
             if (!$conversation && isset($this->booking)) {
-                $conversation = \App\Models\Conversation::create([
-                    'user_id' => auth()->id(),
+                $conversation = Message::create([
+                    'user_id' => Auth::id(),
                     'owner_id' => $adminId,
                     'booking_id' => $this->booking->id,
                 ]);
@@ -75,9 +84,9 @@ class BookingManager extends Component
                 $conversation->save();
             }
             // Créer le premier message automatique
-            \App\Models\Message::create([
+            Message::create([
                 'conversation_id' => $conversation->id,
-                'sender_id' => auth()->id(),
+                'sender_id' => Auth::id(),
                 'content' => 'Nouvelle demande de réservation pour ' . ($this->property ? $this->property->name : '') . ' du ' . ($this->start_date ?? '') . ' au ' . ($this->end_date ?? ''),
             ]);
         }
@@ -95,7 +104,7 @@ class BookingManager extends Component
                 ->where('approved', true) // Filtrer les avis approuvés
                 ->with('user') // Charger les utilisateurs qui ont laissé des avis
                 ->get();
-        }
+        }*/
     }
 
     public function submitReview()
@@ -161,7 +170,7 @@ class BookingManager extends Component
         ]);
 
         // Création automatique de la conversation et du message avec l'admin
-        $admin = \App\Models\User::where('role', 'admin')->first();
+        $admin = User::where('role', 'admin')->first();
         $adminId = $admin ? $admin->id : null;
         if ($adminId) {
             // Vérifier si une conversation existe déjà entre le client et l'admin
@@ -213,7 +222,7 @@ class BookingManager extends Component
             return;
         }
 
-        $wishlist = $user->wishlists()->where('property_id', $property->id)->first();
+        $wishlist = User::wishlists()->where('property_id', $property->id)->first();
         if ($wishlist) {
             // Retirer de la wishlist
             $wishlist->delete();
@@ -221,7 +230,7 @@ class BookingManager extends Component
         } else {
             // Ajouter à la wishlist
             try {
-                $user->wishlists()->create([
+                User::wishlists()->create([
                     'property_id' => $property->id,
                 ]);
                 LivewireAlert::title('Ajouté à votre liste de souhaits !')->success()->show();

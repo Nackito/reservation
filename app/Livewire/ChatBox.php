@@ -47,9 +47,9 @@ class ChatBox extends Component
       'content' => $this->newMessage,
     ]);
 
-    $this->messages->push($message);
 
     $this->newMessage = '';
+    $this->messages->push($message);
 
     broadcast(new MessageSent($message));
   }

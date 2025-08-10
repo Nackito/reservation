@@ -5,23 +5,23 @@
         <form wire:submit.prevent="addBooking" class="mb-4">
             <div class="flex mt-4 flex-col sm:flex-row gap-2 sm:gap-3 items-center bg-white rounded-lg p-2 dark:bg-gray-800">
                 <div class="w-full">
-                    <p class="py-3 px-4 block w-full border-transparent rounded-lg text-sm 
-                    focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 
-                    disabled:pointer-events-none dark:bg-slate-900 dark:border-transparent 
-                    dark:text-gray-400 dark:focus:ring-gray-600" readonly> {{ $propertyName }} </p>
+                    <p class="py-3 px-4 block w-full border-transparent rounded-lg text-sm
+                    focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50
+                    disabled:pointer-events-none dark:bg-slate-900 dark:border-transparent
+                    dark:text-gray-400 dark:focus:ring-gray-600" readonly> {{ $property->name ?? '' }} </p>
                 </div>
 
                 <div class="w-full">
-                    <input type="date" wire:model="checkInDate" id="ReservationCheckInBottom" class="py-3 px-4 block w-full border-transparent rounded-lg text-sm 
-                    focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 
-                    disabled:pointer-events-none dark:bg-slate-900 dark:border-transparent 
+                    <input type="date" wire:model="checkInDate" id="ReservationCheckInBottom" class="py-3 px-4 block w-full border-transparent rounded-lg text-sm
+                    focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50
+                    disabled:pointer-events-none dark:bg-slate-900 dark:border-transparent
                     dark:text-gray-400 dark:focus:ring-gray-600" min="{{ now()->format('Y-m-d') }}">
                     @error('checkInDate') <span class="text-red-500">{{ $message }}</span> @enderror
                 </div>
                 <div class="w-full">
-                    <input type="date" wire:model="checkOutDate" id="ReservationCheckOutBottom" wire:change="calculateTotalPrice" class="py-3 px-4 block w-full border-transparent rounded-lg text-sm 
-                    focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 
-                    disabled:pointer-events-none dark:bg-slate-900 dark:border-transparent 
+                    <input type="date" wire:model="checkOutDate" id="ReservationCheckOutBottom" wire:change="calculateTotalPrice" class="py-3 px-4 block w-full border-transparent rounded-lg text-sm
+                    focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50
+                    disabled:pointer-events-none dark:bg-slate-900 dark:border-transparent
                     dark:text-gray-400 dark:focus:ring-gray-600" min="{{ $checkInDate }}">
                     @error('checkOutDate') <span class="text-red-500">{{ $message }}</span> @enderror
                 </div>
@@ -56,13 +56,13 @@
                     <h2 class="text-2xl lg:text-3xl text-gray-800 font-inter font-extrabold">{{ $property->name ?? 'Nom non disponible' }}</h2>
                     <p class="text-lg lg:text-xl text-gray-700">
                         <i class="fas fa-map-marker-alt text-blue-500 mr-2"></i>
-                        {{ $property->city ?? 'Ville non disponible' }}, {{ $property->municipality }}, {{ $property->district ?? 'Quartier non disponible' }}
+                        {{ $property->city ?? 'Ville non disponible' }}, {{ $property && $property->municipality ? $property->municipality : 'Municipalité non disponible' }}, {{ $property->district ?? 'Quartier non disponible' }}
                     </p>
                 </div>
                 <div class="flex gap-2 mt-1">
                     <!-- Bouton J'aime (wishlist) -->
                     @php
-                    $isWished = Auth::check() ? Auth::user()->wishlists()->where('property_id', $property->id)->exists() : false;
+                    $isWished = Auth::check() && $property ? Auth::user()->wishlists()->where('property_id', $property->id)->exists() : false;
                     @endphp
                     <button
                         @if(Auth::check())
@@ -72,7 +72,8 @@
                         @endif
                         type="button"
                         class="flex items-center justify-center px-3 py-2 {{ $isWished ? 'bg-pink-500 text-white' : 'bg-pink-100 text-pink-600' }} hover:bg-pink-200 rounded-lg shadow transition"
-                        title="{{ Auth::check() ? ($isWished ? 'Retirer de ma liste de souhait' : 'Ajouter à ma liste de souhait') : 'Connectez-vous pour ajouter à votre liste de souhait' }}">
+                        title="{{ Auth::check() ? ($isWished ? 'Retirer de ma liste de souhait' : 'Ajouter à ma liste de souhait') : 'Connectez-vous pour ajouter à votre liste de souhait' }}"
+                        @if(!$property) disabled @endif>
                         <i class="fas fa-heart {{ $isWished ? '' : 'text-pink-600' }} text-lg"></i>
                         <span class="hidden sm:inline ml-1">{{ $isWished ? 'Retirer' : "J'aime" }}</span>
                     </button>
@@ -171,6 +172,7 @@
                         </div>
                     </div>
                     <!-- Bouton de contact employé (connexion requise) -->
+                    @if($property)
                     @if(Auth::check())
                     <button onclick="openContactModal()" class="flex items-center justify-center px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg shadow transition" title="Contacter un employé de la plateforme">
                         <i class="fas fa-headset text-lg"></i>
@@ -181,6 +183,7 @@
                         <i class="fas fa-headset text-lg"></i>
                         <span class="hidden sm:inline ml-1">Contacter un employé</span>
                     </button>
+                    @endif
                     @endif
                     <!-- Modal de contact employé -->
                     <div id="contactEmployeeModal" class="fixed inset-0 z-50 hidden bg-black bg-opacity-60 flex items-center justify-center">
@@ -218,6 +221,7 @@
             <!-- Section des images (2/3) -->
             <div id="PropertyImage" class="lg:col-span-2 pl-4 pr-4">
                 <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    @if($property && $property->images)
                     @foreach($property->images as $index => $image)
                     @if ($index < 3)
                         <div class="image-container relative {{ $index % 3 === 0 ? 'large' : 'small' }}">
@@ -230,6 +234,7 @@
                 </div>
                 @endif
                 @endforeach
+                @endif
             </div>
         </div>
 
@@ -320,16 +325,16 @@
     <form wire:submit.prevent="addBooking" class="mb-4">
         <div class="flex mt-4 flex-col sm:flex-row gap-2 sm:gap-3 items-center bg-white rounded-lg p-2 dark:bg-gray-800">
             <div class="w-full">
-                <p class="py-3 px-4 block w-full border-transparent rounded-lg text-sm 
-                    focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 
-                    disabled:pointer-events-none dark:bg-slate-900 dark:border-transparent 
-                    dark:text-gray-400 dark:focus:ring-gray-600" readonly> {{ $propertyName }} </p>
+                <p class="py-3 px-4 block w-full border-transparent rounded-lg text-sm
+                    focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50
+                    disabled:pointer-events-none dark:bg-slate-900 dark:border-transparent
+                    dark:text-gray-400 dark:focus:ring-gray-600" readonly> {{ $property->name ?? '' }} </p>
             </div>
 
             <div class="w-full" id="Reservation">
                 <input type="date" id="ReservationCheckIn" wire:model="checkInDate" class="py-3 px-4 block w-full border-transparent rounded-lg text-sm cursor-pointer
-                    focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 
-                    disabled:pointer-events-none dark:bg-slate-900 dark:border-transparent 
+                    focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50
+                    disabled:pointer-events-none dark:bg-slate-900 dark:border-transparent
                     dark:text-gray-400 dark:focus:ring-gray-600" min="{{ now()->format('Y-m-d') }}">
                 @error('checkInDate') <span class="text-red-500">{{ $message }}</span> @enderror
             </div>
@@ -379,7 +384,7 @@
             <span class="block text-xl font-semibold text-gray-800 mt-6 mb-4 sm:mt-0 sm:mb-6">Ce que les personnes ayant séjourné ici ont adoré :</span>
         </div>
 
-        @if($reviews->isEmpty())
+        @if(!$reviews || $reviews->isEmpty())
         <div class="flex justify-center">
             <div class="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-6 w-full max-w-lg shadow">
                 <p class="text-xl italic font-medium text-gray-700 dark:text-white text-center">Aucun avis pour cette propriété pour le moment.</p>

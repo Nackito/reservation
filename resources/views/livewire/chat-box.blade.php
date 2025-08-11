@@ -5,11 +5,10 @@
       <div class="p-4 font-bold text-gray-700 border-b">Users</div>
       <div class="divide-y">
         @foreach ($users as $user)
-        <div wire:click="selectUser({{ $user->id }})"
+        <div wire:click="selectUser('{{ $user->id }}')"
           class="p-3 cursor-pointer hover:bg-blue-100 transition
-            {{ $selectedUser->id === $user->id ? 'bg-blue-50 font-semibold' : '' }}">
+            {{ $selectedUser->id == $user->id ? 'bg-blue-50 font-semibold' : '' }}">
           <div class="text-gray-800">{{ $user->name }}</div>
-          <div class="text-xs text-gray-500">{{ $user->email }}</div>
         </div>
         @endforeach
       </div>
@@ -20,8 +19,11 @@
 
       <!-- Chat Header -->
       <div class="p-4 border-b bg-gray-50">
+        @if($selectedUser)
         <div class="text-lg font-semibold text-gray-800">{{ $selectedUser->name }}</div>
-        <div class="text-xs text-gray-500">{{ $selectedUser->email }}</div>
+        @else
+        <div class="text-lg font-semibold text-gray-800 text-center">Aucune conversation</div>
+        @endif
       </div>
 
       <!-- Chat Messages -->

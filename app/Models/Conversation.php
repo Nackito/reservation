@@ -11,7 +11,8 @@ class Conversation extends Model
   protected $fillable = [
     'user_id',
     'owner_id',
-    'booking_id'
+    'booking_id',
+    'is_admin_channel'
   ];
 
   public function messages(): HasMany

@@ -177,17 +177,22 @@ class BookingManager extends Component
             'status' => 'pending', // Statut en attente pour Filament/Admin
         ]);
 
-        // Envoi d'un message à l'admin dans le chat (compatible ChatBox)
-        $admin = User::where('role', 'admin')->first();
-        $adminId = $admin ? $admin->id : null;
-        if ($adminId) {
-            $property = Property::find($this->propertyId);
-            Message::create([
-                'sender_id' => Auth::id(),
-                'receiver_id' => $adminId,
-                'content' => 'Nouvelle demande de réservation pour ' . ($property ? $property->name : '') . ' du ' . $this->checkInDate . ' au ' . $this->checkOutDate . '. Merci de confirmer la disponibilité.',
-            ]);
-        }
+        // Canal admin groupé : conversation unique pour tous les admins
+        $property = Property::find($this->propertyId);
+        // Créer un canal admin groupé unique pour chaque réservation
+        $adminGroupConversation = \App\Models\Conversation::create([
+            'is_admin_channel' => true,
+            'user_id' => Auth::id(),
+            'owner_id' => 5, // ou null si pas utile
+            'booking_id' => $booking->id
+        ]);
+
+        Message::create([
+            'conversation_id' => $adminGroupConversation->id,
+            'sender_id' => Auth::id(),
+            'receiver_id' => 5, // ID d'un admin pour la contrainte SQL
+            'content' => 'Nouvelle demande de réservation pour ' . ($property ? $property->name : '') . ' du ' . $this->checkInDate . ' au ' . $this->checkOutDate . '. Merci de confirmer la disponibilité.',
+        ]);
 
         $this->bookings = Booking::where('property_id', $this->propertyId)->get();
         LivewireAlert::title('Votre demande de réservation a bien été envoyée !')

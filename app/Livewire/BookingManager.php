@@ -187,11 +187,12 @@ class BookingManager extends Component
             'booking_id' => $booking->id
         ]);
 
+        $userName = Auth::user()->name ?? 'Utilisateur';
         Message::create([
             'conversation_id' => $adminGroupConversation->id,
             'sender_id' => Auth::id(),
             'receiver_id' => 5, // ID d'un admin pour la contrainte SQL
-            'content' => 'Nouvelle demande de réservation pour ' . ($property ? $property->name : '') . ' du ' . $this->checkInDate . ' au ' . $this->checkOutDate . '. Merci de confirmer la disponibilité.',
+            'content' => 'Bonjour, je suis Mr/Mme ' . $userName . ', je souhaite réserver ' . ($property ? $property->name : '') . ' du ' . $this->checkInDate . ' au ' . $this->checkOutDate . '. Merci de confirmer la disponibilité.',
         ]);
 
         $this->bookings = Booking::where('property_id', $this->propertyId)->get();

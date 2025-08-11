@@ -30,9 +30,13 @@
       <div class="flex-1 overflow-y-auto p-4 bg-gray-50 space-y-2">
         @foreach ($messages as $message)
         <div class="flex {{ $message->sender_id === auth()->id() ? 'justify-end' : 'justify-start' }}">
-          <div class="max-w-xs px-4 py-2 rounded-2xl shadow
-            {{ $message->sender_id === auth()->id() ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800' }}">
-            {{ $message->content }}
+          <div>
+            <div class="max-w-xs px-4 py-2 rounded-2xl shadow {{ $message->sender_id === auth()->id() ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800' }}">
+              {{ $message->content }}
+            </div>
+            <div class="text-xs text-gray-400 mt-1 text-right">
+              {{ $message->created_at ? $message->created_at->format('d/m/Y H:i') : '' }}
+            </div>
           </div>
         </div>
         @endforeach

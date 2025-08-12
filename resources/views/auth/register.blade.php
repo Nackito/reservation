@@ -6,9 +6,18 @@
   <form method="POST" action="{{ route('register') }}" class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
     @csrf
 
+
+    <div class="mb-4">
+      <label for="firstname" class="block text-gray-700 text-sm font-bold mb-2">Prénom</label>
+      <input id="firstname" type="text" name="firstname" value="{{ old('firstname') }}" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+      @error('firstname')
+      <span class="text-red-500 text-xs">{{ $message }}</span>
+      @enderror
+    </div>
+
     <div class="mb-4">
       <label for="name" class="block text-gray-700 text-sm font-bold mb-2">Nom</label>
-      <input id="name" type="text" name="name" value="{{ old('name') }}" required autofocus class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+      <input id="name" type="text" name="name" value="{{ old('name') }}" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
       @error('name')
       <span class="text-red-500 text-xs">{{ $message }}</span>
       @enderror

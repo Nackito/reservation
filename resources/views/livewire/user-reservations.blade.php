@@ -46,11 +46,6 @@
 
     <!-- Boutons pour changer d'onglet -->
     <div class="pt-4">
-        <button wire:click="setActiveTab('pending')" class="py-2.5 px-5 me-2 mb-2 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg 
-        border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 
-        focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 
-        dark:text-gray-400 dark:border-gray-600 dark:hover:text-white 
-        dark:hover:bg-gray-700 {{ $activeTab === 'pending' ? 'bg-blue-500 text-white' : '' }}">En attente</button>
 
         <button wire:click="setActiveTab('past')" class="py-2.5 px-5 me-2 mb-2 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg 
         border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 
@@ -67,34 +62,7 @@
 
     <!-- Affichage des réservations -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        @if ($activeTab === 'pending')
-        @if ($pendingBookings->isEmpty())
-        <p class="text-black">Vous n'avez pas de réservation en attente</p>
-        @else
-        @foreach($pendingBookings as $booking)
-        <a href="#" class="flex flex-col items-center bg-white border border-gray-200 rounded-lg shadow-sm md:flex-row md:max-w-xl 
-            hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 
-            dark:hover:bg-gray-700">
-            <!-- Affichage de l'image de la propriété -->
-            @if($booking->property->images->isNotEmpty())
-            <img src="{{ asset('storage/' . $booking->property->images->first()->image_path) }}" alt="Image de la propriété" class="object-cover w-full rounded-t-lg h-96 md:h-auto md:w-48 md:rounded-none md:rounded-s-lg">
-            @else
-            <img src="{{ asset('images/default-property.jpg') }}" alt="Image par défaut" class="object-cover w-full rounded-t-lg h-96 md:h-auto md:w-48 md:rounded-none md:rounded-s-lg">
-            @endif
-            <div class="flex flex-col justify-between p-4 leading-normal">
-                <h3 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{{ $booking->property->name ?? 'Nom non disponible' }}</h3>
-                <p class="mb-3 font-normal text-gray-700 dark:text-gray-400">{{ $booking->start_date }} - {{ $booking->end_date }}</p>
-                <p class="mb-3 font-normal text-gray-700 dark:text-gray-400">Prix total : {{ $booking->total_price }} €</p>
-                @if(\Carbon\Carbon::now()->gte(\Carbon\Carbon::parse($booking->start_date)))
-                <button wire:click="openReviewModal({{ $booking->id }})" class="bg-blue-500 text-white py-1 px-2 rounded">Laissez un avis</button>
-                @else
-                <button wire:click="deleteBooking({{ $booking->id }})" class="bg-red-500 text-white py-1 px-2 rounded">Annuler</button>
-                @endif
-            </div>
-        </a>
-        @endforeach
-        @endif
-        @elseif ($activeTab === 'past')
+        @if ($activeTab === 'past')
         @if ($groupedPastBookings->isEmpty())
         <p class="text-black">Vous n'avez pas de réservation passée</p>
         @else

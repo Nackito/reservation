@@ -2,7 +2,7 @@
   <div class="flex h-[550px] text-sm border rounded-xl shadow overflow-hidden bg-white">
     <!-- Left User list -->
     <div class="w-1/4 border-r bg-gray-50">
-      <div class="p-4 font-bold text-gray-700 border-b">Users</div>
+      <!--<div class="p-4 font-bold text-gray-700 border-b">Users</div>-->
       <div class="divide-y">
         @foreach ($users as $user)
         <div wire:click="selectUser('{{ $user->id }}')"

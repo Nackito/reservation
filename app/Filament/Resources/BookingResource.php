@@ -107,7 +107,8 @@ class BookingResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery();
+        // Tri par défaut : du plus récent au plus ancien
+        return parent::getEloquentQuery()->orderByDesc('created_at');
     }
 
     public static function getRelations(): array

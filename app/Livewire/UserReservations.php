@@ -18,7 +18,7 @@ class UserReservations extends Component
     public $pastBookings;
     public $canceledBookings;
     public $review;
-    public $activeTab = 'pending'; // Par defaut, active les réservations en attente
+    public $activeTab = 'past'; // Par defaut, active les réservations passées
     public $rating;
     public $firstImage;
     public $canLeaveReview = false;

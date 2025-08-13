@@ -97,33 +97,21 @@
             @endphp
             @foreach($groupedCanceledBookings as $city => $bookings)
             <div>
-                <div class="flex bg-white rounded-lg overflow-hidden mb-2 max-w-sm transition-shadow duration-200 hover:shadow-md border border-gray-200 cursor-pointer" wire:click="$set('openedCity', $openedCity === '$city' ? null : '$city')">
-                    <div class="flex-shrink-0 w-24 h-24">
-                        @if($bookings->first()->property->images->isNotEmpty())
-                        <img src="{{ asset('storage/' . $bookings->first()->property->images->first()->image_path) }}" alt="Image de la ville" class="object-cover w-full h-full rounded-lg">
-                        @else
-                        <img src="{{ asset('images/default-property.jpg') }}" alt="Image par défaut" class="object-cover w-full h-full rounded-lg">
-                        @endif
-                    </div>
-                    <div class="flex flex-col justify-between p-3 flex-1">
-                        <h3 class="text-base font-bold">{{ $city }}</h3>
-                        <p class="text-gray-700 text-sm">{{ $bookings->count() }} réservation(s) annulée(s)</p>
-                    </div>
-                </div>
-                @if($openedCity === $city)
-                <div class="ml-8 mt-2 space-y-2">
-                    @foreach($bookings as $booking)
-                    <div class="flex items-center justify-between bg-gray-50 rounded p-2">
-                        <div>
-                            <span class="font-semibold">{{ $booking->property->name }}</span>
-                            <span class="ml-2 text-xs text-gray-500">({{ $booking->start_date }} - {{ $booking->end_date }})</span>
-                            <span class="ml-2 text-xs text-gray-500">{{ $booking->total_price }} €</span>
+                <a href="{{ route('user-canceled-reservations.city', ['city' => urlencode($city)]) }}" class="block">
+                    <div class="flex bg-white rounded-lg overflow-hidden mb-2 max-w-sm transition-shadow duration-200 hover:shadow-md border border-gray-200 cursor-pointer">
+                        <div class="flex-shrink-0 w-24 h-24">
+                            @if($bookings->first()->property->images->isNotEmpty())
+                            <img src="{{ asset('storage/' . $bookings->first()->property->images->first()->image_path) }}" alt="Image de la ville" class="object-cover w-full h-full rounded-lg">
+                            @else
+                            <img src="{{ asset('images/default-property.jpg') }}" alt="Image par défaut" class="object-cover w-full h-full rounded-lg">
+                            @endif
                         </div>
-                        <span class="inline-block bg-red-100 text-red-700 text-xs px-2 py-1 rounded">Annulé</span>
+                        <div class="flex flex-col justify-between p-3 flex-1">
+                            <h3 class="text-base font-bold">{{ $city }}</h3>
+                            <p class="text-gray-700 text-sm">{{ $bookings->count() }} réservation(s) annulée(s)</p>
+                        </div>
                     </div>
-                    @endforeach
-                </div>
-                @endif
+                </a>
             </div>
             @endforeach
             @endif

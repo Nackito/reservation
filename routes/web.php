@@ -2,6 +2,8 @@
 
 // Route pour laisser un avis sur une réservation
 use App\Http\Controllers\ReviewController;
+// Page de détail des réservations annulées par ville
+use App\Http\Controllers\UserCanceledReservationsCityController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\HomeController;
@@ -19,11 +21,15 @@ use Illuminate\Support\Facades\Route;
 use PharIo\Manifest\Author;
 // Détail des réservations par ville
 use App\Http\Controllers\UserReservationsCityController;
+use App\Livewire\UserCanceledReservationsCity;
 
 Route::get('/', HomePage::class)->name('home');
 Route::get('/contact-hebergement', ContactForm::class)->name('contact.hebergement');
 
 Route::get('/mes-reservations/avis/{booking}', App\Livewire\ReviewCreate::class)->name('user-reservations.review');
+
+// ...existing code...
+Route::get('/mes-reservations/annulees/ville/{city}', UserCanceledReservationsCity::class)->name('user-canceled-reservations.city');
 Route::get('/mes-reservations/ville/{city}', App\Livewire\UserReservationsCity::class)->name('user-reservations.city');
 Route::get('/property-manager', PropertyManager::class)->name('property-manager');
 Route::get('/booking-manager/{propertyId}', BookingManager::class)->name('booking-manager');

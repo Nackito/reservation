@@ -26,6 +26,17 @@ class UserCanceledReservationsCity extends Component
             ->get();
     }
 
+    public function deleteBooking($bookingId)
+    {
+        $booking = Booking::find($bookingId);
+        if ($booking && $booking->user_id === Auth::id()) {
+            $booking->delete();
+            // Rafraîchir la liste locale
+            $this->canceled = $this->canceled->filter(fn($b) => $b->id !== $bookingId);
+            session()->flash('success', 'Réservation supprimée avec succès.');
+        }
+    }
+
     public function render()
     {
         return view('livewire.user-canceled-reservations-city', [

@@ -5,6 +5,9 @@
   <h2 class="mb-4 text-3xl font-extrabold leading-none tracking-tight text-gray-900 dark:text-gray-800">
     Réservations annulées pour {{ $city }}
   </h2>
+  @if (session()->has('success'))
+  <div class="mb-4 p-2 bg-green-100 text-green-800 rounded">{{ session('success') }}</div>
+  @endif
   @if($canceled->isEmpty())
   <p class="text-gray-700">Aucune réservation annulée dans cette ville.</p>
   @else
@@ -23,7 +26,23 @@
           <div class="text-gray-800 text-lg">{{ $booking->total_price }} FrCFA</div>
         </div>
       </div>
-      <span class="inline-block bg-red-100 text-red-700 text-xs px-2 py-1 rounded">Annulé</span>
+      <div class="flex items-center space-x-1">
+        <span class="inline-block bg-red-100 text-red-700 text-xs px-2 py-1 rounded">Annulé</span>
+        <div class="relative flex flex-col items-end">
+          <div x-data="{ open: false }" class="relative">
+            <button @click="open = !open" class="p-2 rounded-full hover:bg-gray-200 focus:outline-none">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <circle cx="12" cy="5" r="1.5" />
+                <circle cx="12" cy="12" r="1.5" />
+                <circle cx="12" cy="19" r="1.5" />
+              </svg>
+            </button>
+            <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded shadow-lg z-10">
+              <button wire:click="deleteBooking({{ $booking->id }})" onclick="return confirm('Voulez-vous vraiment supprimer cette réservation ?')" class="block w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-red-50">Supprimer</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
     @endforeach
   </div>

@@ -6,6 +6,7 @@ namespace App\Livewire;
 use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Booking;
+use App\Models\Reviews;
 
 class UserReservationsCity extends Component
 {
@@ -17,7 +18,9 @@ class UserReservationsCity extends Component
         $user = Auth::user();
         $decodedCity = urldecode($city);
         $this->city = $decodedCity;
-        $this->residences = Booking::with('property')
+        $this->residences = Booking::with(['property', 'property.reviews' => function ($q) use ($user) {
+            $q->where('user_id', $user->id);
+        }])
             ->whereHas('property', function ($q) use ($decodedCity) {
                 $q->where('city', $decodedCity);
             })

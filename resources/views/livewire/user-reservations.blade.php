@@ -68,34 +68,21 @@
             @else
             @foreach($groupedPastBookings as $group)
             <div>
-                <div class="flex bg-white rounded-lg overflow-hidden mb-2 max-w-sm transition-shadow duration-200 hover:shadow-md border border-gray-200 cursor-pointer" wire:click="toggleCity('{{ $group['city'] }}')">
-                    <div class="flex-shrink-0 w-24 h-24">
-                        @if($group['image'])
-                        <img src="{{ asset('storage/' . $group['image']->image_path) }}" alt="Image de la ville" class="object-cover w-full h-full rounded-lg">
-                        @else
-                        <img src="{{ asset('images/default-property.jpg') }}" alt="Image par défaut" class="object-cover w-full h-full rounded-lg">
-                        @endif
-                    </div>
-                    <div class="flex flex-col justify-between p-3 flex-1">
-                        <h3 class="text-base font-bold">{{ $group['city'] }}</h3>
-                        <p class="text-gray-700 text-sm">{{ $group['count'] }} résidence(s) réservée(s)</p>
-                    </div>
-                </div>
-                @if($openedCity === $group['city'])
-                <div class="ml-8 mt-2 space-y-2">
-                    @forelse($cityResidences as $residence)
-                    <div class="flex items-center justify-between bg-gray-50 rounded p-2">
-                        <div>
-                            <span class="font-semibold">{{ $residence['property']->name }}</span>
-                            <span class="ml-2 text-xs text-gray-500">({{ $residence['count'] }} réservation(s))</span>
+                <a href="{{ route('user-reservations.city', ['city' => urlencode($group['city'])]) }}" class="block">
+                    <div class="flex bg-white rounded-lg overflow-hidden mb-2 max-w-sm transition-shadow duration-200 hover:shadow-md border border-gray-200 cursor-pointer">
+                        <div class="flex-shrink-0 w-24 h-24">
+                            @if($group['image'])
+                            <img src="{{ asset('storage/' . $group['image']->image_path) }}" alt="Image de la ville" class="object-cover w-full h-full rounded-lg">
+                            @else
+                            <img src="{{ asset('images/default-property.jpg') }}" alt="Image par défaut" class="object-cover w-full h-full rounded-lg">
+                            @endif
                         </div>
-                        <button wire:click="openReviewModal({{ $residence['property']->id }})" class="bg-blue-500 text-white px-2 py-1 rounded text-xs">Laisser un avis</button>
+                        <div class="flex flex-col justify-between p-3 flex-1">
+                            <h3 class="text-base font-bold">{{ $group['city'] }}</h3>
+                            <p class="text-gray-700 text-sm">{{ $group['count'] }} résidence(s) réservée(s)</p>
+                        </div>
                     </div>
-                    @empty
-                    <div class="text-gray-500 text-sm">Aucune résidence trouvée.</div>
-                    @endforelse
-                </div>
-                @endif
+                </a>
             </div>
             @endforeach
             @endif

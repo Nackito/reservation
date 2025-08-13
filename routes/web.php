@@ -1,5 +1,7 @@
 <?php
 
+// Route pour laisser un avis sur une réservation
+use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\HomeController;
@@ -15,10 +17,14 @@ use Illuminate\Container\Attributes\Auth;
 use Illuminate\Support\Facades\Auth as FacadesAuth;
 use Illuminate\Support\Facades\Route;
 use PharIo\Manifest\Author;
+// Détail des réservations par ville
+use App\Http\Controllers\UserReservationsCityController;
 
 Route::get('/', HomePage::class)->name('home');
 Route::get('/contact-hebergement', ContactForm::class)->name('contact.hebergement');
 
+Route::get('/mes-reservations/avis/{booking}', [ReviewController::class, 'create'])->name('user-reservations.review');
+Route::get('/mes-reservations/ville/{city}', [UserReservationsCityController::class, 'show'])->name('user-reservations.city');
 Route::get('/property-manager', PropertyManager::class)->name('property-manager');
 Route::get('/booking-manager/{propertyId}', BookingManager::class)->name('booking-manager');
 Route::get('/user-reservations', UserReservations::class)->name('user-reservations');
@@ -28,6 +34,7 @@ Route::middleware(['auth'])->group(function () {
         return view('chat');
     })->name('user.chat');
 });
+
 
 
 

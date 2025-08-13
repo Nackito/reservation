@@ -104,7 +104,7 @@ class UserReservations extends Component
         // Récupérer les réservations annulées
         $this->canceledBookings = Booking::with('property.images')
             ->where('user_id', $userId)
-            ->where('status', 'canceled') // Statut annulé
+            ->where('status', 'cancelled') // Statut annulé
             ->get();
     }
 

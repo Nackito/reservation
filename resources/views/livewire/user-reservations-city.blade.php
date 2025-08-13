@@ -11,10 +11,17 @@
   <div class="space-y-4">
     @foreach($residences as $booking)
     <div class="flex items-center justify-between bg-white rounded-lg shadow p-4">
-      <div>
-        <div class="font-bold text-lg">{{ $booking->property->name }}</div>
-        <div class="text-gray-600 text-sm">{{ $booking->start_date }} - {{ $booking->end_date }}</div>
-        <div class="text-gray-800 text-lg">{{ $booking->total_price }} FrCFA</div>
+      <div class="flex items-center">
+        @if($booking->property->images && $booking->property->images->count())
+        <img src="{{ asset('storage/' . $booking->property->images->first()->image_path) }}" alt="Photo de la propriété" class="w-20 h-20 object-cover rounded mr-4">
+        @else
+        <img src="{{ asset('images/default-property.jpg') }}" alt="Image par défaut" class="w-20 h-20 object-cover rounded mr-4">
+        @endif
+        <div>
+          <div class="font-bold text-lg">{{ $booking->property->name }}</div>
+          <div class="text-gray-600 text-sm">{{ $booking->start_date }} - {{ $booking->end_date }}</div>
+          <div class="text-gray-800 text-lg">{{ $booking->total_price }} FrCFA</div>
+        </div>
       </div>
       <div>
         @php

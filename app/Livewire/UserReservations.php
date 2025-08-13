@@ -50,11 +50,12 @@ class UserReservations extends Component
             ->where('status', 'pending') // Statut en attente
             ->get();
 
-        // Récupérer les réservations passées
+
+        // Récupérer les réservations "à venir" (acceptées et end_date > aujourd'hui)
         $pastBookings = Booking::with('property.images')
             ->where('user_id', $userId)
-            ->where('end_date', '<', Carbon::now()) // Date de sortie < date actuelle
-            ->where('status', 'accepted') // Statut accepté
+            ->where('status', 'accepted')
+            ->where('end_date', '>', Carbon::now())
             ->get();
 
         // Grouper les réservations par propriété

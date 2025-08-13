@@ -30,6 +30,16 @@ class UserReservationsCity extends Component
             ->get();
     }
 
+    public function deleteBooking($bookingId)
+    {
+        $booking = Booking::find($bookingId);
+        if ($booking && $booking->user_id === Auth::id()) {
+            $booking->delete();
+            session()->flash('success', 'Réservation supprimée avec succès.');
+            $this->mount($this->city); // Rafraîchir la liste
+        }
+    }
+
     public function render()
     {
         return view('livewire.user-reservations-city', [

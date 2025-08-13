@@ -67,20 +67,36 @@
             <p class="text-black">Vous n'avez pas de réservation passée</p>
             @else
             @foreach($groupedPastBookings as $group)
-            <a href="{{ route('reservations.details', ['propertyId' => $group['property']->id]) }}" class="flex flex-col items-center bg-white border border-gray-200 rounded-lg shadow-sm md:flex-row md:max-w-xl 
-            hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 
-            dark:hover:bg-gray-700">
-                <!-- Affichage de l'image de la propriété -->
-                @if($group['property']->images->isNotEmpty())
-                <img src="{{ asset('storage/' . $group['property']->images->first()->image_path) }}" alt="Image de la propriété" class="object-cover w-full rounded-t-lg h-96 md:h-auto md:w-48 md:rounded-none md:rounded-s-lg">
-                @else
-                <img src="{{ asset('images/default-property.jpg') }}" alt="Image par défaut" class="object-cover w-full rounded-t-lg h-96 md:h-auto md:w-48 md:rounded-none md:rounded-s-lg">
-                @endif
-                <div class="flex flex-col justify-between p-4 leading-normal">
-                    <h3 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{{ $group['property']->name ?? 'Nom non disponible' }}</h3>
-                    <p class="mb-3 font-normal text-gray-700 dark:text-gray-400">{{ $group['count'] }} réservation(s)</p>
+            <div>
+                <div class="flex bg-white rounded-lg overflow-hidden mb-2 max-w-sm transition-shadow duration-200 hover:shadow-md border border-gray-200 cursor-pointer" wire:click="toggleCity('{{ $group['city'] }}')">
+                    <div class="flex-shrink-0 w-24 h-24">
+                        @if($group['image'])
+                        <img src="{{ asset('storage/' . $group['image']->image_path) }}" alt="Image de la ville" class="object-cover w-full h-full rounded-lg">
+                        @else
+                        <img src="{{ asset('images/default-property.jpg') }}" alt="Image par défaut" class="object-cover w-full h-full rounded-lg">
+                        @endif
+                    </div>
+                    <div class="flex flex-col justify-between p-3 flex-1">
+                        <h3 class="text-base font-bold">{{ $group['city'] }}</h3>
+                        <p class="text-gray-700 text-sm">{{ $group['count'] }} résidence(s) réservée(s)</p>
+                    </div>
                 </div>
-            </a>
+                @if($openedCity === $group['city'])
+                <div class="ml-8 mt-2 space-y-2">
+                    @forelse($cityResidences as $residence)
+                    <div class="flex items-center justify-between bg-gray-50 rounded p-2">
+                        <div>
+                            <span class="font-semibold">{{ $residence['property']->name }}</span>
+                            <span class="ml-2 text-xs text-gray-500">({{ $residence['count'] }} réservation(s))</span>
+                        </div>
+                        <button wire:click="openReviewModal({{ $residence['property']->id }})" class="bg-blue-500 text-white px-2 py-1 rounded text-xs">Laisser un avis</button>
+                    </div>
+                    @empty
+                    <div class="text-gray-500 text-sm">Aucune résidence trouvée.</div>
+                    @endforelse
+                </div>
+                @endif
+            </div>
             @endforeach
             @endif
             @elseif ($activeTab === 'canceled')

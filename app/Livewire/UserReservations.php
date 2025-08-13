@@ -13,6 +13,33 @@ use Jantinnerezo\LivewireAlert\Facades\LivewireAlert;
 
 class UserReservations extends Component
 {
+    public $openedCity = null;
+    public $cityResidences = [];
+
+    public function toggleCity($city)
+    {
+        if ($this->openedCity === $city) {
+            $this->openedCity = null;
+            return;
+        }
+        $this->openedCity = $city;
+        // Récupérer les résidences et le nombre de réservations pour cette ville
+        $userId = Auth::id();
+        $bookings = Booking::with('property.images')
+            ->where('user_id', $userId)
+            ->whereHas('property', function ($q) use ($city) {
+                $q->where('city', $city);
+            })
+            ->where('status', 'accepted')
+            ->where('end_date', '>', now())
+            ->get();
+        $this->cityResidences = $bookings->groupBy('property_id')->map(function ($bookings) {
+            return [
+                'property' => $bookings->first()->property,
+                'count' => $bookings->count(),
+            ];
+        })->values();
+    }
     public $pendingBookings;
     public $acceptedBookings;
     public $pastBookings;
@@ -58,11 +85,19 @@ class UserReservations extends Component
             ->where('end_date', '>', Carbon::now())
             ->get();
 
-        // Grouper les réservations par propriété
-        $this->groupedPastBookings = $pastBookings->groupBy('property_id')->map(function ($bookings) {
+
+        // Grouper les réservations par ville
+        $this->groupedPastBookings = $pastBookings->groupBy(function ($booking) {
+            return $booking->property->city ?? 'Ville inconnue';
+        })->map(function ($bookings, $city) {
+            // Dernière réservation (par date de création)
+            $lastBooking = $bookings->sortByDesc('created_at')->first();
+            $lastProperty = $lastBooking->property;
+            $lastImage = $lastProperty->images->isNotEmpty() ? $lastProperty->images->last() : null;
             return [
-                'property' => $bookings->first()->property,
-                'count' => $bookings->count(),
+                'city' => $city,
+                'count' => $bookings->pluck('property_id')->unique()->count(),
+                'image' => $lastImage,
             ];
         });
 

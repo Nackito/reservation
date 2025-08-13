@@ -2,7 +2,7 @@
   <div class="mt-6 mb-4">
     <a href="{{ route('user-reservations') }}" class="text-blue-500 hover:underline">&larr; Retour à mes réservations</a>
   </div>
-  <h2 class="mb-4 text-3xl font-extrabold leading-none tracking-tight text-gray-900 dark:text-white">
+  <h2 class="mb-4 text-3xl font-extrabold leading-none tracking-tight text-gray-900 dark:text-black">
     Détail des réservations pour {{ $city }}
   </h2>
   @if($residences->isEmpty())

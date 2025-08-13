@@ -1,6 +1,6 @@
 <div class="container mx-auto p-4">
     <h2 class="mb-4 text-4xl font-extrabold leading-none tracking-tight 
-    text-gray-900 md:text-5xl lg:text-6xl dark:text-white">Mes réservations</h2>
+    text-gray-900 md:text-5xl lg:text-6xl dark:text-black">Mes réservations</h2>
 
     <!-- Reservations en cours -->
 

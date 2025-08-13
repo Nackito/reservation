@@ -1,5 +1,3 @@
-@include('components.header')
-@livewire('partials.navbar')
 <div class="container mx-auto p-4">
   <div class="mt-6 mb-4">
     <a href="{{ route('user-reservations') }}" class="text-blue-500 hover:underline">&larr; Retour à mes réservations</a>
@@ -16,7 +14,7 @@
       <div>
         <div class="font-bold text-lg">{{ $booking->property->name }}</div>
         <div class="text-gray-600 text-sm">{{ $booking->start_date }} - {{ $booking->end_date }}</div>
-        <div class="text-gray-500 text-xs">Prix payé : {{ $booking->total_price }} €</div>
+        <div class="text-gray-800 text-lg">{{ $booking->total_price }} FrCFA</div>
       </div>
       <div>
         <form action="{{ route('user-reservations.review', $booking->id) }}" method="GET">
@@ -28,4 +26,3 @@
   </div>
   @endif
 </div>
-@livewire('partials.footer')

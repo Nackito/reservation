@@ -24,7 +24,7 @@ Route::get('/', HomePage::class)->name('home');
 Route::get('/contact-hebergement', ContactForm::class)->name('contact.hebergement');
 
 Route::get('/mes-reservations/avis/{booking}', [ReviewController::class, 'create'])->name('user-reservations.review');
-Route::get('/mes-reservations/ville/{city}', [UserReservationsCityController::class, 'show'])->name('user-reservations.city');
+Route::get('/mes-reservations/ville/{city}', App\Livewire\UserReservationsCity::class)->name('user-reservations.city');
 Route::get('/property-manager', PropertyManager::class)->name('property-manager');
 Route::get('/booking-manager/{propertyId}', BookingManager::class)->name('booking-manager');
 Route::get('/user-reservations', UserReservations::class)->name('user-reservations');

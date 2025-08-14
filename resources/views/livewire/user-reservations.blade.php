@@ -12,7 +12,7 @@
                 <img src="{{ asset('images/photo5.jpg') }}" alt="Image par défaut" class="rounded-full w-96 h-96">
             </div>
             <div class="w-2/3 p-4">
-                <p class="text-4xl font-bold text-gray-900 dark:text-white mb-4">Vous preferez avec ou sans Jaccuzy?</p>
+                <p class="text-4xl font-bold text-gray-900 dark:text-black mb-4">Vous preferez avec ou sans Jaccuzy?</p>
                 <p class="text-black text-2xl">Lorsque vous aurez effectué une réservation, elle apparaîtra ici.</p>
             </div>
         </div>

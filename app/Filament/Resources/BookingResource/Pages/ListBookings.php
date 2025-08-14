@@ -42,7 +42,7 @@ class ListBookings extends ListRecords
             null => Tab::make('All'),
             'pending' => Tab::make()->query(fn($query) => $query->where('status', 'pending')),
             'accepted' => Tab::make()->query(fn($query) => $query->where('status', 'accepted')),
-            'cancelled' => Tab::make()->query(fn($query) => $query->where('status', 'cancelled')),
+            'canceled' => Tab::make()->query(fn($query) => $query->where('status', 'canceled')),
         ];
     }
 }

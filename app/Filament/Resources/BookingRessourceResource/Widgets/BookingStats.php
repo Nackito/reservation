@@ -32,7 +32,7 @@ class BookingStats extends BaseWidget
                 ->whereHas('property', function ($query) use ($userId) {
                     $query->where('user_id', $userId);
                 })
-                ->where('status', 'cancelled')
+                ->where('status', 'canceled')
                 ->count()),
 
             Stat::make('Total revenue', Booking::query()

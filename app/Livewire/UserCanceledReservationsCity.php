@@ -21,7 +21,7 @@ class UserCanceledReservationsCity extends Component
                 $q->where('city', $this->city);
             })
             ->where('user_id', $user->id)
-            ->where('status', 'cancelled')
+            ->where('status', 'canceled')
             ->orderByDesc('start_date')
             ->get();
     }
@@ -29,10 +29,18 @@ class UserCanceledReservationsCity extends Component
     public function deleteBooking($bookingId)
     {
         $booking = Booking::find($bookingId);
-        if ($booking && $booking->user_id === Auth::id()) {
+        if ($booking && $booking->user_id === Auth::id() && $booking->status === 'canceled') {
             $booking->delete();
-            // Rafraîchir la liste locale
-            $this->canceled = $this->canceled->filter(fn($b) => $b->id !== $bookingId);
+            // Rafraîchir la liste depuis la base pour garantir la cohérence
+            $user = Auth::user();
+            $this->canceled = Booking::with('property')
+                ->whereHas('property', function ($q) {
+                    $q->where('city', $this->city);
+                })
+                ->where('user_id', $user->id)
+                ->where('status', 'canceled')
+                ->orderByDesc('start_date')
+                ->get();
             session()->flash('success', 'Réservation supprimée avec succès.');
         }
     }

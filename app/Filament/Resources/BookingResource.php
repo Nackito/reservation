@@ -92,7 +92,7 @@ class BookingResource extends Resource
                 Tables\Actions\Action::make('cancel')
                     ->label('Annuler')
                     ->action(function (Booking $record) {
-                        $record->update(['status' => 'cancelled']);
+                        $record->update(['status' => 'canceled']);
                     })
                     ->requiresConfirmation()
                     ->color('danger')

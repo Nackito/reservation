@@ -7,7 +7,7 @@
             <div class="bg-white border border-gray-200 rounded-xl shadow-sm dark:bg-gray-800 dark:border-gray-700">
                 <div class="p-4 sm:p-7">
                     <div class="text-center">
-                        <h1 class="block text-2xl font-bold text-gray-800 dark:text-white">Se connecter à Afridays</h1>
+                        <h1 class="block text-2xl font-bold text-gray-800 dark:text-white">Se connecter à Afridayz</h1>
                         <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
                             Vous n'avez pas encore de compte ?
                             <a wire:navigate class="text-blue-600 decoration-2 hover:underline font-medium dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600" href="/register">

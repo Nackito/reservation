@@ -22,7 +22,7 @@
         <div class="container mx-auto py-16 px-4">
             {{-- Titre et sous-titre de bienvenue --}}
             <div class="text-center mb-8">
-                <h1 class="text-4xl font-bold mb-4">Bienvenue sur Afridays</h1>
+                <h1 class="text-4xl font-bold mb-4">Bienvenue sur Afridayz</h1>
                 <p class="text-xl text-blue-100">Trouvez la propriété idéale pour votre séjour en Côte d'Ivoire</p>
             </div>
 

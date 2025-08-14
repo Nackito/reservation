@@ -4,7 +4,7 @@
     <div class="text-center mb-12">
       <h1 class="text-4xl font-bold text-gray-900 mb-4">Proposer votre hébergement</h1>
       <p class="text-xl text-gray-600 max-w-3xl mx-auto">
-        Vous possédez un établissement en Côte d'Ivoire ? Rejoignez Afridays et faites découvrir votre hébergement à nos voyageurs.
+  Vous possédez un établissement en Côte d'Ivoire ? Rejoignez Afridayz et faites découvrir votre hébergement à nos voyageurs.
         Remplissez ce formulaire et notre équipe vous contactera rapidement.
       </p>
     </div>

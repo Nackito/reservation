@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="utf-8">
-  <title>Nouvelle demande d'hébergement - Afridays</title>
+  <title>Nouvelle demande d'hébergement - Afridayz</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -93,7 +93,7 @@
   <div class="container">
     <div class="header">
       <h1>📨 Nouvelle demande d'hébergement</h1>
-      <p>Afridays - Plateforme de réservation</p>
+  <p>Afridayz - Plateforme de réservation</p>
     </div>
 
     <div class="content">

@@ -90,6 +90,7 @@ class BookingResource extends Resource
                     ->action(function (Booking $record) {
                         $record->update(['status' => 'accepted']);
                         $user = $record->user;
+                        $admin = Auth::user();
                         if ($user) {
                             // Notification Laravel (mail + database)
                             $user->notify(new \App\Notifications\BookingAcceptedNotification($record));
@@ -102,6 +103,28 @@ class BookingResource extends Resource
                                         ->subject('Votre réservation a été acceptée');
                                 }
                             );
+                        }
+
+                        // Envoi d'un mail à l'admin avec les infos de la réservation
+                        $adminMail = $admin ? $admin->email : null;
+                        if ($adminMail) {
+                            $propertyName = $record->property->name ?? '';
+                            $userName = $user ? $user->name : '';
+                            $startDate = $record->start_date;
+                            $endDate = $record->end_date;
+                            $createdAt = $record->created_at;
+                            $adminName = $admin->name ?? '';
+                            $content = "Réservation acceptée :\n" .
+                                "- Propriété : $propertyName\n" .
+                                "- Utilisateur : $userName\n" .
+                                "- Date d'entrée : $startDate\n" .
+                                "- Date de sortie : $endDate\n" .
+                                "- Date de soumission : $createdAt\n" .
+                                "- Action réalisée par : $adminName";
+                            Mail::raw($content, function ($message) use ($adminMail) {
+                                $message->to($adminMail)
+                                    ->subject('Réservation acceptée - Notification admin');
+                            });
                         }
 
                         // Message système dans la conversation admin liée à la réservation
@@ -124,8 +147,8 @@ class BookingResource extends Resource
                     ->label('Annuler')
                     ->action(function (Booking $record) {
                         $record->update(['status' => 'canceled']);
-                        // Notifier l'utilisateur par email
                         $user = $record->user;
+                        $admin = Auth::user();
                         if ($user) {
                             $user->notify(new \App\Notifications\BookingCanceledNotification($record));
 
@@ -137,6 +160,28 @@ class BookingResource extends Resource
                                         ->subject('Votre réservation a été annulée');
                                 }
                             );
+                        }
+
+                        // Envoi d'un mail à l'admin avec les infos de la réservation
+                        $adminMail = $admin ? $admin->email : null;
+                        if ($adminMail) {
+                            $propertyName = $record->property->name ?? '';
+                            $userName = $user ? $user->name : '';
+                            $startDate = $record->start_date;
+                            $endDate = $record->end_date;
+                            $createdAt = $record->created_at;
+                            $adminName = $admin->name ?? '';
+                            $content = "Réservation annulée :\n" .
+                                "- Propriété : $propertyName\n" .
+                                "- Utilisateur : $userName\n" .
+                                "- Date d'entrée : $startDate\n" .
+                                "- Date de sortie : $endDate\n" .
+                                "- Date de soumission : $createdAt\n" .
+                                "- Action réalisée par : $adminName";
+                            Mail::raw($content, function ($message) use ($adminMail) {
+                                $message->to($adminMail)
+                                    ->subject('Réservation annulée - Notification admin');
+                            });
                         }
 
                         // Envoyer un message système dans la conversation admin liée à la réservation

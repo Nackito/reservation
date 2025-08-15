@@ -191,6 +191,8 @@ class BookingManager extends Component
                             ->subject('Nouvelle demande de réservation');
                     }
                 );
+                // Notification Laravel (canal database)
+                $admin->notify(new \App\Notifications\BookingRequestNotification($booking));
             }
         } catch (\Exception $e) {
             // Optionnel : log ou alerte

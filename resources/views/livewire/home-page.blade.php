@@ -975,12 +975,22 @@
                             </span>
                         </div>
 
-                        {{-- Badge nombre de réservations --}}
+                        {{-- Bouton wishlist (j'aime) --}}
                         <div class="absolute top-3 right-3 z-10">
-                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-600 text-white">
-                                <i class="fas fa-calendar-check mr-1"></i>
-                                {{ $property->bookings_count }} réservation{{ $property->bookings_count > 1 ? 's' : '' }}
-                            </span>
+                            <button
+                                @if(auth()->check())
+                                wire:click.stop="toggleWishlist({{ $property->id }})"
+                                @else
+                                onclick="window.dispatchEvent(new CustomEvent('show-login-modal'))"
+                                @endif
+                                class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-pink-100 text-pink-600 hover:bg-pink-200 transition"
+                                title="Ajouter ou retirer de la liste de souhaits">
+                                @if(auth()->check() && auth()->user()->wishlists->contains('property_id', $property->id))
+                                <i class="fas fa-heart"></i>
+                                @else
+                                <i class="far fa-heart"></i>
+                                @endif
+                            </button>
                         </div>
 
                         {{-- Image de la propriété --}}

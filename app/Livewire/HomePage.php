@@ -6,6 +6,7 @@ use Livewire\Component;
 use Livewire\Attributes\Title;
 use App\Models\Property;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 
 #[Title('Home Page - Afridays')]
 class HomePage extends Component
@@ -68,6 +69,41 @@ class HomePage extends Component
         'Grand-Bereby',
         'Fresco'
     ];
+    // Ajout du bouton wishlist (j'aime) sur la page d'accueil
+    public function toggleWishlist($propertyId)
+    {
+        if (!Auth::check()) {
+            return redirect()->route('login');
+        }
+
+        $user = Auth::user();
+        $property = Property::find($propertyId);
+
+        if (!$property) {
+            session()->flash('error', 'Propriété introuvable');
+            return;
+        }
+
+        if (!method_exists($user, 'wishlists')) {
+            session()->flash('error', 'Relation wishlists manquante sur User');
+            return;
+        }
+
+        $wishlist = $user->wishlists()->where('property_id', $property->id)->first();
+        if ($wishlist) {
+            $wishlist->delete();
+            session()->flash('message', 'Retiré de votre liste de souhaits');
+        } else {
+            try {
+                $user->wishlists()->create([
+                    'property_id' => $property->id,
+                ]);
+                session()->flash('message', 'Ajouté à votre liste de souhaits !');
+            } catch (\Exception $e) {
+                session()->flash('error', 'Erreur lors de la modification de la wishlist');
+            }
+        }
+    }
 
     public function updatedSearchCity()
     {

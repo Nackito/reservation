@@ -30,7 +30,7 @@
             <div class="flex flex-col justify-between p-3 flex-1">
                 <h5 class="text-base font-bold">{{ $booking->property->name ?? 'Nom non disponible' }}</h5>
                 <p class="text-gray-700 text-sm">{{ $booking->start_date }} - {{ $booking->end_date }}</p>
-                <p class="text-gray-500 text-xs">{{ $booking->total_price }} €</p>
+                <p class="text-gray-500 text-xs">{{ $booking->total_price }} FrCFA</p>
                 <p class="text-gray-400 text-xs">Soumis le : {{ $booking->created_at }}</p>
                 <div class="mt-2 flex justify-between">
                     @php $userReview = $booking->property->reviews->first(); @endphp

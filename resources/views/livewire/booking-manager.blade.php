@@ -256,7 +256,7 @@
                     @endforelse
                 </ul>
                 <div class="p-4">
-                    <p class="text-gray-600 text-right font-bold mt-5">{{ $property->price_per_night ?? 'Prix non disponible' }} € par nuit</p>
+                    <p class="text-gray-600 text-right font-bold mt-5">{{ $property->price_per_night ?? 'Prix non disponible' }} FrCFA par nuit</p>
                     <div class="mt-4">
                         <a href="#Reservation" class="border border-blue-500 bg-white-500 text-blue-500 text-center py-2 px-4 rounded block w-full">Réserver cette résidence</a>
                     </div>
@@ -291,7 +291,7 @@
         <p class="text-gray-500 mt-5">
             {!! $property->description ?? 'Description non disponible' !!}
         </p>
-        <p id="pricing" class="text-gray-600  mt-5">Vous pouvez disposez de ce logement à <span class="text-xl font-bold"> {{ $property->price_per_night }} euros par nuit</span></p>
+        <p id="pricing" class="text-gray-600  mt-5">Vous pouvez disposez de ce logement à <span class="text-xl font-bold"> {{ $property->price_per_night }} FrCFA par nuit</span></p>
     </div>
 </div>
 
@@ -441,7 +441,7 @@
                     </button>
                 </div>
                 <div class="mt-2">
-                    <p class="text-gray-700 dark:text-white">Vous allez payer <span id="totalPrice"></span> € pour cette réservation. Voulez-vous confirmer ?</p>
+                    <p class="text-gray-700 dark:text-white">Vous allez payer <span id="totalPrice"></span> FrCFA pour cette réservation. Voulez-vous confirmer ?</p>
                 </div>
                 <div class="flex justify-end pt-4">
                     <button class="bg-gray-500 text-white px-4 py-2 rounded mr-2" onclick="closeModal()">Annuler</button>

@@ -14,7 +14,7 @@
                 <div>
                     <h3 class="text-lg text-gray-800">{{ $reservation->property->name ?? 'Nom non disponible' }}</h3>
                     <p class="text-gray-500">{{ $reservation->start_date }} - {{ $reservation->end_date }}</p>
-                    <p class="text-gray-600">{{ $reservation->total_price }} €</p>
+                    <p class="text-gray-600">{{ $reservation->total_price }} FrCFA</p>
                     <p class="text-gray-400">Soumis le : {{ $reservation->created_at }}</p>
                 </div>
                 <div class="flex justify-end mt-4">

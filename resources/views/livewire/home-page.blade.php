@@ -217,7 +217,7 @@
                         {{-- Filtre prix --}}
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">
-                                <i class="fas fa-euro-sign mr-1"></i>Prix par nuit
+                                <span class="font-bold mr-1">FrCFA</span>Prix par nuit
                             </label>
                             <div class="grid grid-cols-2 gap-2">
                                 <input
@@ -373,15 +373,15 @@
 
                         @if($minPrice)
                         <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800">
-                            <i class="fas fa-euro-sign mr-1"></i>
-                            Min: {{ $minPrice }}€
+                            <span class="font-bold mr-1">FrCFA</span>
+                            Min: {{ $minPrice }} FrCFA
                         </span>
                         @endif
 
                         @if($maxPrice)
                         <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800">
-                            <i class="fas fa-euro-sign mr-1"></i>
-                            Max: {{ $maxPrice }}€
+                            <span class="font-bold mr-1">FrCFA</span>
+                            Max: {{ $maxPrice }} FrCFA
                         </span>
                         @endif
 
@@ -454,7 +454,7 @@
                             {{-- Filtre prix minimum --}}
                             <div>
                                 <label for="minPriceMobile" class="block text-sm font-medium text-gray-700 mb-2">
-                                    <i class="fas fa-euro-sign mr-1"></i>Prix min./nuit
+                                    <span class="font-bold mr-1">FrCFA</span>Prix min./nuit
                                 </label>
                                 <input
                                     type="number"
@@ -468,7 +468,7 @@
                             {{-- Filtre prix maximum --}}
                             <div>
                                 <label for="maxPriceMobile" class="block text-sm font-medium text-gray-700 mb-2">
-                                    <i class="fas fa-euro-sign mr-1"></i>Prix max./nuit
+                                    <span class="font-bold mr-1">FrCFA</span>Prix max./nuit
                                 </label>
                                 <input
                                     type="number"
@@ -644,7 +644,7 @@
                             <div class="flex justify-between items-center">
                                 {{-- Prix par nuit --}}
                                 <span class="text-lg font-bold text-blue-600">
-                                    {{ $property->price_per_night ?? 'Prix non disponible' }} €/nuit
+                                    {{ $property->price_per_night ?? 'Prix non disponible' }} FrCFA/nuit
                                 </span>
                             </div>
                         </div>
@@ -712,7 +712,7 @@
 
                             {{-- Badge de prix en overlay --}}
                             <div class="absolute top-3 right-3 bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-semibold shadow-lg">
-                                {{ $property->price_per_night ?? 'N/A' }} €/nuit
+                                {{ $property->price_per_night ?? 'N/A' }} FrCFA/nuit
                             </div>
                         </div> {{-- Contenu de la carte optimisé --}}
                         <div class="property-content p-4 flex flex-col h-80 overflow-hidden">
@@ -1088,7 +1088,7 @@
                             <div class="flex justify-between items-center mt-4">
 
                                 <span class="text-lg font-bold text-blue-600">
-                                    {{ $property->price_per_night ?? 'Prix non disponible' }} €/nuit
+                                    {{ $property->price_per_night ?? 'Prix non disponible' }} FrCFA/nuit
                                 </span>
                                 <a href="{{ route('booking-manager', ['propertyId' => $property->id]) }}"
                                     class="inline-flex items-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 ml-2">

@@ -38,7 +38,7 @@
             <div class="p-4 text-center">
                 <h3 class="text-lg text-gray-800">{{ $property->name ?? 'Nom non disponible' }}</h3>
                 <p class="text-gray-500">{{ $property->description ?? 'Description non disponible' }}</p>
-                <p class="text-gray-600">{{ $property->price_per_night ?? 'Prix non disponible' }} € par nuit</p>
+                <p class="text-gray-600">{{ $property->price_per_night ?? 'Prix non disponible' }} FrCFA par nuit</p>
                 <div class="mt-4 flex justify-between">
                     <button wire:click="edit({{ $property->id }})" class="bg-yellow-500 text-white py-1 px-2 rounded">Modifier</button>
                     <button wire:click="delete({{ $property->id }})" class="bg-red-500 text-white py-1 px-2 rounded">Supprimer</button>
@@ -60,7 +60,7 @@
                 <p class="text-gray-500">Demande par : {{ $booking->user->name ?? 'Nom non disponible' }}</p>
                 <p class="text-gray-500">Date d'entrée : {{ $booking->start_date }}</p>
                 <p class="text-gray-500">Date de sortie : {{ $booking->end_date }}</p>
-                <p class="text-gray-600">Prix total : {{ $booking->total_price }} €</p>
+                <p class="text-gray-600">Prix total : {{ $booking->total_price }} FrCFA</p>
                 <p class="text-gray-400">Soumit le : {{ $booking->created_at }}</p>
                 <div class="mt-4 flex justify-between">
                     @if($booking->status == 'pending')

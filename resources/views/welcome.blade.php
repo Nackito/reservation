@@ -21,7 +21,7 @@
                 <div class="p-8">
                     <h3 class="text-2xl font-semibold text-gray-800 mb-4">{{ $property->name ?? 'Nom non disponible' }}</h3>
                     <p class="text-gray-500 mb-6 text-lg leading-relaxed">{{ $property->description ?? 'Description non disponible' }}</p>
-                    <p class="text-xl font-bold text-blue-600 mb-6">{{ $property->price_per_night ?? 'Prix non disponible' }} € par nuit</p>
+                    <p class="text-xl font-bold text-blue-600 mb-6">{{ $property->price_per_night ?? 'Prix non disponible' }} FrCFA par nuit</p>
                     <div class="mt-6">
                         <a href="{{ route('booking-manager', ['propertyId' => $property->id]) }}"
                             class="bg-blue-600 hover:bg-blue-700 text-white py-4 px-8 rounded-lg font-medium transition-colors duration-200 inline-flex items-center justify-center w-full text-lg">

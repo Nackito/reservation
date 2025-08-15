@@ -6,7 +6,7 @@
       <div class="carousel-caption absolute text-center">
         <h5 class="text-xl">{{ $property->name }}</h5>
         <p>{{ $property->address }}</p>
-        <p>{{ $property->price_per_night }} € par nuit</p>
+        <p>{{ $property->price_per_night }} FrCFA par nuit</p>
         <a href="{{ route('booking', ['property' => $property->id]) }}" class="bg-primary text-white px-4 py-2 rounded">RESERVATION</a>
       </div>
     </div>

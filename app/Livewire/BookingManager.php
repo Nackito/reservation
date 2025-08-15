@@ -114,7 +114,7 @@ class BookingManager extends Component
         $this->totalPrice = $days * $property->price_per_night;
 
         $this->dispatch('show-confirmation', ['totalPrice' => $this->totalPrice]);
-        LivewireAlert::title('Le prix total est de ' . $this->totalPrice . '€')->show();
+        LivewireAlert::title('Le prix total est de ' . $this->totalPrice . ' FrCFA')->show();
     }
 
 

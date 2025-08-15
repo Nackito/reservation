@@ -23,7 +23,7 @@
       <h2 class="text-xl font-semibold mb-2">Description</h2>
       <p class="text-gray-700 mb-4">{!! $property->description !!}</p>
       <div class="mb-2">
-        <span class="font-bold">Prix par nuit :</span> {{ $property->price_per_night }} €
+        <span class="font-bold">Prix par nuit :</span> {{ $property->price_per_night }} FrCFA
       </div>
       <!-- Ajoute ici d'autres infos si besoin -->
     </div>

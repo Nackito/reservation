@@ -1,7 +1,7 @@
 <div>
 
     <!-- Footer mobile de navigation rapide, visible uniquement sur mobile -->
-    <nav class="w-full bg-white border-t border-gray-200 shadow-lg flex justify-between items-center px-6 py-2 md:hidden">
+    <nav class="w-full flex-shrink-0 bg-white border-t border-gray-200 shadow-lg flex justify-between items-center px-6 py-2 md:hidden">
         <a href="{{ route('home') }}" class="flex flex-col items-center text-gray-500 hover:text-blue-600 transition">
             <i class="fas fa-search text-xl"></i>
             <span class="text-xs">Recherche</span>

@@ -93,7 +93,7 @@
   <div class="container">
     <div class="header">
       <h1>📨 Nouvelle demande d'hébergement</h1>
-  <p>Afridayz - Plateforme de réservation</p>
+      <p>Afridayz - Plateforme de réservation</p>
     </div>
 
     <div class="content">

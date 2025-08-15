@@ -34,7 +34,7 @@
                 <p class="text-gray-400 text-xs">Soumis le : {{ $booking->created_at }}</p>
                 <div class="mt-2 flex justify-between">
                     @php $userReview = $booking->property->reviews->first(); @endphp
-                    @if(\Carbon\Carbon::now()->gte(\Carbon\Carbon::parse($booking->start_date)))
+                    @if(\Carbon\Carbon::now()->gte(\Carbon\Carbon::parse($booking->end_date)))
                     @if($userReview)
                     <form action="{{ route('user-reservations.review', $booking->id) }}" method="GET">
                         <input type="hidden" name="edit" value="1">

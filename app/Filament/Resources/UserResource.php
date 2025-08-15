@@ -34,7 +34,7 @@ class UserResource extends Resource
                     ->required()
                     ->placeholder('John Doe'),
 
-                Forms\Components\TextInput::make('prenom')
+                Forms\Components\TextInput::make('firstname')
                     ->label('Prénom')
                     ->required()
                     ->placeholder('Jean'),
@@ -83,9 +83,12 @@ class UserResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('name')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('prenom')
+                Tables\Columns\TextColumn::make('firstname')
                     ->searchable(),
-
+                Tables\Columns\TextColumn::make('phone')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('role')
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('email')
                     ->searchable(),
 
@@ -127,6 +130,8 @@ class UserResource extends Resource
         return [
             'name',
             'email',
+            'firstname',
+            'phone',
         ];
     }
 

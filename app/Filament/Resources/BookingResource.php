@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources;
 
+use Illuminate\Support\Facades\Mail;
+
 use App\Notifications\BookingCanceledNotification;
 use Illuminate\Support\Facades\Notification;
 use App\Filament\Resources\BookingResource\Pages;
@@ -99,6 +101,15 @@ class BookingResource extends Resource
                         $user = $record->user;
                         if ($user) {
                             $user->notify(new \App\Notifications\BookingCanceledNotification($record));
+
+                            // Envoi d'un mail personnalisé avec le même texte que le message système
+                            Mail::raw(
+                                "Votre demande de réservation a été annulée par l'administrateur.",
+                                function ($message) use ($user) {
+                                    $message->to($user->email)
+                                        ->subject('Votre réservation a été annulée');
+                                }
+                            );
                         }
 
                         // Envoyer un message système dans la conversation admin liée à la réservation

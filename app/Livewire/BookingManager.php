@@ -70,34 +70,6 @@ class BookingManager extends Component
         }
 
 
-        /*// Récupérer l'admin (premier utilisateur avec le rôle 'admin')
-        $admin = User::where('role', 'admin')->first();
-        $adminId = $admin ? $admin->id : null;
-
-        if ($adminId && isset($this->propertyId)) {
-            // Vérifier si une conversation existe déjà entre le client et l'admin
-            $conversation = Message::where('user_id', Auth::id())
-                ->where('owner_id', $adminId)
-                ->first();
-            if (!$conversation && isset($this->booking)) {
-                $conversation = Message::create([
-                    'user_id' => Auth::id(),
-                    'owner_id' => $adminId,
-                    'booking_id' => $this->booking->id,
-                ]);
-            } elseif ($conversation && isset($this->booking)) {
-                // Mettre à jour la réservation liée si besoin
-                $conversation->booking_id = $this->booking->id;
-                $conversation->save();
-            }
-            // Créer le premier message automatique
-            Message::create([
-                'conversation_id' => $conversation->id,
-                'sender_id' => Auth::id(),
-                'content' => 'Nouvelle demande de réservation pour ' . ($this->property ? $this->property->name : '') . ' du ' . ($this->start_date ?? '') . ' au ' . ($this->end_date ?? ''),
-            ]);
-        }
-
         // Convertir la description Markdown en HTML
         if ($this->property && $this->property->description) {
             $this->property->description = Str::markdown($this->property->description);
@@ -111,7 +83,7 @@ class BookingManager extends Component
                 ->where('approved', true) // Filtrer les avis approuvés
                 ->with('user') // Charger les utilisateurs qui ont laissé des avis
                 ->get();
-        }*/
+        }
     }
 
     public function submitReview()

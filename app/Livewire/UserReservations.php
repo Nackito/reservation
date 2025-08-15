@@ -78,11 +78,11 @@ class UserReservations extends Component
             ->get();
 
 
-        // Récupérer les réservations "à venir" (acceptées et end_date > aujourd'hui)
+        // Récupérer les réservations passées (acceptées et end_date < aujourd'hui)
         $pastBookings = Booking::with('property.images')
             ->where('user_id', $userId)
             ->where('status', 'accepted')
-            ->where('end_date', '>', Carbon::now())
+            ->where('end_date', '<', Carbon::now())
             ->get();
 
 

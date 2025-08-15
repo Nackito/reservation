@@ -249,7 +249,12 @@ class PropertiesResource extends Resource
                 Tables\Columns\TextColumn::make('district')
                     ->searchable(),
 
-                Tables\Columns\TextColumn::make('status')
+                Tables\Columns\SelectColumn::make('status')
+                    ->options([
+                        'available' => 'Disponible',
+                        'booked' => 'Occupé',
+                        'pending' => 'En attente',
+                    ])
                     ->sortable()
                     ->searchable(),
 

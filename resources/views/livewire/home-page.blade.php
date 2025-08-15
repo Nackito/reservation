@@ -540,114 +540,127 @@
                     @foreach($properties as $property)
                     {{-- Carte de propriété avec effet hover --}}
                     <div class="shadow-lg rounded-lg overflow-hidden hover:shadow-xl transition duration-200">
-                        {{-- Image de la propriété avec lien : première image ou image par défaut --}}
-                        <a href="{{ route('booking-manager', ['propertyId' => $property->id]) }}"
-                            class="block"
-                            aria-label="Réserver {{ $property->name }}">
-                            @if($property->firstImage())
-                            <img src="{{ asset('storage/' . $property->firstImage()->image_path) }}"
-                                alt="{{ $property->name }}"
-                                class="w-full h-48 object-cover hover:scale-105 transition-transform duration-300">
-                            @else
-                            <img src="{{ asset('images/default-image.jpg') }}"
-                                alt="{{ $property->name ?? 'propriété' }}"
-                                class="w-full h-48 object-cover hover:scale-105 transition-transform duration-300">
-                            @endif
-                        </a>
-
-                        {{-- Contenu de la carte --}}
-                        <div class="p-4">
-                            {{-- Nom de la propriété avec lien --}}
-                            <h3 class="text-lg font-semibold text-gray-800 mb-2">
-                                <a href="{{ route('booking-manager', ['propertyId' => $property->id]) }}"
-                                    class="hover:text-blue-600 transition-colors duration-200"
-                                    aria-label="Réserver {{ $property->name }}">
-                                    {{ $property->name ?? 'Nom non disponible' }}
-                                </a>
-                            </h3>
-
-                            {{-- Localisation : ville et quartier --}}
-                            <p class="text-gray-600 mb-2">
-                                <i class="fas fa-map-marker-alt mr-1"></i>
-                                {{ $property->city ?? 'Ville non disponible' }}
-                                @if($property->municipality)
-                                , {{ $property->municipality }}
+                        {{-- Statut de la propriété --}}
+                        @php
+                        $isOccupied = $property->bookings()->where('status', 'accepted')
+                        ->whereDate('start_date', '<=', now())
+                            ->whereDate('end_date', '>=', now())
+                            ->exists();
+                            @endphp
+                            <div class="absolute top-3 left-3 z-10">
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold {{ $isOccupied ? 'bg-gray-200 text-gray-700' : 'bg-green-100 text-green-800' }}">
+                                    <i class="fas {{ $isOccupied ? 'fa-lock' : 'fa-unlock' }} mr-1"></i>
+                                    {{ $isOccupied ? 'Occupé' : 'Disponible' }}
+                                </span>
+                            </div>
+                            {{-- Image de la propriété avec lien : première image ou image par défaut --}}
+                            <a href="{{ route('booking-manager', ['propertyId' => $property->id]) }}"
+                                class="block"
+                                aria-label="Réserver {{ $property->name }}">
+                                @if($property->firstImage())
+                                <img src="{{ asset('storage/' . $property->firstImage()->image_path) }}"
+                                    alt="{{ $property->name }}"
+                                    class="w-full h-48 object-cover hover:scale-105 transition-transform duration-300">
+                                @else
+                                <img src="{{ asset('images/default-image.jpg') }}"
+                                    alt="{{ $property->name ?? 'propriété' }}"
+                                    class="w-full h-48 object-cover hover:scale-105 transition-transform duration-300">
                                 @endif
-                            </p>
+                            </a>
 
-                            {{-- Type de logement --}}
-                            @if($property->property_type)
-                            <div class="mb-2">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                    <i class="fas fa-home mr-1"></i>
-                                    {{ ucfirst($property->property_type) }}
-                                </span>
-                                {{-- Nombre de chambres --}}
-                                @if($property->number_of_rooms)
-                                <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                    <i class="fas fa-bed mr-1"></i>
-                                    {{ $property->number_of_rooms }} chambre{{ $property->number_of_rooms > 1 ? 's' : '' }}
-                                </span>
+                            {{-- Contenu de la carte --}}
+                            <div class="p-4">
+                                {{-- Nom de la propriété avec lien --}}
+                                <h3 class="text-lg font-semibold text-gray-800 mb-2">
+                                    <a href="{{ route('booking-manager', ['propertyId' => $property->id]) }}"
+                                        class="hover:text-blue-600 transition-colors duration-200"
+                                        aria-label="Réserver {{ $property->name }}">
+                                        {{ $property->name ?? 'Nom non disponible' }}
+                                    </a>
+                                </h3>
+
+                                {{-- Localisation : ville et quartier --}}
+                                <p class="text-gray-600 mb-2">
+                                    <i class="fas fa-map-marker-alt mr-1"></i>
+                                    {{ $property->city ?? 'Ville non disponible' }}
+                                    @if($property->municipality)
+                                    , {{ $property->municipality }}
+                                    @endif
+                                </p>
+
+                                {{-- Type de logement --}}
+                                @if($property->property_type)
+                                <div class="mb-2">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                        <i class="fas fa-home mr-1"></i>
+                                        {{ ucfirst($property->property_type) }}
+                                    </span>
+                                    {{-- Nombre de chambres --}}
+                                    @if($property->number_of_rooms)
+                                    <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                        <i class="fas fa-bed mr-1"></i>
+                                        {{ $property->number_of_rooms }} chambre{{ $property->number_of_rooms > 1 ? 's' : '' }}
+                                    </span>
+                                    @endif
+                                </div>
+                                @elseif($property->number_of_rooms)
+                                <div class="mb-2">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                        <i class="fas fa-bed mr-1"></i>
+                                        {{ $property->number_of_rooms }} chambre{{ $property->number_of_rooms > 1 ? 's' : '' }}
+                                    </span>
+                                </div>
                                 @endif
-                            </div>
-                            @elseif($property->number_of_rooms)
-                            <div class="mb-2">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                    <i class="fas fa-bed mr-1"></i>
-                                    {{ $property->number_of_rooms }} chambre{{ $property->number_of_rooms > 1 ? 's' : '' }}
-                                </span>
-                            </div>
-                            @endif
 
-                            {{-- Description tronquée --}}
-                            <p class="text-gray-500 mb-3">
-                                {{ Str::words($property->description ?? 'Description non disponible', 15, '...') }}
-                            </p>
+                                {{-- Description tronquée --}}
+                                <p class="text-gray-500 mb-3">
+                                    {{ Str::words($property->description ?? 'Description non disponible', 15, '...') }}
+                                </p>
 
-                            {{-- Commodités principales --}}
-                            @if($property->features && count($property->features) > 0)
-                            <div class="mb-3 flex flex-wrap gap-1">
-                                @foreach(array_slice($property->features, 0, 3) as $feature)
-                                <span class="inline-flex items-center px-2 py-1 bg-gray-50 text-gray-600 rounded text-xs">
-                                    @switch(strtolower($feature))
-                                    @case('wifi')
-                                    @case('wi-fi')
-                                    <i class="fas fa-wifi mr-1"></i>
-                                    @break
-                                    @case('piscine')
-                                    @case('pool')
-                                    <i class="fas fa-swimming-pool mr-1"></i>
-                                    @break
-                                    @case('parking')
-                                    <i class="fas fa-parking mr-1"></i>
-                                    @break
-                                    @case('climatisation')
-                                    @case('air conditioning')
-                                    @case('ac')
-                                    <i class="fas fa-snowflake mr-1"></i>
-                                    @break
-                                    @default
-                                    <i class="fas fa-check mr-1"></i>
-                                    @endswitch
-                                    {{ ucfirst($feature) }}
-                                </span>
-                                @endforeach
-                                @if(count($property->features) > 3)
-                                <span class="inline-flex items-center px-2 py-1 bg-blue-50 text-blue-600 rounded text-xs">
-                                    +{{ count($property->features) - 3 }} autres
-                                </span>
+                                {{-- Commodités principales --}}
+                                @if($property->features && count($property->features) > 0)
+                                <div class="mb-3 flex flex-wrap gap-1">
+                                    @foreach(array_slice($property->features, 0, 3) as $feature)
+                                    <span class="inline-flex items-center px-2 py-1 bg-gray-50 text-gray-600 rounded text-xs">
+                                        @switch(strtolower($feature))
+                                        @case('wifi')
+                                        @case('wi-fi')
+                                        <i class="fas fa-wifi mr-1"></i>
+                                        @break
+                                        @case('piscine')
+                                        @case('pool')
+                                        <i class="fas fa-swimming-pool mr-1"></i>
+                                        @break
+                                        @case('parking')
+                                        <i class="fas fa-parking mr-1"></i>
+                                        @break
+                                        @case('climatisation')
+                                        @case('air conditioning')
+                                        @case('ac')
+                                        <i class="fas fa-snowflake mr-1"></i>
+                                        @break
+                                        @default
+                                        <i class="fas fa-check mr-1"></i>
+                                        @endswitch
+                                        {{ ucfirst($feature) }}
+                                    </span>
+                                    @endforeach
+                                    @if(count($property->features) > 3)
+                                    <span class="inline-flex items-center px-2 py-1 bg-blue-50 text-blue-600 rounded text-xs">
+                                        +{{ count($property->features) - 3 }} autres
+                                    </span>
+                                    @endif
+                                </div>
                                 @endif
-                            </div>
-                            @endif
 
-                            {{-- Ligne de bas : prix et bouton de réservation --}}
-                            <div class="flex justify-between items-center">
-                                {{-- Prix par nuit --}}
-                                <span class="text-lg font-bold text-blue-600">
-                                    {{ $property->price_per_night ?? 'Prix non disponible' }} FrCFA/nuit
-                                </span>
+                                {{-- Ligne de bas : prix et bouton de réservation --}}
+                                <div class="flex justify-between items-center">
+                                    {{-- Prix par nuit --}}
+                                    <span class="text-lg font-bold text-blue-600">
+                                        {{ $property->price_per_night ?? 'Prix non disponible' }} FrCFA/nuit
+                                    </span>
+                                </div>
                             </div>
-                        </div>
                     </div>
                     @endforeach
                 </div>
@@ -688,142 +701,155 @@
                 @foreach($properties as $index => $property)
                 <div class="swiper-slide" data-swiper-slide-index="{{ $index }}">
                     {{-- Carte de propriété optimisée dans le carrousel --}}
-                    <div class="property-card shadow-md rounded-lg overflow-hidden max-w-md w-full h-full hover:shadow-lg transition-shadow duration-300 mx-auto">
-
-                        {{-- Container d'image avec lazy loading et lien vers booking --}}
-                        <div class="property-image-container relative overflow-hidden">
-                            <a href="{{ route('booking-manager', ['propertyId' => $property->id]) }}"
-                                class="block w-full h-full"
-                                aria-label="Réserver {{ $property->name }}">
-                                @if($property->firstImage())
-                                <img src="{{ asset('storage/' . $property->firstImage()->image_path) }}"
-                                    alt="{{ $property->name }}"
-                                    class="property-image w-full h-48 object-cover transition-transform duration-300 hover:scale-105"
-                                    loading="{{ $index < 3 ? 'eager' : 'lazy' }}"
-                                    decoding="async">
-                                @else
-                                <img src="{{ asset('images/default-image.jpg') }}"
-                                    alt="{{ $property->name ?? 'propriété' }}"
-                                    class="property-image w-full h-48 object-cover transition-transform duration-300 hover:scale-105"
-                                    loading="{{ $index < 3 ? 'eager' : 'lazy' }}"
-                                    decoding="async">
-                                @endif
-                            </a>
-
-                            {{-- Badge de prix en overlay --}}
-                            <div class="absolute top-3 right-3 bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-semibold shadow-lg">
-                                {{ $property->price_per_night ?? 'N/A' }} FrCFA/nuit
+                    <div class="property-card shadow-md rounded-lg overflow-hidden max-w-md w-full h-full hover:shadow-lg transition-shadow duration-300 mx-auto relative">
+                        {{-- Statut de la propriété --}}
+                        @php
+                        $isOccupied = $property->bookings()->where('status', 'accepted')
+                        ->whereDate('start_date', '<=', now())
+                            ->whereDate('end_date', '>=', now())
+                            ->exists();
+                            @endphp
+                            <div class="absolute top-3 left-3 z-10">
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold {{ $isOccupied ? 'bg-gray-200 text-gray-700' : 'bg-green-100 text-green-800' }}">
+                                    <i class="fas {{ $isOccupied ? 'fa-lock' : 'fa-unlock' }} mr-1"></i>
+                                    {{ $isOccupied ? 'Occupé' : 'Disponible' }}
+                                </span>
                             </div>
-                        </div> {{-- Contenu de la carte optimisé --}}
-                        <div class="property-content p-4 flex flex-col h-80 overflow-hidden">
-                            {{-- En-tête avec nom et localisation --}}
-                            <div class="property-header mb-3">
-                                <h3 class="property-title text-lg font-semibold text-gray-800 mb-1 line-clamp-1">
-                                    <a href="{{ route('booking-manager', ['propertyId' => $property->id]) }}"
-                                        class="hover:text-blue-600 transition-colors duration-200"
-                                        aria-label="Réserver {{ $property->name }}">
-                                        {{ $property->name ?? 'Nom non disponible' }}
-                                    </a>
-                                </h3>
 
-                                <div class="property-location flex items-center text-gray-600 text-sm">
-                                    <i class="fas fa-map-marker-alt text-blue-500 mr-1 flex-shrink-0" aria-hidden="true"></i>
-                                    <span class="line-clamp-1">
-                                        {{ $property->city ?? 'Ville non disponible' }}@if($property->district), {{ $property->district }}@endif
-                                    </span>
+                            {{-- Container d'image avec lazy loading et lien vers booking --}}
+                            <div class="property-image-container relative overflow-hidden">
+                                <a href="{{ route('booking-manager', ['propertyId' => $property->id]) }}"
+                                    class="block w-full h-full"
+                                    aria-label="Réserver {{ $property->name }}">
+                                    @if($property->firstImage())
+                                    <img src="{{ asset('storage/' . $property->firstImage()->image_path) }}"
+                                        alt="{{ $property->name }}"
+                                        class="property-image w-full h-48 object-cover transition-transform duration-300 hover:scale-105"
+                                        loading="{{ $index < 3 ? 'eager' : 'lazy' }}"
+                                        decoding="async">
+                                    @else
+                                    <img src="{{ asset('images/default-image.jpg') }}"
+                                        alt="{{ $property->name ?? 'propriété' }}"
+                                        class="property-image w-full h-48 object-cover transition-transform duration-300 hover:scale-105"
+                                        loading="{{ $index < 3 ? 'eager' : 'lazy' }}"
+                                        decoding="async">
+                                    @endif
+                                </a>
+
+                                {{-- Badge de prix en overlay --}}
+                                <div class="absolute top-3 right-3 bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-semibold shadow-lg">
+                                    {{ $property->price_per_night ?? 'N/A' }} FrCFA/nuit
+                                </div>
+                            </div> {{-- Contenu de la carte optimisé --}}
+                            <div class="property-content p-4 flex flex-col h-80 overflow-hidden">
+                                {{-- En-tête avec nom et localisation --}}
+                                <div class="property-header mb-3">
+                                    <h3 class="property-title text-lg font-semibold text-gray-800 mb-1 line-clamp-1">
+                                        <a href="{{ route('booking-manager', ['propertyId' => $property->id]) }}"
+                                            class="hover:text-blue-600 transition-colors duration-200"
+                                            aria-label="Réserver {{ $property->name }}">
+                                            {{ $property->name ?? 'Nom non disponible' }}
+                                        </a>
+                                    </h3>
+
+                                    <div class="property-location flex items-center text-gray-600 text-sm">
+                                        <i class="fas fa-map-marker-alt text-blue-500 mr-1 flex-shrink-0" aria-hidden="true"></i>
+                                        <span class="line-clamp-1">
+                                            {{ $property->city ?? 'Ville non disponible' }}@if($property->district), {{ $property->district }}@endif
+                                        </span>
+                                    </div>
+
+                                    {{-- Type de logement dans le carrousel --}}
+                                    @if($property->property_type)
+                                    <div class="mt-2">
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                            <i class="fas fa-home mr-1"></i>
+                                            {{ ucfirst($property->property_type) }}
+                                        </span>
+                                        {{-- Nombre de chambres dans le carrousel --}}
+                                        @if($property->number_of_rooms)
+                                        <span class="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                            <i class="fas fa-bed mr-1"></i>
+                                            {{ $property->number_of_rooms }}
+                                        </span>
+                                        @endif
+                                    </div>
+                                    @elseif($property->number_of_rooms)
+                                    <div class="mt-2">
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                            <i class="fas fa-bed mr-1"></i>
+                                            {{ $property->number_of_rooms }} chambre{{ $property->number_of_rooms > 1 ? 's' : '' }}
+                                        </span>
+                                    </div>
+                                    @endif
                                 </div>
 
-                                {{-- Type de logement dans le carrousel --}}
-                                @if($property->property_type)
-                                <div class="mt-2">
-                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                        <i class="fas fa-home mr-1"></i>
-                                        {{ ucfirst($property->property_type) }}
+                                {{-- Description avec limitation de lignes --}}
+                                <div class="property-description mb-2 max-h-10 overflow-hidden flex-shrink-0">
+                                    <p class="text-gray-500 text-sm line-clamp-2">
+                                        {{ $property->description ?? 'Description non disponible' }}
+                                    </p>
+                                </div>
+
+                                {{-- Commodités principales pour le carrousel --}}
+                                @if($property->features && count($property->features) > 0)
+                                <div class="mb-2 flex flex-wrap gap-1 min-h-[24px] flex-shrink-0">
+                                    @foreach(array_slice($property->features, 0, 2) as $feature)
+                                    <span class="inline-flex items-center px-1.5 py-0.5 bg-gray-50 text-gray-600 rounded text-xs">
+                                        @switch(strtolower($feature))
+                                        @case('wifi')
+                                        @case('wi-fi')
+                                        <i class="fas fa-wifi mr-1"></i>
+                                        @break
+                                        @case('piscine')
+                                        @case('pool')
+                                        <i class="fas fa-swimming-pool mr-1"></i>
+                                        @break
+                                        @case('parking')
+                                        <i class="fas fa-parking mr-1"></i>
+                                        @break
+                                        @case('climatisation')
+                                        @case('air conditioning')
+                                        @case('ac')
+                                        <i class="fas fa-snowflake mr-1"></i>
+                                        @break
+                                        @default
+                                        <i class="fas fa-check mr-1"></i>
+                                        @endswitch
+                                        {{ Str::limit($feature, 8) }}
                                     </span>
-                                    {{-- Nombre de chambres dans le carrousel --}}
-                                    @if($property->number_of_rooms)
-                                    <span class="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                        <i class="fas fa-bed mr-1"></i>
-                                        {{ $property->number_of_rooms }}
+                                    @endforeach
+                                    @if(count($property->features) > 2)
+                                    <span class="inline-flex items-center px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded text-xs">
+                                        +{{ count($property->features) - 2 }}
                                     </span>
                                     @endif
                                 </div>
-                                @elseif($property->number_of_rooms)
-                                <div class="mt-2">
-                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                        <i class="fas fa-bed mr-1"></i>
-                                        {{ $property->number_of_rooms }} chambre{{ $property->number_of_rooms > 1 ? 's' : '' }}
-                                    </span>
+                                @endif
+
+                                {{-- Pied de carte avec bouton de réservation --}}
+                                <div class="flex items-center gap-2">
+                                    @php
+                                    $avgRating = $property->reviews()->avg('rating');
+                                    $avgRating = $avgRating ? round($avgRating, 1) : null;
+                                    $maxStars = 5;
+                                    @endphp
+                                    @if($avgRating)
+                                    @for ($i = 1; $i <= $maxStars; $i++)
+                                        @if ($i <=floor($avgRating))
+                                        <i class="fas fa-star text-yellow-400"></i>
+                                        @elseif ($i - $avgRating > 0 && $i - $avgRating < 1)
+                                            <i class="fas fa-star-half-alt text-yellow-400"></i>
+                                            @else
+                                            <i class="far fa-star text-yellow-300"></i>
+                                            @endif
+                                            @endfor
+                                            <span class="ml-2 text-sm text-gray-600">{{ $avgRating }}/5</span>
+                                            @else
+                                            <span class="text-sm text-gray-400">Pas encore noté</span>
+                                            @endif
                                 </div>
-                                @endif
                             </div>
-
-                            {{-- Description avec limitation de lignes --}}
-                            <div class="property-description mb-2 max-h-10 overflow-hidden flex-shrink-0">
-                                <p class="text-gray-500 text-sm line-clamp-2">
-                                    {{ $property->description ?? 'Description non disponible' }}
-                                </p>
-                            </div>
-
-                            {{-- Commodités principales pour le carrousel --}}
-                            @if($property->features && count($property->features) > 0)
-                            <div class="mb-2 flex flex-wrap gap-1 min-h-[24px] flex-shrink-0">
-                                @foreach(array_slice($property->features, 0, 2) as $feature)
-                                <span class="inline-flex items-center px-1.5 py-0.5 bg-gray-50 text-gray-600 rounded text-xs">
-                                    @switch(strtolower($feature))
-                                    @case('wifi')
-                                    @case('wi-fi')
-                                    <i class="fas fa-wifi mr-1"></i>
-                                    @break
-                                    @case('piscine')
-                                    @case('pool')
-                                    <i class="fas fa-swimming-pool mr-1"></i>
-                                    @break
-                                    @case('parking')
-                                    <i class="fas fa-parking mr-1"></i>
-                                    @break
-                                    @case('climatisation')
-                                    @case('air conditioning')
-                                    @case('ac')
-                                    <i class="fas fa-snowflake mr-1"></i>
-                                    @break
-                                    @default
-                                    <i class="fas fa-check mr-1"></i>
-                                    @endswitch
-                                    {{ Str::limit($feature, 8) }}
-                                </span>
-                                @endforeach
-                                @if(count($property->features) > 2)
-                                <span class="inline-flex items-center px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded text-xs">
-                                    +{{ count($property->features) - 2 }}
-                                </span>
-                                @endif
-                            </div>
-                            @endif
-
-                            {{-- Pied de carte avec bouton de réservation --}}
-                            <div class="flex items-center gap-2">
-                                @php
-                                $avgRating = $property->reviews()->avg('rating');
-                                $avgRating = $avgRating ? round($avgRating, 1) : null;
-                                $maxStars = 5;
-                                @endphp
-                                @if($avgRating)
-                                @for ($i = 1; $i <= $maxStars; $i++)
-                                    @if ($i <=floor($avgRating))
-                                    <i class="fas fa-star text-yellow-400"></i>
-                                    @elseif ($i - $avgRating > 0 && $i - $avgRating < 1)
-                                        <i class="fas fa-star-half-alt text-yellow-400"></i>
-                                        @else
-                                        <i class="far fa-star text-yellow-300"></i>
-                                        @endif
-                                        @endfor
-                                        <span class="ml-2 text-sm text-gray-600">{{ $avgRating }}/5</span>
-                                        @else
-                                        <span class="text-sm text-gray-400">Pas encore noté</span>
-                                        @endif
-                            </div>
-                        </div>
                     </div>
                 </div>
                 @endforeach
@@ -970,11 +996,21 @@
                     @foreach($cityProperties as $property)
                     <div class="popular-property-card bg-white shadow-lg rounded-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 relative">
                         {{-- Badge "Populaire" --}}
-                        <div class="absolute top-3 left-3 z-10">
+                        <div class="absolute top-3 left-3 z-10 flex flex-col gap-1">
                             <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800">
                                 <i class="fas fa-fire mr-1"></i>
                                 Populaire
                             </span>
+                            @php
+                            $isOccupied = $property->bookings()->where('status', 'accepted')
+                            ->whereDate('start_date', '<=', now())
+                                ->whereDate('end_date', '>=', now())
+                                ->exists();
+                                @endphp
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold {{ $isOccupied ? 'bg-gray-200 text-gray-700' : 'bg-green-100 text-green-800' }}">
+                                    <i class="fas {{ $isOccupied ? 'fa-lock' : 'fa-unlock' }} mr-1"></i>
+                                    {{ $isOccupied ? 'Occupé' : 'Disponible' }}
+                                </span>
                         </div>
 
                         {{-- Bouton wishlist (j'aime) --}}

@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources;
 
+use App\Notifications\BookingCanceledNotification;
+use Illuminate\Support\Facades\Notification;
 use App\Filament\Resources\BookingResource\Pages;
 use App\Models\Booking;
 use Filament\Forms;
@@ -93,6 +95,24 @@ class BookingResource extends Resource
                     ->label('Annuler')
                     ->action(function (Booking $record) {
                         $record->update(['status' => 'canceled']);
+                        // Notifier l'utilisateur par email
+                        $user = $record->user;
+                        if ($user) {
+                            $user->notify(new \App\Notifications\BookingCanceledNotification($record));
+                        }
+
+                        // Envoyer un message système dans la conversation admin liée à la réservation
+                        $conversation = \App\Models\Conversation::where('is_admin_channel', true)
+                            ->where('booking_id', $record->id)
+                            ->first();
+                        if ($conversation) {
+                            \App\Models\Message::create([
+                                'conversation_id' => $conversation->id,
+                                'sender_id' => 1, // 1 = admin ou système, à adapter selon votre logique
+                                'receiver_id' => $user ? $user->id : null,
+                                'content' => "Votre demande de réservation a été annulée par l'administrateur.",
+                            ]);
+                        }
                     })
                     ->requiresConfirmation()
                     ->color('danger')

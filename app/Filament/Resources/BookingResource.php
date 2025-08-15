@@ -89,6 +89,33 @@ class BookingResource extends Resource
                     ->label('Accepter')
                     ->action(function (Booking $record) {
                         $record->update(['status' => 'accepted']);
+                        $user = $record->user;
+                        if ($user) {
+                            // Notification Laravel (mail + database)
+                            $user->notify(new \App\Notifications\BookingAcceptedNotification($record));
+
+                            // Envoi d'un mail personnalisé (optionnel, car déjà fait par la notification)
+                            Mail::raw(
+                                "Votre réservation à été accepté, vous pouvez procedé au paiement.\nSans paiement, nous ne pourront vous garantir la disponibilité le jour-j",
+                                function ($message) use ($user) {
+                                    $message->to($user->email)
+                                        ->subject('Votre réservation a été acceptée');
+                                }
+                            );
+                        }
+
+                        // Message système dans la conversation admin liée à la réservation
+                        $conversation = \App\Models\Conversation::where('is_admin_channel', true)
+                            ->where('booking_id', $record->id)
+                            ->first();
+                        if ($conversation) {
+                            \App\Models\Message::create([
+                                'conversation_id' => $conversation->id,
+                                'sender_id' => 1, // 1 = admin ou système
+                                'receiver_id' => $user ? $user->id : null,
+                                'content' => "Votre réservation à été accepté, vous pouvez procedé au paiement.\nSans paiement, nous ne pourront vous garantir la disponibilité le jour-j",
+                            ]);
+                        }
                     })
                     ->requiresConfirmation()
                     ->color('success')

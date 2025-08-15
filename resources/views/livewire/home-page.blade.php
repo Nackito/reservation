@@ -802,24 +802,26 @@
                             @endif
 
                             {{-- Pied de carte avec bouton de réservation --}}
-                            <div class="property-footer mt-auto pt-2 flex-shrink-0">
-                                {{-- Affichage de la note de l'hébergement (étoiles) --}}
+                            <div class="flex items-center gap-2">
                                 @php
-                                $rating = $property->average_rating ?? 0;
+                                $avgRating = $property->reviews()->avg('rating');
+                                $avgRating = $avgRating ? round($avgRating, 1) : null;
                                 $maxStars = 5;
                                 @endphp
-                                <div class="flex items-center gap-1">
-                                    @for ($i = 1; $i <= $maxStars; $i++)
-                                        @if ($i <=floor($rating))
-                                        <i class="fas fa-star text-yellow-400"></i>
-                                        @elseif ($i - $rating > 0 && $i - $rating < 1)
-                                            <i class="fas fa-star-half-alt text-yellow-400"></i>
-                                            @else
-                                            <i class="far fa-star text-yellow-300"></i>
-                                            @endif
-                                            @endfor
-                                            <span class="ml-2 text-sm text-gray-600">{{ number_format($rating, 1) }}/5</span>
-                                </div>
+                                @if($avgRating)
+                                @for ($i = 1; $i <= $maxStars; $i++)
+                                    @if ($i <=floor($avgRating))
+                                    <i class="fas fa-star text-yellow-400"></i>
+                                    @elseif ($i - $avgRating > 0 && $i - $avgRating < 1)
+                                        <i class="fas fa-star-half-alt text-yellow-400"></i>
+                                        @else
+                                        <i class="far fa-star text-yellow-300"></i>
+                                        @endif
+                                        @endfor
+                                        <span class="ml-2 text-sm text-gray-600">{{ $avgRating }}/5</span>
+                                        @else
+                                        <span class="text-sm text-gray-400">Pas encore noté</span>
+                                        @endif
                             </div>
                         </div>
                     </div>
@@ -1082,13 +1084,14 @@
                             </div>
                             @endif
 
-                            {{-- Prix et bouton de réservation --}}
+                            {{-- Note moyenne, prix et bouton de réservation --}}
                             <div class="flex justify-between items-center mt-4">
+
                                 <span class="text-lg font-bold text-blue-600">
                                     {{ $property->price_per_night ?? 'Prix non disponible' }} €/nuit
                                 </span>
                                 <a href="{{ route('booking-manager', ['propertyId' => $property->id]) }}"
-                                    class="inline-flex items-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200">
+                                    class="inline-flex items-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 ml-2">
                                     <i class="fas fa-calendar-check mr-1"></i>
                                     Réserver
                                 </a>

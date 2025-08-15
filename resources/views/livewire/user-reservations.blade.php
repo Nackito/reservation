@@ -33,8 +33,18 @@
                 <p class="text-gray-500 text-xs">{{ $booking->total_price }} €</p>
                 <p class="text-gray-400 text-xs">Soumis le : {{ $booking->created_at }}</p>
                 <div class="mt-2 flex justify-between">
+                    @php $userReview = $booking->property->reviews->first(); @endphp
                     @if(\Carbon\Carbon::now()->gte(\Carbon\Carbon::parse($booking->start_date)))
-                    <button wire:click="openReviewModal({{ $booking->id }})" class="bg-blue-500 text-white py-1 px-2 rounded text-xs">Laissez un avis</button>
+                    @if($userReview)
+                    <form action="{{ route('user-reservations.review', $booking->id) }}" method="GET">
+                        <input type="hidden" name="edit" value="1">
+                        <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-yellow-700 bg-yellow-500 rounded hover:bg-yellow-50">Modifier mon avis</button>
+                    </form>
+                    @else
+                    <form action="{{ route('user-reservations.review', $booking->id) }}" method="GET">
+                        <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-blue-700 bg-blue-500 rounded hover:bg-blue-50">Laisser un avis</button>
+                    </form>
+                    @endif
                     @else
                     <button wire:click="deleteBooking({{ $booking->id }})" class="bg-red-500 text-white py-1 px-2 rounded text-xs">Annuler</button>
                     @endif

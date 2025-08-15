@@ -25,7 +25,7 @@
       <div>
         <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3 flex items-center"><i class="fas fa-question-circle mr-2"></i>Aide</h3>
         <div class="space-y-2">
-          <a href="//" class="block w-full px-4 py-3 rounded-lg bg-pink-50 text-pink-700 font-semibold hover:bg-pink-100 transition"><i class="fas fa-headset mr-2"></i>Contacter le service clients</a>
+          <a href="#" class="block w-full px-4 py-3 rounded-lg bg-pink-50 text-pink-700 font-semibold hover:bg-pink-100 transition"><i class="fas fa-headset mr-2"></i>Contacter le service clients</a>
         </div>
       </div>
 

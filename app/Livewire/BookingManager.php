@@ -167,6 +167,35 @@ class BookingManager extends Component
             'content' => 'Bonjour, je suis Mr/Mme ' . $userName . ', je souhaite réserver ' . ($property ? $property->name : '') . ' du ' . $this->checkInDate . ' au ' . $this->checkOutDate . '. Merci de confirmer la disponibilité.',
         ]);
 
+        // Envoi d'un mail à l'utilisateur
+        try {
+            \Illuminate\Support\Facades\Mail::raw(
+                "Votre demande de reservation à bien été soumise, nous vérifions la disponibilité...",
+                function ($message) {
+                    $message->to(Auth::user()->email)
+                        ->subject('Demande de réservation soumise');
+                }
+            );
+        } catch (\Exception $e) {
+            // Optionnel : log ou alerte
+        }
+
+        // Envoi d'un mail à l'admin (id 5 ou tous les admins si besoin)
+        try {
+            $admin = \App\Models\User::find(5); // Adapter si plusieurs admins
+            if ($admin) {
+                \Illuminate\Support\Facades\Mail::raw(
+                    "Vous avez une demande de reservation en attente.",
+                    function ($message) use ($admin) {
+                        $message->to($admin->email)
+                            ->subject('Nouvelle demande de réservation');
+                    }
+                );
+            }
+        } catch (\Exception $e) {
+            // Optionnel : log ou alerte
+        }
+
         $this->bookings = Booking::where('property_id', $this->propertyId)->get();
         LivewireAlert::title('Votre demande de réservation a bien été envoyée !')
             ->text('Nous reviendrons vers vous pour la confirmation. Vous pouvez suivre la discussion dans la messagerie interne.')

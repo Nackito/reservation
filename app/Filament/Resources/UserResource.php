@@ -29,22 +29,50 @@ class UserResource extends Resource
     {
         return $form
             ->schema([
+                // Si l'utilisateur est admin, afficher un message et masquer les champs éditables
+                Forms\Components\Group::make([
+                    Forms\Components\Placeholder::make('admin_notice')
+                        ->content('Les informations de l\'administrateur ne peuvent pas être modifiées ici.')
+                ])->visible(fn($record) => $record && $record->role === 'admin'),
                 Forms\Components\TextInput::make('name')
                     ->label('Nom')
                     ->required()
-                    ->placeholder('John Doe'),
+                    ->placeholder('John Doe')
+                    ->disabled(fn($record) => $record && $record->role === 'admin'),
 
                 Forms\Components\TextInput::make('firstname')
                     ->label('Prénom')
                     ->required()
-                    ->placeholder('Jean'),
+                    ->placeholder('Jean')
+                    ->disabled(fn($record) => $record && $record->role === 'admin'),
+
+                Forms\Components\Select::make('country_code')
+                    ->label('Indicatif pays')
+                    ->options([
+                        '+225' => '🇨🇮 +225',
+                        '+33' => '🇫🇷 +33',
+                        '+226' => '🇧🇫 +226',
+                        '+229' => '🇧🇯 +229',
+                        '+223' => '🇲🇱 +223',
+                        '+221' => '🇸🇳 +221',
+                        '+1' => '🇺🇸 +1',
+                    ])
+                    ->default('+225')
+                    ->searchable()
+                    ->disabled(fn($record) => $record && $record->role === 'admin'),
+
+                Forms\Components\TextInput::make('phone')
+                    ->label('Téléphone')
+                    ->placeholder('0102030405')
+                    ->disabled(fn($record) => $record && $record->role === 'admin'),
 
                 Forms\Components\TextInput::make('email')
                     ->label('Email')
                     ->email()
                     ->maxLength(255)
                     ->unique(ignoreRecord: true)
-                    ->required(),
+                    ->required()
+                    ->disabled(fn($record) => $record && $record->role === 'admin'),
 
                 Forms\Components\Select::make('role')
                     ->label('Rôle')
@@ -56,24 +84,28 @@ class UserResource extends Resource
                         'gestionnaire' => 'Gestionnaire',
                     ])
                     ->required()
-                    ->default('user'),
+                    ->default('user')
+                    ->disabled(fn($record) => $record && $record->role === 'admin'),
 
                 Forms\Components\DateTimePicker::make('email_verified_at')
                     ->label('Email Verified At')
-                    ->default(now()),
+                    ->default(now())
+                    ->disabled(fn($record) => $record && $record->role === 'admin'),
 
                 Forms\Components\TextInput::make('password')
                     ->label('Password')
-                    ->required()
                     ->password()
                     ->autocomplete('new-password')
-                    ->placeholder('********'),
+                    ->placeholder('********')
+                    ->required(fn($context) => $context === 'create')
+                    ->dehydrated(fn($state) => filled($state)),
 
                 Forms\Components\TextInput::make('password_confirmation')
                     ->label('Password Confirmation')
-                    ->required()
                     ->password()
-                    ->placeholder('********'),
+                    ->placeholder('********')
+                    ->required(fn($context) => $context === 'create')
+                    ->dehydrated(fn($state) => filled($state)),
             ]);
     }
 

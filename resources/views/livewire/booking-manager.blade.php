@@ -1,41 +1,54 @@
 <div>
     <!-- Début du composant Livewire : tout est enveloppé dans ce div racine -->
     <div class="container mx-auto py-8">
+        {{-- Statut de la propriété --}}
+        @php
+        $isOccupied = $property && $property->bookings()->where('status', 'accepted')
+        ->whereDate('start_date', '<=', now())
+            ->whereDate('end_date', '>=', now())
+            ->exists();
+            @endphp
+            <div class="mb-4">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold {{ $isOccupied ? 'bg-gray-200 text-gray-700' : 'bg-green-100 text-green-800' }}">
+                    <i class="fas {{ $isOccupied ? 'fa-lock' : 'fa-unlock' }} mr-2"></i>
+                    {{ $isOccupied ? 'Occupé' : 'Disponible' }}
+                </span>
+            </div>
 
-        <form wire:submit.prevent="addBooking" class="mb-4">
-            <div class="flex mt-4 flex-col sm:flex-row gap-2 sm:gap-3 items-center bg-white rounded-lg p-2 dark:bg-gray-800">
-                <div class="w-full">
-                    <p class="py-3 px-4 block w-full border-transparent rounded-lg text-sm
+            <form wire:submit.prevent="addBooking" class="mb-4">
+                <div class="flex mt-4 flex-col sm:flex-row gap-2 sm:gap-3 items-center bg-white rounded-lg p-2 dark:bg-gray-800">
+                    <div class="w-full">
+                        <p class="py-3 px-4 block w-full border-transparent rounded-lg text-sm
                     focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50
                     disabled:pointer-events-none dark:bg-slate-900 dark:border-transparent
                     dark:text-gray-400 dark:focus:ring-gray-600" readonly> {{ $property->name ?? '' }} </p>
-                </div>
+                    </div>
 
-                <div class="w-full">
-                    <input type="date" wire:model="checkInDate" id="ReservationCheckInBottom" class="py-3 px-4 block w-full border-transparent rounded-lg text-sm
+                    <div class="w-full">
+                        <input type="date" wire:model="checkInDate" id="ReservationCheckInBottom" class="py-3 px-4 block w-full border-transparent rounded-lg text-sm
                     focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50
                     disabled:pointer-events-none dark:bg-slate-900 dark:border-transparent
                     dark:text-gray-400 dark:focus:ring-gray-600" min="{{ now()->format('Y-m-d') }}">
-                    @error('checkInDate') <span class="text-red-500">{{ $message }}</span> @enderror
-                </div>
-                <div class="w-full">
-                    <input type="date" wire:model="checkOutDate" id="ReservationCheckOutBottom" wire:change="calculateTotalPrice" class="py-3 px-4 block w-full border-transparent rounded-lg text-sm
+                        @error('checkInDate') <span class="text-red-500">{{ $message }}</span> @enderror
+                    </div>
+                    <div class="w-full">
+                        <input type="date" wire:model="checkOutDate" id="ReservationCheckOutBottom" wire:change="calculateTotalPrice" class="py-3 px-4 block w-full border-transparent rounded-lg text-sm
                     focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50
                     disabled:pointer-events-none dark:bg-slate-900 dark:border-transparent
                     dark:text-gray-400 dark:focus:ring-gray-600" min="{{ $checkInDate }}">
-                    @error('checkOutDate') <span class="text-red-500">{{ $message }}</span> @enderror
+                        @error('checkOutDate') <span class="text-red-500">{{ $message }}</span> @enderror
+                    </div>
+                    @if(Auth::check())
+                    <button type="submit" wire:submit.prevent="addBooking" id="confirm-booking" class="bg-blue-500 text-white py-2 px-4 rounded">
+                        Confirmer
+                    </button>
+                    @else
+                    <button type="button" onclick="showReservationLoginNotification()" class="bg-blue-500 text-white py-2 px-4 rounded">
+                        Confirmer
+                    </button>
+                    @endif
                 </div>
-                @if(Auth::check())
-                <button type="submit" wire:submit.prevent="addBooking" id="confirm-booking" class="bg-blue-500 text-white py-2 px-4 rounded">
-                    Confirmer
-                </button>
-                @else
-                <button type="button" onclick="showReservationLoginNotification()" class="bg-blue-500 text-white py-2 px-4 rounded">
-                    Confirmer
-                </button>
-                @endif
-            </div>
-        </form>
+            </form>
     </div>
 
     <!-- NavBar -->

@@ -39,7 +39,7 @@
                                     @error('checkInDate') <span class="text-red-500">{{ $message }}</span> @enderror
                                 </div>
                                 <div class="w-full">
-                                    <input type="text" wire:model="checkOutDate" id="ReservationCheckOutBottom" wire:change="calculateTotalPrice" class="py-3 px-4 block w-full border-transparent rounded-lg text-sm
+                                    <input type="text" wire:model="checkOutDate" id="ReservationCheckOutBottom" class="py-3 px-4 block w-full border-transparent rounded-lg text-sm
                     focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50
                     disabled:pointer-events-none dark:bg-slate-900 dark:border-transparent
                     dark:text-gray-400 dark:focus:ring-gray-600" placeholder="Date de départ">
@@ -352,14 +352,14 @@
                         </div>
 
                         <div class="w-full" id="Reservation">
-                            <input type="text" id="ReservationCheckIn" wire:model="checkInDate" class="py-3 px-4 block w-full border-transparent rounded-lg text-sm cursor-pointer
+                            <input type="text" id="ReservationCheckIn" class="py-3 px-4 block w-full border-transparent rounded-lg text-sm cursor-pointer
                     focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50
                     disabled:pointer-events-none dark:bg-slate-900 dark:border-transparent
                     dark:text-gray-400 dark:focus:ring-gray-600" placeholder="Date d'arrivée">
                             @error('checkInDate') <span class="text-red-500">{{ $message }}</span> @enderror
                         </div>
                         <div class="w-full">
-                            <input type="text" id="ReservationCheckOut" wire:model="checkOutDate" wire:change="calculateTotalPrice" class="py-3 px-4 block w-full border-transparent rounded-lg text-sm cursor-pointer
+                            <input type="text" id="ReservationCheckOut" class="py-3 px-4 block w-full border-transparent rounded-lg text-sm cursor-pointer
                     focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 
                     disabled:pointer-events-none dark:bg-slate-900 dark:border-transparent 
                     dark:text-gray-400 dark:focus:ring-gray-600" placeholder="Date de départ">
@@ -367,25 +367,6 @@
                         </div>
                         <script>
                             window.occupiedDates = @json($occupiedDates);
-                        </script>
-                        <script>
-                            // Force l'ouverture du calendrier natif sur tout clic dans le champ pour les deux formulaires
-                            document.addEventListener('DOMContentLoaded', function() {
-                                const ids = [
-                                    'ReservationCheckIn',
-                                    'ReservationCheckOut',
-                                    'ReservationCheckInBottom',
-                                    'ReservationCheckOutBottom'
-                                ];
-                                ids.forEach(function(id) {
-                                    var el = document.getElementById(id);
-                                    if (el) {
-                                        el.addEventListener('click', function(e) {
-                                            this.showPicker && this.showPicker();
-                                        });
-                                    }
-                                });
-                            });
                         </script>
                         @if(Auth::check())
                         <button type="submit" wire:submit.prevent="addBooking" id="confirm-booking" class="bg-blue-500 text-white py-2 px-4 rounded">
@@ -451,46 +432,8 @@
                 </div>
 
 
-                <!-- Preline Modal -->
-                <div id="confirmationModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
-                    <div class="flex items-center justify-center min-h-screen px-4">
-                        <div class="relative w-full max-w-lg p-4 mx-auto bg-white rounded-lg shadow-lg">
-                            <div class="flex justify-between items-center pb-3">
-                                <h3 class="text-lg font-semibold">Confirmation de réservation</h3>
-                                <button class="text-gray-400 hover:text-gray-600" onclick="closeModal()">
-                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                    </svg>
-                                </button>
-                            </div>
-                            <div class="mt-2">
-                                <p class="text-gray-700 dark:text-white">Vous allez payer <span id="totalPrice"></span> FrCFA pour cette réservation. Voulez-vous confirmer ?</p>
-                            </div>
-                            <div class="flex justify-end pt-4">
-                                <button class="bg-gray-500 text-white px-4 py-2 rounded mr-2" onclick="closeModal()">Annuler</button>
-                                <button class="bg-blue-500 text-white px-4 py-2 rounded" onclick="confirmBooking()">Confirmer</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Modal de confirmation -->
+                <!-- script pour le partage (conservé) -->
                 <script>
-                    function closeModal() {
-                        document.getElementById('confirmationModal').classList.add('hidden');
-                    }
-
-                    function confirmBooking() {
-                        document.getElementById('confirm-booking').click();
-                        closeModal();
-                    }
-
-                    document.addEventListener('DOMContentLoaded', function() {
-                        window.addEventListener('show-confirmation', event => {
-                            document.getElementById('totalPrice').textContent = event.detail.totalPrice;
-                            document.getElementById('confirmationModal').classList.remove('hidden');
-                        });
-                    });
                     // Fonction d'ouverture du modal de partage
                     function shareProperty() {
                         document.getElementById('shareModal').classList.remove('hidden');
@@ -516,6 +459,17 @@
                             }
                         });
                     }
+
+                    // Redirection directe vers le chat après soumission du formulaire
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const bookingForms = document.querySelectorAll('form[wire\\:submit\\.prevent="addBooking"]');
+                        bookingForms.forEach(function(form) {
+                            form.addEventListener('submit', function(e) {
+                                // Laisser Livewire gérer la soumission, puis rediriger côté serveur
+                                // On ne fait rien ici, la redirection doit être gérée côté Livewire PHP
+                            });
+                        });
+                    });
                 </script>
                 <!-- script pour le swiper -->
                 <script>

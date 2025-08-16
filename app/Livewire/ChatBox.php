@@ -20,7 +20,7 @@ class ChatBox extends Component
   public function mount()
   {
     $userId = Auth::id();
-    // 1. Récupérer les conversations directes (messages privés)
+    // 1. Récupérer les conversations directes (messages privés) avec dernier message
     $directUserIds = Message::where(function ($q) use ($userId) {
       $q->where('sender_id', $userId)->orWhere('receiver_id', $userId);
     })
@@ -32,6 +32,17 @@ class ChatBox extends Component
       ->filter(fn($id) => $id != $userId)
       ->values();
     $directUsers = User::whereIn('id', $directUserIds)->get();
+
+    // Associer chaque user à la date de son dernier message
+    $directUserData = $directUsers->map(function ($user) use ($userId) {
+      $lastMsg = Message::where(function ($q) use ($userId, $user) {
+        $q->where('sender_id', $userId)->where('receiver_id', $user->id);
+      })->orWhere(function ($q) use ($userId, $user) {
+        $q->where('sender_id', $user->id)->where('receiver_id', $userId);
+      })->orderByDesc('created_at')->first();
+      $user->last_message_at = $lastMsg ? $lastMsg->created_at : now()->subYears(10);
+      return $user;
+    });
 
     // 2. Récupérer tous les canaux admin groupés liés à l'utilisateur (un par réservation)
     $adminChannels = Conversation::where('is_admin_channel', true)
@@ -48,17 +59,15 @@ class ChatBox extends Component
       $adminUser->name = $propertyName;
       $adminUser->email = 'Canal de réservation';
       $adminUser->conversation_id = $adminChannel->id;
+      // Chercher le dernier message de ce canal
+      $lastMsg = Message::where('conversation_id', $adminChannel->id)->orderByDesc('created_at')->first();
+      $adminUser->last_message_at = $lastMsg ? $lastMsg->created_at : now()->subYears(10);
       $adminUsers->push($adminUser);
     }
 
-    // Fusionner les deux types de conversations dans $this->users
-    $this->users = collect();
-    foreach ($adminUsers as $adminUser) {
-      $this->users->push($adminUser);
-    }
-    foreach ($directUsers as $user) {
-      $this->users->push($user);
-    }
+    // Fusionner, puis trier par date de dernier message décroissante
+    $allUsers = $adminUsers->concat($directUserData)->sortByDesc('last_message_at')->values();
+    $this->users = $allUsers;
 
     if ($this->users->isNotEmpty()) {
       $this->selectedUser = $this->users->first();

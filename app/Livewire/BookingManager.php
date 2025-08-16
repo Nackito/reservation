@@ -137,9 +137,7 @@ class BookingManager extends Component
         $checkOut = strtotime($this->checkOutDate);
         $days = ($checkOut - $checkIn) / 86400; // 86400 seconds in a day
         $this->totalPrice = $days * $property->price_per_night;
-
-        $this->dispatch('show-confirmation', ['totalPrice' => $this->totalPrice]);
-        LivewireAlert::title('Le prix total est de ' . $this->totalPrice . ' FrCFA')->show();
+        // Plus d'alerte ni d'affichage du prix ici
     }
 
 
@@ -207,7 +205,7 @@ class BookingManager extends Component
 
         // Envoi d'un mail à l'admin (id 5 ou tous les admins si besoin)
         try {
-            $admin = \App\Models\User::find(5); // Adapter si plusieurs admins
+            $admin = User::find(5); // Adapter si plusieurs admins
             if ($admin) {
                 \Illuminate\Support\Facades\Mail::raw(
                     "Vous avez une demande de reservation en attente.",
@@ -224,10 +222,8 @@ class BookingManager extends Component
         }
 
         $this->bookings = Booking::where('property_id', $this->propertyId)->get();
-        LivewireAlert::title('Votre demande de réservation a bien été envoyée !')
-            ->text('Nous reviendrons vers vous pour la confirmation. Vous pouvez suivre la discussion dans la messagerie interne.')
-            ->success()->show();
-        // Ne pas rediriger, l'utilisateur reste sur la page et attend la réponse de l'admin dans le chat.
+        // Redirection directe vers la page de chat générale
+        return redirect('/chat');
     }
 
     public function toggleWishlist()

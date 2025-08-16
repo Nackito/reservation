@@ -32,17 +32,17 @@
                                 </div>
 
                                 <div class="w-full">
-                                    <input type="date" wire:model="checkInDate" id="ReservationCheckInBottom" class="py-3 px-4 block w-full border-transparent rounded-lg text-sm
+                                    <input type="text" wire:model="checkInDate" id="ReservationCheckInBottom" class="py-3 px-4 block w-full border-transparent rounded-lg text-sm
                     focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50
                     disabled:pointer-events-none dark:bg-slate-900 dark:border-transparent
-                    dark:text-gray-400 dark:focus:ring-gray-600 {{ $isOccupied ? 'opacity-60 pointer-events-none' : '' }}" min="{{ now()->format('Y-m-d') }}" @if($isOccupied) disabled @endif>
+                    dark:text-gray-400 dark:focus:ring-gray-600" placeholder="Date d'arrivée">
                                     @error('checkInDate') <span class="text-red-500">{{ $message }}</span> @enderror
                                 </div>
                                 <div class="w-full">
-                                    <input type="date" wire:model="checkOutDate" id="ReservationCheckOutBottom" wire:change="calculateTotalPrice" class="py-3 px-4 block w-full border-transparent rounded-lg text-sm
+                                    <input type="text" wire:model="checkOutDate" id="ReservationCheckOutBottom" wire:change="calculateTotalPrice" class="py-3 px-4 block w-full border-transparent rounded-lg text-sm
                     focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50
                     disabled:pointer-events-none dark:bg-slate-900 dark:border-transparent
-                    dark:text-gray-400 dark:focus:ring-gray-600 {{ $isOccupied ? 'opacity-60 pointer-events-none' : '' }}" min="{{ $checkInDate }}" @if($isOccupied) disabled @endif>
+                    dark:text-gray-400 dark:focus:ring-gray-600" placeholder="Date de départ">
                                     @error('checkOutDate') <span class="text-red-500">{{ $message }}</span> @enderror
                                 </div>
                                 @if(Auth::check())
@@ -352,19 +352,22 @@
                         </div>
 
                         <div class="w-full" id="Reservation">
-                            <input type="date" id="ReservationCheckIn" wire:model="checkInDate" class="py-3 px-4 block w-full border-transparent rounded-lg text-sm cursor-pointer
+                            <input type="text" id="ReservationCheckIn" wire:model="checkInDate" class="py-3 px-4 block w-full border-transparent rounded-lg text-sm cursor-pointer
                     focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50
                     disabled:pointer-events-none dark:bg-slate-900 dark:border-transparent
-                    dark:text-gray-400 dark:focus:ring-gray-600" min="{{ now()->format('Y-m-d') }}">
+                    dark:text-gray-400 dark:focus:ring-gray-600" placeholder="Date d'arrivée">
                             @error('checkInDate') <span class="text-red-500">{{ $message }}</span> @enderror
                         </div>
                         <div class="w-full">
-                            <input type="date" id="ReservationCheckOut" wire:model="checkOutDate" wire:change="calculateTotalPrice" class="py-3 px-4 block w-full border-transparent rounded-lg text-sm cursor-pointer
+                            <input type="text" id="ReservationCheckOut" wire:model="checkOutDate" wire:change="calculateTotalPrice" class="py-3 px-4 block w-full border-transparent rounded-lg text-sm cursor-pointer
                     focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 
                     disabled:pointer-events-none dark:bg-slate-900 dark:border-transparent 
-                    dark:text-gray-400 dark:focus:ring-gray-600" min="{{ $checkInDate }}">
+                    dark:text-gray-400 dark:focus:ring-gray-600" placeholder="Date de départ">
                             @error('checkOutDate') <span class="text-red-500">{{ $message }}</span> @enderror
                         </div>
+                        <script>
+                            window.occupiedDates = @json($occupiedDates);
+                        </script>
                         <script>
                             // Force l'ouverture du calendrier natif sur tout clic dans le champ pour les deux formulaires
                             document.addEventListener('DOMContentLoaded', function() {

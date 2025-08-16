@@ -105,6 +105,31 @@ class BookingManager extends Component
         $this->reset(['review', 'rating']);
     }
 
+    /**
+     * Retourne la liste des dates occupées (format YYYY-MM-DD) pour Flatpickr
+     */
+    public function getOccupiedDatesProperty()
+    {
+        if (!$this->property) {
+            return [];
+        }
+        $bookings = $this->property->bookings()
+            ->where('status', 'accepted')
+            ->get(['start_date', 'end_date']);
+        $dates = [];
+        foreach ($bookings as $booking) {
+            $period = new \DatePeriod(
+                new \DateTime($booking->start_date),
+                new \DateInterval('P1D'),
+                (new \DateTime($booking->end_date))->modify('+1 day')
+            );
+            foreach ($period as $date) {
+                $dates[] = $date->format('Y-m-d');
+            }
+        }
+        return array_values(array_unique($dates));
+    }
+
     public function calculateTotalPrice()
     {
         $property = Property::find($this->propertyId);
@@ -244,8 +269,8 @@ class BookingManager extends Component
 
     public function render()
     {
-        //                return view('livewire.booking-manager')->extends('layouts.app')->section('content');
         $properties = Property::all();
-        return view('livewire.booking-manager', compact('properties'));
+        $occupiedDates = $this->occupiedDates;
+        return view('livewire.booking-manager', compact('properties', 'occupiedDates'));
     }
 }

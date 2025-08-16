@@ -10,6 +10,26 @@ class Booking extends Model
     use HasFactory;
     protected $fillable = ['property_id', 'user_id', 'start_date', 'end_date', 'total_price', 'status'];
 
+    /**
+     * Calcule le prix total de la réservation selon les dates et le prix de la propriété
+     * @return float|int|null
+     */
+    public function calculateTotalPrice()
+    {
+        // S'assurer que la relation property est chargée
+        $property = $this->property ?? $this->loadMissing('property')->property;
+        if (!$property || !$this->start_date || !$this->end_date) {
+            return null;
+        }
+        $checkIn = strtotime($this->start_date);
+        $checkOut = strtotime($this->end_date);
+        $days = ($checkOut - $checkIn) / 86400;
+        if ($days < 1) {
+            $days = 1;
+        }
+        return $days * $property->price_per_night;
+    }
+
     public function property()
     {
         return $this->belongsTo(Property::class);

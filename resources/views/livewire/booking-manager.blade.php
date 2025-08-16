@@ -338,7 +338,7 @@
                 </div>
             </div>
 
-            <!-- Reservation form -->
+            <!--2nd Reservation form -->
             <div class="container mx-auto mt-8">
                 <h1 class="block text-3xl font-bold text-gray-800 sm:text-4xl lg:text-2xl lg:leading-tight dark:text-black mt-6 mb-4 sm:mt-0 sm:mb-6 px-4 sm:px-0">Entrez vos dates</h1>
 
@@ -352,22 +352,20 @@
                         </div>
 
                         <div class="w-full" id="Reservation">
-                            <input type="text" id="ReservationCheckIn" class="py-3 px-4 block w-full border-transparent rounded-lg text-sm cursor-pointer
+                            <input type="text" id="ReservationCheckIn" wire:model="checkInDate" class="py-3 px-4 block w-full border-transparent rounded-lg text-sm cursor-pointer
                     focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50
                     disabled:pointer-events-none dark:bg-slate-900 dark:border-transparent
                     dark:text-gray-400 dark:focus:ring-gray-600" placeholder="Date d'arrivée">
                             @error('checkInDate') <span class="text-red-500">{{ $message }}</span> @enderror
                         </div>
                         <div class="w-full">
-                            <input type="text" id="ReservationCheckOut" class="py-3 px-4 block w-full border-transparent rounded-lg text-sm cursor-pointer
-                    focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 
-                    disabled:pointer-events-none dark:bg-slate-900 dark:border-transparent 
+                            <input type="text" id="ReservationCheckOut" wire:model="checkOutDate" class="py-3 px-4 block w-full border-transparent rounded-lg text-sm cursor-pointer
+                    focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50
+                    disabled:pointer-events-none dark:bg-slate-900 dark:border-transparent
                     dark:text-gray-400 dark:focus:ring-gray-600" placeholder="Date de départ">
                             @error('checkOutDate') <span class="text-red-500">{{ $message }}</span> @enderror
                         </div>
-                        <script>
-                            window.occupiedDates = @json($occupiedDates);
-                        </script>
+
                         @if(Auth::check())
                         <button type="submit" wire:submit.prevent="addBooking" id="confirm-booking" class="bg-blue-500 text-white py-2 px-4 rounded">
                             Confirmer
@@ -378,6 +376,9 @@
                         </button>
                         @endif
                     </div>
+                    <script>
+                        window.occupiedDates = @json($occupiedDates);
+                    </script>
                 </form>
             </div>
 

@@ -19,6 +19,7 @@ class ProfileUpdateRequest extends FormRequest
             'firstname' => ['required', 'string', 'max:255'],
             'name' => ['required', 'string', 'max:255'],
             'phone' => ['nullable', 'string', 'max:255'],
+            'country_code' => ['nullable', 'string', 'max:10'],
             'email' => [
                 'required',
                 'string',

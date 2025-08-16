@@ -31,8 +31,21 @@
         </div>
 
         <div>
-            <x-input-label for="phone" :value="__('Phone')" />
-            <x-text-input id="phone" name="phone" type="text" class="mt-1 block w-full" :value="old('phone', $user->phone)" />
+            <x-input-label for="phone" :value="__('Téléphone')" />
+            <div class="flex gap-2">
+                <select name="country_code" id="country_code" class="mt-1 block w-32 border-gray-300 rounded-md">
+                    <option value="+225" @if(old('country_code', $user->country_code ?? '+225') == '+225') selected @endif>🇨🇮 +225</option>
+                    <option value="+33" @if(old('country_code', $user->country_code ?? '') == '+33') selected @endif>🇫🇷 +33</option>
+                    <option value="+226" @if(old('country_code', $user->country_code ?? '') == '+226') selected @endif>🇧🇫 +226</option>
+                    <option value="+229" @if(old('country_code', $user->country_code ?? '') == '+229') selected @endif>🇧🇯 +229</option>
+                    <option value="+223" @if(old('country_code', $user->country_code ?? '') == '+223') selected @endif>🇲🇱 +223</option>
+                    <option value="+221" @if(old('country_code', $user->country_code ?? '') == '+221') selected @endif>🇸🇳 +221</option>
+                    <option value="+1" @if(old('country_code', $user->country_code ?? '') == '+1') selected @endif>🇺🇸 +1</option>
+                    <!-- Ajoutez d'autres pays si besoin -->
+                </select>
+                <x-text-input id="phone" name="phone" type="text" class="mt-1 block w-full" :value="old('phone', $user->phone)" autocomplete="tel" />
+            </div>
+            <x-input-error class="mt-2" :messages="$errors->get('country_code')" />
             <x-input-error class="mt-2" :messages="$errors->get('phone')" />
         </div>
 

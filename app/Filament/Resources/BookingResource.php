@@ -91,13 +91,20 @@ class BookingResource extends Resource
                         $record->update(['status' => 'accepted']);
                         $user = $record->user;
                         $admin = Auth::user();
+                        // Générer le lien de paiement (placeholder, à remplacer par la vraie route plus tard)
+                        $paymentUrl = url('/payment/cinetpay/' . $record->id);
+                        $amount = method_exists($record, 'calculateTotalPrice') ? $record->calculateTotalPrice() : $record->total_price;
                         if ($user) {
                             // Notification Laravel (mail + database)
                             $user->notify(new \App\Notifications\BookingAcceptedNotification($record));
 
-                            // Envoi d'un mail personnalisé (optionnel, car déjà fait par la notification)
+                            // Envoi d'un mail personnalisé avec lien de paiement
+                            $mailContent = "Votre réservation a été acceptée, vous pouvez procéder au paiement en cliquant sur le lien ci-dessous.\n\n" .
+                                "Montant à payer : $amount FrCFA\n" .
+                                "Lien de paiement : $paymentUrl\n\n" .
+                                "Sans paiement, nous ne pourrons vous garantir la disponibilité le jour-j.";
                             Mail::raw(
-                                "Votre réservation à été accepté, vous pouvez procedé au paiement.\nSans paiement, nous ne pourront vous garantir la disponibilité le jour-j",
+                                $mailContent,
                                 function ($message) use ($user) {
                                     $message->to($user->email)
                                         ->subject('Votre réservation a été acceptée');
@@ -127,16 +134,20 @@ class BookingResource extends Resource
                             });
                         }
 
-                        // Message système dans la conversation admin liée à la réservation
+                        // Message système dans la conversation admin liée à la réservation avec lien de paiement
                         $conversation = \App\Models\Conversation::where('is_admin_channel', true)
                             ->where('booking_id', $record->id)
                             ->first();
                         if ($conversation) {
+                            $msgContent = "Votre réservation a été acceptée, vous pouvez procéder au paiement.\n" .
+                                "Montant à payer : $amount FrCFA\n" .
+                                "Lien de paiement : $paymentUrl\n" .
+                                "Sans paiement, nous ne pourrons vous garantir la disponibilité le jour-j.";
                             \App\Models\Message::create([
                                 'conversation_id' => $conversation->id,
                                 'sender_id' => 1, // 1 = admin ou système
                                 'receiver_id' => $user ? $user->id : null,
-                                'content' => "Votre réservation à été accepté, vous pouvez procedé au paiement.\nSans paiement, nous ne pourront vous garantir la disponibilité le jour-j",
+                                'content' => $msgContent,
                             ]);
                         }
                     })

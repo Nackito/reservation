@@ -93,6 +93,14 @@
               </div>
 
               <div>
+                <label for="commune" class="block text-sm font-medium text-gray-700 mb-2">Commune</label>
+                <input type="text" id="commune" wire:model="commune"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Cocody, Yopougon, ... (optionnel)">
+                @error('commune') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+              </div>
+
+              <div>
                 <label for="quartier" class="block text-sm font-medium text-gray-700 mb-2">Quartier</label>
                 <input type="text" id="quartier" wire:model="quartier"
                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -102,11 +110,11 @@
             </div>
 
             <div>
-              <label for="adresse" class="block text-sm font-medium text-gray-700 mb-2">Adresse complète *</label>
-              <textarea id="adresse" wire:model="adresse" rows="3"
+              <label for="plus_details" class="block text-sm font-medium text-gray-700 mb-2">Plus de détails</label>
+              <textarea id="plus_details" wire:model="plus_details" rows="3"
                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Adresse complète de votre établissement"></textarea>
-              @error('adresse') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                placeholder="Indiquez ici toute information complémentaire sur l'emplacement, l'accès, ou autre (optionnel)"></textarea>
+              @error('plus_details') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -130,6 +138,21 @@
                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 @error('prix_nuit') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
               </div>
+            </div>
+
+            <div class="mt-6">
+              <label for="photos" class="block text-sm font-medium text-gray-700 mb-2">Photos de la propriété <span class="text-red-500">(minimum 5)</span></label>
+              <input type="file" id="photos" wire:model="photos" multiple accept="image/*"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+              <p class="text-xs text-gray-500 mt-1">Ajoutez au moins 5 photos (formats acceptés : jpg, jpeg, png, webp).</p>
+              @error('photos') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+              @if(isset($photos) && is_array($photos) && count($photos) > 0)
+              <ul class="mt-2 text-xs text-gray-600">
+                @foreach($photos as $photo)
+                <li>{{ is_string($photo) ? $photo : (isset($photo->getClientOriginalName) ? $photo->getClientOriginalName() : 'Fichier sélectionné') }}</li>
+                @endforeach
+              </ul>
+              @endif
             </div>
           </div>
         </div>

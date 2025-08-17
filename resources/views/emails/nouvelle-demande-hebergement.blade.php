@@ -144,7 +144,12 @@
 
         <div class="info-item">
           <span class="label">Adresse complète :</span><br>
-          <span class="value">{{ $etablissement['adresse'] }}</span>
+          <span class="value">
+            {{ $etablissement['ville'] }}
+            @if(!empty($etablissement['commune']))<br>Commune : {{ $etablissement['commune'] }}@endif
+            @if(!empty($etablissement['quartier']))<br>Quartier : {{ $etablissement['quartier'] }}@endif
+            @if(!empty($etablissement['plus_details']))<br>Détails : {{ $etablissement['plus_details'] }}@endif
+          </span>
         </div>
 
         <div class="info-grid">

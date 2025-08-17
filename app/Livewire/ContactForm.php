@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use Livewire\Component;
+use Livewire\WithFileUploads;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Validate;
 use Illuminate\Support\Facades\Mail;
@@ -12,6 +13,7 @@ use Jantinnerezo\LivewireAlert\Facades\LivewireAlert;
 #[Title('Proposer un hébergement - Afridays')]
 class ContactForm extends Component
 {
+  use WithFileUploads;
   public function mount()
   {
     $user = Auth::user();
@@ -42,8 +44,15 @@ class ContactForm extends Component
   #[Validate('required|string')]
   public $type_hebergement = '';
 
-  #[Validate('required|string|max:255')]
-  public $adresse = '';
+
+  #[Validate('nullable|string|max:100')]
+  public $commune = '';
+
+  #[Validate('nullable|string|max:255')]
+  public $plus_details = '';
+
+  #[Validate('required|array|min:5')]
+  public $photos = [];
 
   #[Validate('required|string|max:100')]
   public $ville = '';
@@ -91,7 +100,16 @@ class ContactForm extends Component
     'spa' => 'Spa',
     'navette' => 'Navette aéroport',
     'climatisation' => 'Climatisation',
-    'petit_dejeuner' => 'Petit-déjeuner inclus'
+    'petit_dejeuner' => 'Petit-déjeuner inclus',
+    'securite' => 'Sécurité 24h/24',
+    'menage' => 'Service de ménage',
+    'salle_reunion' => 'Salle de réunion',
+    'coworking' => 'Espace coworking',
+    'vue_mer' => 'Vue sur mer',
+    'pmr' => 'Accès PMR (personnes à mobilité réduite)',
+    'aire_jeux' => 'Aire de jeux enfants',
+    'restaurant_sur_place' => 'Restaurant sur place',
+    'bar_lounge' => 'Bar/lounge',
   ];
 
   public function envoyer()
@@ -107,15 +125,17 @@ class ContactForm extends Component
         'etablissement' => [
           'nom' => $this->nom_etablissement,
           'type' => $this->types_hebergement[$this->type_hebergement] ?? $this->type_hebergement,
-          'adresse' => $this->adresse,
           'ville' => $this->ville,
+          'commune' => $this->commune,
           'quartier' => $this->quartier,
+          'plus_details' => $this->plus_details,
           'chambres' => $this->nombre_chambres,
           'capacite' => $this->capacite_max,
           'prix' => $this->prix_nuit,
           'services' => array_intersect_key($this->services_disponibles, array_flip($this->services)),
           'description' => $this->description,
-          'message' => $this->message_supplementaire
+          'message' => $this->message_supplementaire,
+          'photos' => $this->photos,
         ]
       ];
 

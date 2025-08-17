@@ -162,7 +162,14 @@ class UserReservations extends Component
                 ->where('status', 'canceled')
                 ->get();
 
-            session()->flash('message', 'Réservation annulée avec succès.');
+            // Afficher une alerte Livewire
+            if (method_exists($this, 'alert')) {
+                $this->alert('success', 'Réservation annulée avec succès.');
+            } else if (class_exists('Jantinnerezo\LivewireAlert\LivewireAlert')) {
+                LivewireAlert::title('Réservation annulée avec succès.')->success()->show();
+            } else {
+                session()->flash('message', 'Réservation annulée avec succès.');
+            }
         }
     }
 

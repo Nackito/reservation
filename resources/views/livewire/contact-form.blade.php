@@ -172,6 +172,62 @@
               <span class="text-sm text-gray-700">{{ $service }}</span>
             </label>
             @endforeach
+            <!-- Ajout de services supplémentaires en dur (si non déjà dans $services_disponibles) -->
+            <label class="flex items-center space-x-3 cursor-pointer">
+              <input type="checkbox" wire:model="services" value="Sécurité 24h/24"
+                class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+              <span class="text-sm text-gray-700">Sécurité 24h/24</span>
+            </label>
+            <label class="flex items-center space-x-3 cursor-pointer">
+              <input type="checkbox" wire:model="services" value="Petit-déjeuner inclus"
+                class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+              <span class="text-sm text-gray-700">Petit-déjeuner inclus</span>
+            </label>
+            <label class="flex items-center space-x-3 cursor-pointer">
+              <input type="checkbox" wire:model="services" value="Service de ménage"
+                class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+              <span class="text-sm text-gray-700">Service de ménage</span>
+            </label>
+            <label class="flex items-center space-x-3 cursor-pointer">
+              <input type="checkbox" wire:model="services" value="Navette aéroport"
+                class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+              <span class="text-sm text-gray-700">Navette aéroport</span>
+            </label>
+            <label class="flex items-center space-x-3 cursor-pointer">
+              <input type="checkbox" wire:model="services" value="Salle de réunion"
+                class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+              <span class="text-sm text-gray-700">Salle de réunion</span>
+            </label>
+            <label class="flex items-center space-x-3 cursor-pointer">
+              <input type="checkbox" wire:model="services" value="Espace coworking"
+                class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+              <span class="text-sm text-gray-700">Espace coworking</span>
+            </label>
+            <label class="flex items-center space-x-3 cursor-pointer">
+              <input type="checkbox" wire:model="services" value="Vue sur mer"
+                class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+              <span class="text-sm text-gray-700">Vue sur mer</span>
+            </label>
+            <label class="flex items-center space-x-3 cursor-pointer">
+              <input type="checkbox" wire:model="services" value="Accès PMR"
+                class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+              <span class="text-sm text-gray-700">Accès PMR (personnes à mobilité réduite)</span>
+            </label>
+            <label class="flex items-center space-x-3 cursor-pointer">
+              <input type="checkbox" wire:model="services" value="Aire de jeux enfants"
+                class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+              <span class="text-sm text-gray-700">Aire de jeux enfants</span>
+            </label>
+            <label class="flex items-center space-x-3 cursor-pointer">
+              <input type="checkbox" wire:model="services" value="Restaurant sur place"
+                class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+              <span class="text-sm text-gray-700">Restaurant sur place</span>
+            </label>
+            <label class="flex items-center space-x-3 cursor-pointer">
+              <input type="checkbox" wire:model="services" value="Bar/lounge"
+                class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+              <span class="text-sm text-gray-700">Bar/lounge</span>
+            </label>
           </div>
         </div>
 

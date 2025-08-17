@@ -21,35 +21,36 @@
           </h2>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            @php $user = Auth::user(); @endphp
             <div>
               <label for="prenom" class="block text-sm font-medium text-gray-700 mb-2">Prénom *</label>
               <input type="text" id="prenom" wire:model="prenom"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Votre prénom">
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent {{ $user ? 'bg-gray-100 text-gray-500' : '' }}"
+                placeholder="Votre prénom" @if($user) value="{{ $user->firstname ?? '' }}" readonly disabled @endif>
               @error('prenom') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
             </div>
 
             <div>
               <label for="nom" class="block text-sm font-medium text-gray-700 mb-2">Nom *</label>
               <input type="text" id="nom" wire:model="nom"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Votre nom">
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent {{ $user ? 'bg-gray-100 text-gray-500' : '' }}"
+                placeholder="Votre nom" @if($user) value="{{ $user->name ?? '' }}" readonly disabled @endif>
               @error('nom') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
             </div>
 
             <div>
               <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Email *</label>
               <input type="email" id="email" wire:model="email"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="votre@email.com">
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent {{ $user ? 'bg-gray-100 text-gray-500' : '' }}"
+                placeholder="votre@email.com" @if($user) value="{{ $user->email }}" readonly disabled @endif>
               @error('email') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
             </div>
 
             <div>
               <label for="telephone" class="block text-sm font-medium text-gray-700 mb-2">Téléphone *</label>
               <input type="tel" id="telephone" wire:model="telephone"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="+225 XX XX XX XX XX">
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent {{ $user ? 'bg-gray-100 text-gray-500' : '' }}"
+                placeholder="+225 XX XX XX XX XX" @if($user) value="{{ $user->telephone ?? $user->phone ?? '' }}" readonly disabled @endif>
               @error('telephone') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
             </div>
           </div>

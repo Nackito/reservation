@@ -6,11 +6,22 @@ use Livewire\Component;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Validate;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Auth;
 use Jantinnerezo\LivewireAlert\Facades\LivewireAlert;
 
 #[Title('Proposer un hébergement - Afridays')]
 class ContactForm extends Component
 {
+  public function mount()
+  {
+    $user = Auth::user();
+    if ($user) {
+      $this->prenom = $user->firstname;
+      $this->nom = $user->name;
+      $this->email = $user->email;
+      $this->telephone = $user->telephone ?? ($user->phone ?? '');
+    }
+  }
   // Informations personnelles
   #[Validate('required|string|max:255')]
   public $nom = '';

@@ -34,101 +34,30 @@
             --}}
             <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-6">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-
-                    {{-- Champ de recherche par ville --}}
-                    <div>
-                        <label for="city" class="block text-sm font-medium text-gray-700 mb-2">
-                            <i class="fas fa-map-marker-alt mr-1"></i>Ville
+                    {{-- Champ de recherche universel (ville, commune ou quartier) --}}
+                    <div class="col-span-1 md:col-span-2 lg:col-span-3">
+                        <label for="searchQuery" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-search mr-1"></i>Ville, commune ou quartier
                         </label>
                         <div class="relative">
-                            {{--
-                                Input de recherche ville avec modèle Livewire en temps réel
-                                wire:model.live déclenche automatiquement la recherche
-                            --}}
                             <input
                                 type="text"
-                                id="city"
-                                wire:model.live="searchCity"
-                                placeholder="Entrez une ville de Côte d'Ivoire..."
+                                id="searchQuery"
+                                wire:model.live="searchQuery"
+                                placeholder="Entrez une ville, une commune ou un quartier..."
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-                                autocomplete="off">
+                                autocomplete="on">
 
-                            {{--
-                                Suggestions d'autocomplétion pour les villes
-                                Affichage conditionnel : seulement si il y a des suggestions à montrer
-                                wire:ignore.self empêche Livewire de re-render ce conteneur
-                            --}}
-                            @if($showCitySuggestions && count($citySuggestions) > 0)
-                            <div class="autocomplete-dropdown absolute w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto"
-                                wire:ignore.self>
-                                {{--
-                                    Boucle sur les suggestions de villes
-                                    wire:key pour un tracking optimal par Livewire
-                                    wire:click pour la sélection de la suggestion
-                                --}}
-                                @foreach($citySuggestions as $index => $suggestion)
+                            {{-- Suggestions d'autocomplétion universelles --}}
+                            @if($showSuggestions && count($suggestions) > 0)
+                            <div class="autocomplete-dropdown absolute w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto" wire:ignore.self>
+                                @foreach($suggestions as $index => $suggestion)
                                 <button type="button"
-                                    wire:key="city-{{ $index }}"
-                                    wire:click="selectCity('{{ $suggestion }}')"
+                                    wire:key="suggestion-{{ $index }}"
+                                    wire:click="selectSuggestion('{{ $suggestion }}')"
                                     class="autocomplete-item w-full text-left px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0 flex items-center transition duration-150"
                                     onclick="event.stopPropagation();">
-                                    {{-- Icône de localisation --}}
-                                    <i class="fas fa-map-marker-alt text-blue-500 mr-3"></i>
-                                    {{-- Nom de la ville --}}
-                                    <span class="text-gray-900">{{ $suggestion }}</span>
-                                </button>
-                                @endforeach
-                            </div>
-                            @endif
-                        </div>
-                    </div>
-                    {{-- Champ de recherche par commune --}}
-                    <div>
-                        <label for="district" class="block text-sm font-medium text-gray-700 mb-2">
-                            <i class="fas fa-map mr-1"></i>Commune
-                        </label>
-                        <div class="relative">
-                            <input
-                                type="text"
-                                id="district"
-                                wire:model.live="searchDistrict"
-                                placeholder="Entrez une commune..."
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-                                autocomplete="off">
-                        </div>
-                    </div>
-
-                    {{-- Champ de recherche par quartier/municipality --}}
-                    <div>
-                        <label for="municipality" class="block text-sm font-medium text-gray-700 mb-2">
-                            <i class="fas fa-building mr-1"></i>Quartier
-                        </label>
-                        <div class="relative">
-                            {{--
-                                Input de recherche quartier avec modèle Livewire en temps réel
-                                Les suggestions proviennent de la base de données (table properties)
-                            --}}
-                            <input
-                                type="text"
-                                id="municipality"
-                                wire:model.live="searchMunicipality"
-                                placeholder="Entrez un quartier..."
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-                                autocomplete="off">
-
-                            {{-- Suggestions d'autocomplétion pour les quartiers --}}
-                            @if($showMunicipalitySuggestions && count($municipalitySuggestions) > 0)
-                            <div class="autocomplete-dropdown absolute w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                                {{-- Boucle sur les suggestions de quartiers depuis la BDD --}}
-                                @foreach($municipalitySuggestions as $index => $suggestion)
-                                <button type="button"
-                                    wire:key="municipality-{{ $index }}"
-                                    wire:click="selectMunicipality('{{ $suggestion }}')"
-                                    class="autocomplete-item w-full text-left px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0 flex items-center transition duration-150"
-                                    onclick="event.stopPropagation();">
-                                    {{-- Icône de bâtiment pour les quartiers --}}
-                                    <i class="fas fa-building text-blue-500 mr-3"></i>
-                                    {{-- Nom du quartier --}}
+                                    <i class="fas fa-search text-blue-500 mr-3"></i>
                                     <span class="text-gray-900">{{ $suggestion }}</span>
                                 </button>
                                 @endforeach
@@ -346,18 +275,8 @@
                 <div class="mb-6">
                     <h2 class="text-3xl font-bold text-gray-800 mb-2">
                         Résultats de recherche
-                        {{-- Affichage conditionnel des critères de recherche --}}
-                        @if($searchCity || $searchMunicipality)
-                        pour
-                        @if($searchCity)
-                        <span class="text-blue-600">"{{ $searchCity }}"</span>
-                        @endif
-                        @if($searchCity && $searchMunicipality)
-                        ,
-                        @endif
-                        @if($searchMunicipality)
-                        <span class="text-blue-600">"{{ $searchMunicipality }}"</span>
-                        @endif
+                        @if($searchQuery)
+                        pour <span class="text-blue-600">"{{ $searchQuery }}"</span>
                         @endif
                     </h2>
 

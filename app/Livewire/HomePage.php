@@ -11,13 +11,10 @@ use Illuminate\Support\Facades\Auth;
 #[Title('Home Page - Afridays')]
 class HomePage extends Component
 {
-    public $searchCity = '';
-    public $searchMunicipality = '';
+    public $searchQuery = '';
     public $showResults = false;
-    public $citySuggestions = [];
-    public $showCitySuggestions = false;
-    public $municipalitySuggestions = [];
-    public $showMunicipalitySuggestions = false;
+    public $suggestions = [];
+    public $showSuggestions = false;
 
     // Filtres de recherche avancés
     public $propertyType = '';
@@ -105,38 +102,40 @@ class HomePage extends Component
         }
     }
 
-    public function updatedSearchCity()
+    public function updatedSearchQuery()
     {
-        if (strlen($this->searchCity) >= 2) {
-            $predefinedCities = collect($this->ivorianCities)
+        if (strlen($this->searchQuery) >= 2) {
+            $predefined = collect($this->ivorianCities)
                 ->filter(function ($city) {
-                    return stripos($city, $this->searchCity) !== false;
+                    return stripos($city, $this->searchQuery) !== false;
                 });
 
             $dbCities = Property::select('city')
-                ->where('city', 'like', '%' . $this->searchCity . '%')
+                ->where('city', 'like', '%' . $this->searchQuery . '%')
                 ->distinct()
                 ->pluck('city');
 
-            $this->citySuggestions = $predefinedCities
+            $dbMunicipalities = Property::select('municipality')
+                ->where('municipality', 'like', '%' . $this->searchQuery . '%')
+                ->whereNotNull('municipality')
+                ->distinct()
+                ->pluck('municipality');
+
+            $this->suggestions = $predefined
                 ->merge($dbCities)
+                ->merge($dbMunicipalities)
                 ->unique()
                 ->take(5)
                 ->values()
                 ->toArray();
 
-            $this->showCitySuggestions = !empty($this->citySuggestions);
-
-            // Déclencher automatiquement la recherche
+            $this->showSuggestions = !empty($this->suggestions);
             $this->showResults = true;
         } else {
-            $this->showCitySuggestions = false;
-            $this->citySuggestions = [];
-
-            // Ne pas changer showResults si clearSearch est en cours
-            // Vérifier si tous les critères de recherche sont vides
+            $this->showSuggestions = false;
+            $this->suggestions = [];
             if (
-                empty($this->searchMunicipality) && empty($this->propertyType) &&
+                empty($this->propertyType) &&
                 empty($this->minPrice) && empty($this->maxPrice) &&
                 empty($this->minRooms) && empty($this->selectedAmenities)
             ) {
@@ -145,59 +144,19 @@ class HomePage extends Component
         }
     }
 
-    public function updatedSearchMunicipality()
+    // supprimé : fusionné dans updatedSearchQuery()
+
+    public function selectSuggestion($value)
     {
-        if (strlen($this->searchMunicipality) >= 2) {
-            $this->municipalitySuggestions = Property::select('municipality')
-                ->where('municipality', 'like', '%' . $this->searchMunicipality . '%')
-                ->whereNotNull('municipality')
-                ->distinct()
-                ->take(5)
-                ->pluck('municipality')
-                ->toArray();
-
-            $this->showMunicipalitySuggestions = !empty($this->municipalitySuggestions);
-
-            // Déclencher automatiquement la recherche
-            $this->showResults = true;
-        } else {
-            $this->showMunicipalitySuggestions = false;
-            $this->municipalitySuggestions = [];
-
-            // Ne pas changer showResults si clearSearch est en cours
-            // Vérifier si tous les critères de recherche sont vides
-            if (
-                empty($this->searchCity) && empty($this->propertyType) &&
-                empty($this->minPrice) && empty($this->maxPrice) &&
-                empty($this->minRooms) && empty($this->selectedAmenities)
-            ) {
-                $this->showResults = false;
-            }
-        }
-    }
-
-    public function selectCity($city)
-    {
-        Log::info('selectCity called with: ' . $city);
-        $this->searchCity = $city;
-        $this->showCitySuggestions = false;
-        $this->citySuggestions = [];
-
+        $this->searchQuery = $value;
+        $this->showSuggestions = false;
+        $this->suggestions = [];
         if ($this->showResults) {
             $this->search();
         }
     }
 
-    public function selectMunicipality($municipality)
-    {
-        $this->searchMunicipality = $municipality;
-        $this->showMunicipalitySuggestions = false;
-        $this->municipalitySuggestions = [];
-
-        if ($this->showResults) {
-            $this->search();
-        }
-    }
+    // supprimé : fusionné dans selectSuggestion()
 
     public function search()
     {
@@ -212,10 +171,8 @@ class HomePage extends Component
         $this->showResults = false;
 
         // Vider les suggestions en premier
-        $this->showCitySuggestions = false;
-        $this->citySuggestions = [];
-        $this->showMunicipalitySuggestions = false;
-        $this->municipalitySuggestions = [];
+        $this->showSuggestions = false;
+        $this->suggestions = [];
 
         // Vider les filtres avant les champs de recherche
         $this->propertyType = '';
@@ -226,8 +183,7 @@ class HomePage extends Component
         $this->selectedAmenities = [];
 
         // Vider les champs de recherche en dernier
-        $this->searchCity = '';
-        $this->searchMunicipality = '';
+        $this->searchQuery = '';
 
         // Masquer les filtres mobiles si affichés
         $this->showFilters = false;
@@ -251,7 +207,7 @@ class HomePage extends Component
         $this->selectedAmenities = [];
 
         // Si aucun autre critère de recherche n'est actif, revenir à l'affichage par défaut
-        if (empty($this->searchCity) && empty($this->searchMunicipality)) {
+        if (empty($this->searchQuery)) {
             $this->showResults = false;
         }
     }
@@ -289,26 +245,22 @@ class HomePage extends Component
 
     public function searchByCity($city)
     {
-        $this->searchCity = $city;
-        $this->searchMunicipality = '';
+        $this->searchQuery = $city;
         $this->showResults = true;
-        $this->showCitySuggestions = false;
-        $this->citySuggestions = [];
-        $this->showMunicipalitySuggestions = false;
-        $this->municipalitySuggestions = [];
+        $this->showSuggestions = false;
+        $this->suggestions = [];
     }
 
     public function render()
     {
-        if ($this->showResults && ($this->searchCity || $this->searchMunicipality || $this->propertyType || $this->minPrice || $this->maxPrice || $this->minRooms || $this->maxRooms || !empty($this->selectedAmenities))) {
+        if ($this->showResults && ($this->searchQuery || $this->propertyType || $this->minPrice || $this->maxPrice || $this->minRooms || $this->maxRooms || !empty($this->selectedAmenities))) {
             $query = Property::query();
 
-            if ($this->searchCity) {
-                $query->where('city', 'like', '%' . $this->searchCity . '%');
-            }
-
-            if ($this->searchMunicipality) {
-                $query->where('municipality', 'like', '%' . $this->searchMunicipality . '%');
+            if ($this->searchQuery) {
+                $query->where(function ($q) {
+                    $q->whereRaw('LOWER(REPLACE(city, " ", "")) LIKE ?', ['%' . strtolower(str_replace(' ', '', $this->searchQuery)) . '%'])
+                        ->orWhereRaw('LOWER(REPLACE(municipality, " ", "")) LIKE ?', ['%' . strtolower(str_replace(' ', '', $this->searchQuery)) . '%']);
+                });
             }
 
             // Filtres avancés

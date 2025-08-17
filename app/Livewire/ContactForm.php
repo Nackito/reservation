@@ -54,6 +54,7 @@ class ContactForm extends Component
   #[Validate('required|array|min:5')]
   public $photos = [];
 
+
   #[Validate('required|string|max:100')]
   public $ville = '';
 
@@ -117,6 +118,17 @@ class ContactForm extends Component
     $this->validate();
 
     try {
+      // Upload des photos dans public/photos et récupération des URLs
+      $photoUrls = [];
+      if (is_array($this->photos)) {
+        foreach ($this->photos as $photo) {
+          if (is_object($photo) && method_exists($photo, 'store')) {
+            $path = $photo->store('photos', 'public');
+            $photoUrls[] = asset('storage/' . $path);
+          }
+        }
+      }
+
       // Préparer les données pour l'email
       $donnees = [
         'nom_complet' => $this->prenom . ' ' . $this->nom,
@@ -135,7 +147,7 @@ class ContactForm extends Component
           'services' => array_intersect_key($this->services_disponibles, array_flip($this->services)),
           'description' => $this->description,
           'message' => $this->message_supplementaire,
-          'photos' => $this->photos,
+          'photos' => $photoUrls,
         ]
       ];
 
@@ -155,11 +167,12 @@ class ContactForm extends Component
         ->show();
     } catch (\Exception $e) {
       LivewireAlert::title('Erreur lors de l\'envoi')
-        ->text('Une erreur est survenue. Veuillez réessayer plus tard.')
+        ->text('Détail : ' . $e->getMessage())
         ->error()
         ->show();
     }
   }
+
 
   public function render()
   {

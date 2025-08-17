@@ -166,6 +166,16 @@
             <span class="value">{{ number_format($etablissement['prix'], 0, ',', ' ') }} FCFA</span>
           </div>
         </div>
+        @if(!empty($etablissement['photos']) && count($etablissement['photos']) > 0)
+        <div class="info-item" style="margin-top:20px;">
+          <span class="label">Photos de la propriété :</span><br>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;">
+            @foreach($etablissement['photos'] as $photoUrl)
+            <img src="{{ $photoUrl }}" alt="Photo" style="width:90px;height:60px;object-fit:cover;border-radius:4px;border:1px solid #eee;">
+            @endforeach
+          </div>
+        </div>
+        @endif
       </div>
 
       @if(count($etablissement['services']) > 0)

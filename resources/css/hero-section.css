@@ -1,0 +1,22 @@
+/* 
+ * Styles pour la section héro de la page d'accueil
+ * Image d'arrière-plan avec overlay sombre pour la lisibilité du texte
+ */
+
+.hero-section {
+    background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
+        url("/images/photo5.jpg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    min-height: 500px;
+}
+
+/* Responsive : désactiver l'effet parallax sur mobile pour de meilleures performances */
+@media (max-width: 768px) {
+    .hero-section {
+        background-attachment: scroll;
+        min-height: 400px;
+    }
+}

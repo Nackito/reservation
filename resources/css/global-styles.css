@@ -1,0 +1,45 @@
+/**
+ * Styles globaux pour l'application
+ * Fichier: global-styles.css
+ * Utilisation: Layout principal de l'application
+ */
+
+/* Background blanc pour toute l'application avec sticky footer */
+html,
+body {
+    height: 100%;
+}
+
+body {
+    background-color: #ffffff;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Style pour les conteneurs principaux */
+.main-container {
+    background-color: #ffffff;
+}
+
+/* Assurer que les sections ont un background cohérent */
+.section-container {
+    background-color: transparent;
+}
+
+/* Style pour la section des résultats de recherche */
+.search-results-section {
+    background-color: #ffffff;
+    padding: 2rem 0;
+}
+
+/* Style pour la section du carrousel */
+.carousel-section {
+    background-color: #ffffff;
+    padding: 2rem 0;
+}
+
+/* Assurer que le main prend tout l'espace disponible */
+main {
+    flex: 1;
+}

@@ -1,0 +1,293 @@
+/**
+ * Styles optimisés pour le carrousel de propriétés
+ * Fichier: property-carousel.css
+ * Utilisation: Section "Nos propriétés populaires" - HomePage
+ */
+
+/* Conteneur principal du carrousel */
+.property-carousel {
+    padding: 2rem;
+}
+
+/* Cartes de propriétés */
+.property-card {
+    height: 420px; /* Hauteur réduite avec un seul bouton */
+    border: 1px solid #e5e7eb;
+    transition: all 0.3s ease;
+    position: relative;
+    animation: slideInUp 0.6s ease-out;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+        0 2px 4px -1px rgba(0, 0, 0, 0.06), 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.property-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25),
+        0 20px 25px -5px rgba(0, 0, 0, 0.1),
+        0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    border-color: #d1d5db;
+}
+
+/* Container d'image avec aspect ratio fixe */
+.property-image-container {
+    height: 200px;
+    position: relative;
+    background-color: #f3f4f6;
+    overflow: hidden;
+    border-radius: 12px 12px 0 0;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.property-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    will-change: transform;
+    transition: transform 0.3s ease;
+}
+
+.property-card:hover .property-image {
+    transform: scale(1.05);
+}
+
+/* Contenu de la carte avec flex layout */
+.property-content {
+    height: calc(420px - 200px); /* Ajusté pour la hauteur réduite */
+    display: flex;
+    flex-direction: column;
+}
+
+.property-header {
+    flex-shrink: 0;
+}
+
+.property-title {
+    font-weight: 600;
+    color: #1f2937;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.property-location {
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+.property-description {
+    flex-grow: 1;
+    display: flex;
+    align-items: flex-start;
+}
+
+.property-description p {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.4;
+}
+
+.property-footer {
+    flex-shrink: 0;
+    margin-top: auto;
+}
+
+.property-cta {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    border: none;
+    font-weight: 500;
+    letter-spacing: 0.025em;
+    box-shadow: 0 2px 4px -1px rgba(37, 99, 235, 0.3);
+}
+
+.property-cta:hover {
+    background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px -2px rgba(37, 99, 235, 0.4),
+        0 2px 4px -1px rgba(37, 99, 235, 0.2);
+}
+
+.property-cta:focus {
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3),
+        0 2px 4px -1px rgba(37, 99, 235, 0.3);
+}
+
+/* Utilitaires line-clamp pour le texte tronqué */
+.line-clamp-1 {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Navigation du carrousel */
+.carousel-nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid #e5e7eb;
+    color: #374151;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.carousel-nav-btn:hover {
+    background: #2563eb;
+    color: white;
+    transform: translateY(-50%) scale(1.1);
+    border-color: #2563eb;
+}
+
+.carousel-nav-btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3);
+}
+
+.swiper-button-prev {
+    left: -22px;
+}
+
+.swiper-button-next {
+    right: -22px;
+}
+
+/* Pagination dots */
+.swiper-pagination {
+    position: static !important;
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+}
+
+.swiper-pagination-bullet {
+    width: 10px !important;
+    height: 10px !important;
+    background: #d1d5db !important;
+    opacity: 1 !important;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.swiper-pagination-bullet-active {
+    background: #2563eb !important;
+    transform: scale(1.2);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .property-carousel {
+        padding: 1.5rem 1rem;
+    }
+
+    .property-card {
+        height: 380px; /* Hauteur ajustée pour mobile avec un seul bouton */
+        box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1),
+            0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    }
+
+    .property-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15),
+            0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+
+    .property-image-container {
+        height: 180px;
+    }
+
+    .property-content {
+        height: calc(380px - 180px);
+    }
+
+    .carousel-nav-btn {
+        width: 36px;
+        height: 36px;
+        font-size: 14px;
+    }
+
+    .swiper-button-prev {
+        left: -18px;
+    }
+
+    .swiper-button-next {
+        right: -18px;
+    }
+}
+
+@media (max-width: 480px) {
+    .property-carousel {
+        padding: 1rem 0.5rem;
+    }
+
+    .carousel-nav-btn {
+        display: none; /* Masquer les boutons sur très petit écran */
+    }
+}
+
+/* États de chargement */
+.carousel-loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 20;
+}
+
+/* Performance optimizations et animations */
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Amélioration de l'accessibilité */
+.carousel-nav-btn:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .property-card,
+    .carousel-nav-btn,
+    .property-image,
+    .property-cta {
+        transition: none !important;
+        animation: none !important;
+    }
+
+    .property-card:hover {
+        transform: none !important;
+    }
+
+    .property-card:hover .property-image {
+        transform: none !important;
+    }
+}

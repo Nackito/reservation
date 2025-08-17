@@ -43,6 +43,8 @@ import Alpine from "alpinejs";
 import "preline";
 import Swal from "sweetalert2";
 import "./echo";
+// Swiper importé via Vite
+import "swiper/css/bundle";
 window.Alpine = Alpine;
 window.Swal = Swal;
 Alpine.start();

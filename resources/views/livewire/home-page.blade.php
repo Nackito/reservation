@@ -18,7 +18,7 @@
 
 <div>
     {{-- Section de bienvenue avec image d'arrière-plan --}}
-    <div class="hero-section relative bg-cover bg-center bg-no-repeat text-white">
+    <div class="relative bg-cover bg-center bg-no-repeat text-white" style="background-image: url('{{ asset('images/photo5.jpg') }}')">
         <div class="container mx-auto py-16 px-4">
             {{-- Titre et sous-titre de bienvenue --}}
             <div class="text-center mb-8">

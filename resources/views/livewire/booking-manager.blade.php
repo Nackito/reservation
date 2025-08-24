@@ -75,7 +75,9 @@
                     <div>
                         <h2 class="text-2xl lg:text-3xl text-gray-800 font-inter font-extrabold">{{ $property->name ?? 'Nom non disponible' }}</h2>
                         <p class="text-lg lg:text-xl text-gray-700">
-                            <i class="fas fa-map-marker-alt text-blue-500 mr-2"></i>
+                            <a href="#map" title="Voir la carte">
+                                <i class="fas fa-map-marker-alt text-blue-500 mr-2 cursor-pointer"></i>
+                            </a>
                             {{ $property->city ?? 'Ville non disponible' }}, {{ $property && $property->municipality ? $property->municipality : 'Municipalité non disponible' }}, {{ $property->district ?? 'Quartier non disponible' }}
                         </p>
                     </div>

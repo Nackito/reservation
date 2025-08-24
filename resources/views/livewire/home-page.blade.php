@@ -110,7 +110,7 @@
         {{-- Layout avec sidebar pour les filtres --}}
         <div class="flex flex-col lg:flex-row gap-6">
             {{-- Sidebar des filtres (à gauche) --}}
-            <div class="lg:w-1/4 xl:w-1/5">
+            <div class="hidden lg:block lg:w-1/4 xl:w-1/5">
                 {{-- Filtres permanents dans la sidebar --}}
                 <div class="bg-white rounded-lg shadow-lg p-6 sticky top-24">
                     <div class="flex items-center justify-between mb-4">

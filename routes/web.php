@@ -29,12 +29,8 @@ Route::get('/contact-hebergement', ContactForm::class)->name('contact.hebergemen
 Route::get('/mes-reservations/avis/{booking}', App\Livewire\ReviewCreate::class)->name('user-reservations.review');
 
 // ...existing code...
-Route::get('/mes-reservations/annulees/ville/{city}', UserCanceledReservationsCity::class)->name('user-canceled-reservations.city');
-Route::get('/mes-reservations/ville/{city}', App\Livewire\UserReservationsCity::class)->name('user-reservations.city');
 Route::get('/property-manager', PropertyManager::class)->name('property-manager');
 Route::get('/booking-manager/{propertyId}', BookingManager::class)->name('booking-manager');
-Route::get('/user-reservations', UserReservations::class)->name('user-reservations');
-Route::get('/reservation-details/{propertyId}', ReservationDetails::class)->name('reservations.details');
 Route::middleware(['auth'])->group(function () {
     Route::get('chat', function () {
         return view('chat');
@@ -45,6 +41,10 @@ Route::middleware(['auth'])->group(function () {
 
 
 Route::middleware('auth')->group(function () {
+    Route::get('/mes-reservations/annulees/ville/{city}', UserCanceledReservationsCity::class)->name('user-canceled-reservations.city');
+    Route::get('/mes-reservations/ville/{city}', App\Livewire\UserReservationsCity::class)->name('user-reservations.city');
+    Route::get('/reservation-details/{propertyId}', ReservationDetails::class)->name('reservations.details');
+    Route::get('/user-reservations', UserReservations::class)->name('user-reservations');
     Route::get('/wishlist', App\Livewire\WishlistPage::class)->name('wishlist.index');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

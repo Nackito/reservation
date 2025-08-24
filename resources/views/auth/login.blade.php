@@ -8,6 +8,13 @@
                 <div class="p-4 sm:p-7">
                     <div class="text-center">
                         <h1 class="block text-2xl font-bold text-gray-800 dark:text-white">Se connecter à Afridayz</h1>
+                        <div class="mb-4 flex flex-col items-center">
+                            <a href="{{ url('/auth/redirect/google') }}" class="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg border border-gray-300 bg-white text-gray-700 font-semibold shadow hover:bg-gray-50 transition mb-2">
+                                <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" class="w-5 h-5">
+                                Se connecter avec Google
+                            </a>
+                            <span class="text-gray-400 text-xs">ou</span>
+                        </div>
                         <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
                             Vous n'avez pas encore de compte ?
                             <a wire:navigate class="text-blue-600 decoration-2 hover:underline font-medium dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600" href="/register">

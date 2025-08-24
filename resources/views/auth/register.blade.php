@@ -3,6 +3,13 @@
 
 <div class="container mx-auto max-w-md py-8">
   <h2 class="text-2xl font-bold mb-6 text-center">Inscription</h2>
+  <div class="mb-6 flex flex-col items-center">
+    <a href="{{ url('/auth/redirect/google') }}" class="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg border border-gray-300 bg-white text-gray-700 font-semibold shadow hover:bg-gray-50 transition mb-4">
+      <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" class="w-5 h-5">
+      S'inscrire avec Google
+    </a>
+    <span class="text-gray-400 text-xs">ou</span>
+  </div>
   <form method="POST" action="{{ route('register') }}" class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
     @csrf
 

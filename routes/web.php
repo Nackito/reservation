@@ -15,13 +15,15 @@ use App\Livewire\HomePage;
 use App\Livewire\ReservationDetails;
 use App\Livewire\ContactForm;
 use App\Http\Requests\Auth\RegisterRequest;
-use Illuminate\Container\Attributes\Auth;
-use Illuminate\Support\Facades\Auth as FacadesAuth;
+// Nettoyage des imports inutiles
 use Illuminate\Support\Facades\Route;
-use PharIo\Manifest\Author;
+use Illuminate\Support\Facades\Auth;
 // Détail des réservations par ville
 use App\Http\Controllers\UserReservationsCityController;
 use App\Livewire\UserCanceledReservationsCity;
+// Auth Google Socialite
+use Laravel\Socialite\Facades\Socialite;
+use App\Models\User;
 
 Route::get('/', HomePage::class)->name('home');
 Route::get('/contact-hebergement', ContactForm::class)->name('contact.hebergement');
@@ -52,6 +54,25 @@ Route::middleware('auth')->group(function () {
     Route::get('/messagerie', App\Livewire\Messaging::class)->name('messaging');
     Route::get('/mon-espace', App\Livewire\UserMenu::class)->name('user.menu');
     // Ajout d'un lien vers la messagerie dans la vue du profil
+});
+
+// Auth Google Socialite
+Route::get('/auth/redirect/google', function () {
+    return Socialite::driver('google')->redirect();
+});
+
+Route::get('/auth/callback/google', function () {
+    $googleUser = Socialite::driver('google')->user();
+    $user = User::firstOrCreate([
+        'email' => $googleUser->getEmail(),
+    ], [
+        'name' => $googleUser->getName() ?? $googleUser->getNickname(),
+        'email_verified_at' => now(),
+        'password' => bcrypt(uniqid()), // mot de passe aléatoire
+        'avatar' => $googleUser->getAvatar(),
+    ]);
+    Auth::login($user, true);
+    return redirect('/');
 });
 
 require __DIR__ . '/auth.php';

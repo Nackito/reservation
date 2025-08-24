@@ -22,7 +22,7 @@
                 </span>
             </div>
 
-            <form wire:submit.prevent="addBooking" class="mb-4">
+            <form wire:submit.prevent="addBooking" class="mb-4 hidden md:block">
                 <div class="flex mt-4 flex-col sm:flex-row gap-2 sm:gap-3 items-center bg-white rounded-lg p-2 dark:bg-gray-800">
                     <div class="w-full">
                         <p class="py-3 px-4 block w-full border-transparent rounded-lg text-sm

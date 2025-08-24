@@ -22,6 +22,7 @@
     "dependencies": {
         "bootstrap": "^5.3.3",
         "flatpickr": "^4.6.13",
+        "leaflet": "^1.9.4",
         "preline": "^3.0.1",
         "sweetalert2": "^11.17.2",
         "vanilla-calendar-pro": "^3.0.3"

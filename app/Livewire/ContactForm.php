@@ -61,6 +61,15 @@ class ContactForm extends Component
   #[Validate('nullable|string|max:100')]
   public $quartier = '';
 
+  #[Validate('required|string')]
+  public $adresse = '';
+
+  #[Validate('nullable|numeric')]
+  public $latitude = null;
+
+  #[Validate('nullable|numeric')]
+  public $longitude = null;
+
   #[Validate('required|integer|min:1')]
   public $nombre_chambres = 1;
 
@@ -137,10 +146,11 @@ class ContactForm extends Component
         'etablissement' => [
           'nom' => $this->nom_etablissement,
           'type' => $this->types_hebergement[$this->type_hebergement] ?? $this->type_hebergement,
+          'adresse' => $this->adresse,
           'ville' => $this->ville,
-          'commune' => $this->commune,
           'quartier' => $this->quartier,
-          'plus_details' => $this->plus_details,
+          'latitude' => $this->latitude,
+          'longitude' => $this->longitude,
           'chambres' => $this->nombre_chambres,
           'capacite' => $this->capacite_max,
           'prix' => $this->prix_nuit,
@@ -170,6 +180,47 @@ class ContactForm extends Component
         ->text('Détail : ' . $e->getMessage())
         ->error()
         ->show();
+    }
+  }
+
+  /**
+   * Méthode appelée côté Livewire pour géocoder une adresse
+   */
+  public function geocodeAddress($address)
+  {
+    if (empty($address)) return;
+    
+    try {
+      // Utiliser Nominatim pour le géocodage gratuit
+      $query = urlencode($address . ', Côte d\'Ivoire');
+      $url = "https://nominatim.openstreetmap.org/search?format=json&q={$query}&limit=1";
+      
+      $context = stream_context_create([
+        'http' => [
+          'timeout' => 5,
+          'user_agent' => 'Afridays-App/1.0'
+        ]
+      ]);
+      
+      $response = file_get_contents($url, false, $context);
+      
+      if ($response !== false) {
+        $data = json_decode($response, true);
+        
+        if (!empty($data) && isset($data[0]['lat'], $data[0]['lon'])) {
+          $this->latitude = (float) $data[0]['lat'];
+          $this->longitude = (float) $data[0]['lon'];
+          
+          // Dispatch un événement pour mettre à jour la carte côté client
+          $this->dispatch('coordinates-updated', [
+            'latitude' => $this->latitude,
+            'longitude' => $this->longitude
+          ]);
+        }
+      }
+    } catch (\Exception $e) {
+      // En cas d'erreur, on continue sans géocodage
+      \Log::info('Erreur géocodage: ' . $e->getMessage());
     }
   }
 

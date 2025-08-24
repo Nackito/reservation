@@ -313,6 +313,10 @@
                         </p>
                         <p id="pricing" class="text-gray-600  mt-5">Vous pouvez disposez de ce logement à <span class="text-xl font-bold"> {{ $property->price_per_night }} FrCFA par nuit</span></p>
                     </div>
+                    <h2 class="text-2xl font-bold text-gray-800 dark:text-dark mt-8 mb-4 pl-4">Emplacement de l'établissement</h2>
+                    <div id="map">
+
+                    </div>
             </div>
 
             <!-- Info section -->

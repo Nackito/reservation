@@ -9,9 +9,17 @@ function init(lat, lng, label = "Résidence") {
         attribution:
             '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     }).addTo(map);
-    if (lat && lng) {
+    if (
+        typeof lat === "number" &&
+        typeof lng === "number" &&
+        !isNaN(lat) &&
+        !isNaN(lng)
+    ) {
         L.marker([lat, lng]).addTo(map).bindPopup(label);
     }
 }
 
-init();
+// Rendre la fonction accessible globalement pour les scripts inline (Vite)
+window.init = init;
+
+//init();

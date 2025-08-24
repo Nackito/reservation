@@ -66,4 +66,9 @@ class MessageResource extends Resource
             'edit' => Pages\EditMessage::route('/{record}/edit'),
         ];
     }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
+    }
 }

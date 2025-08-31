@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Notification;
 use App\Filament\Resources\BookingResource\Pages;
 use App\Models\Booking;
 use Filament\Forms;
-use Filament\Forms\Form;
+use Filament\Schemas\Schema;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -21,6 +21,13 @@ use Illuminate\Support\Facades\Auth;
 use Filament\Support\Enums\IconName;
 use Filament\Actions\EditAction;
 use Filament\Actions\Action;
+//use App\Filament\Resources\BookingResource;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\DatePicker;
+//use Filament\Forms\Components\TextInput;
+//use Illuminate\Support\Facades\Mail;
+//use App\Models\Booking;
+use Filament\Resources\Pages\CreateRecord;
 
 class BookingResource extends Resource
 {
@@ -29,6 +36,50 @@ class BookingResource extends Resource
     protected static ?string $recordTitleAttribute = 'id';
     protected static ?int $navigationSort = 3;
 
+    public static function form(\Filament\Schemas\Schema $schema): \Filament\Schemas\Schema
+    {
+        return $schema->schema([
+            Select::make('property_id')
+                ->relationship('property', 'name')
+                ->required(),
+            Select::make('user_id')
+                ->relationship('user', 'name')
+                ->required(),
+            DatePicker::make('start_date')
+                ->required(),
+            DatePicker::make('end_date')
+                ->required(),
+            TextInput::make('total_price')
+                ->numeric()
+                ->required(),
+            Select::make('status')
+                ->options([
+                    'pending' => 'En attente',
+                    'accepted' => 'Acceptée',
+                    'canceled' => 'Annulée',
+                ])
+                ->required(),
+        ]);
+    }
+
+    protected function afterCreate(Booking $record): void
+    {
+        // Exemple : envoi d'un mail à l'utilisateur
+        if ($record->user && $record->user->email) {
+            Mail::raw(
+                "Votre réservation a bien été créée. Merci !",
+                function ($message) use ($record) {
+                    $message->to($record->user->email)
+                        ->subject('Confirmation de réservation');
+                }
+            );
+        }
+    }
+
+    protected function getCreatedNotificationTitle(): ?string
+    {
+        return 'Réservation créée avec succès !';
+    }
 
     public static function table(Table $table): Table
     {

@@ -43,7 +43,7 @@ class CreateBooking extends CreateRecord
 
     protected function getRedirectUrl(): string
     {
-        // Redirige vers la page d’édition de la réservation nouvellement créée
-        return static::$resource::getUrl('edit', ['record' => $this->getRecord()]);
+        // Redirige vers la liste des réservations
+        return static::$resource::getUrl('index');
     }
 }

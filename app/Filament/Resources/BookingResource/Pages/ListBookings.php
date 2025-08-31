@@ -7,7 +7,7 @@ use App\Filament\Resources\BookingResource\Widgets\BookingStats;
 use App\Models\Booking;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
-use Filament\Resources\Pages\Tab;
+use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
@@ -39,21 +39,13 @@ class ListBookings extends ListRecords
     public function getTabs(): array
     {
         return [
-            'all' => [
-                'label' => 'Tous',
-            ],
-            'pending' => [
-                'label' => 'En attente',
-                'query' => fn($query) => $query->where('status', 'pending'),
-            ],
-            'accepted' => [
-                'label' => 'Acceptées',
-                'query' => fn($query) => $query->where('status', 'accepted'),
-            ],
-            'canceled' => [
-                'label' => 'Annulées',
-                'query' => fn($query) => $query->where('status', 'canceled'),
-            ],
+            'all' => Tab::make('Tous'),
+            'pending' => Tab::make('En attente')
+                ->modifyQueryUsing(fn($query) => $query->where('status', 'pending')),
+            'accepted' => Tab::make('Acceptées')
+                ->modifyQueryUsing(fn($query) => $query->where('status', 'accepted')),
+            'canceled' => Tab::make('Annulées')
+                ->modifyQueryUsing(fn($query) => $query->where('status', 'canceled')),
         ];
     }
 }

@@ -33,8 +33,12 @@ class BookingResource extends Resource
 {
     protected static ?string $model = Booking::class;
     //protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
-    protected static ?string $recordTitleAttribute = 'id';
+    protected static ?string $recordTitleAttribute = 'name';
     protected static ?int $navigationSort = 3;
+    public static function getRecordTitle($record): ?string
+    {
+        return $record->property->name ?? 'Réservation';
+    }
 
     public static function form(\Filament\Schemas\Schema $schema): \Filament\Schemas\Schema
     {

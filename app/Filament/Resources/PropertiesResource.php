@@ -27,7 +27,7 @@ use function Laravel\Prompts\search;
 class PropertiesResource extends Resource
 {
     protected static ?string $model = Property::class;
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    /*protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
     protected static ?string $recordTitleAttribute = 'name';
     protected static ?int $navigationSort = 2;
 
@@ -205,7 +205,7 @@ class PropertiesResource extends Resource
                                     ->default(fn() => Auth::id()),
                             ])
                     ])*/
-            ])->columns(3);
+    /*])->columns(3);
     }
 
     public static function table(Table $table): Table
@@ -306,5 +306,5 @@ class PropertiesResource extends Resource
             'create' => Pages\CreateProperties::route('/create'),
             'edit' => Pages\EditProperties::route('/{record}/edit'),
         ];
-    }
+    }*/
 }

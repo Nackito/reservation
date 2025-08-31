@@ -18,7 +18,7 @@ class PropertiesRelationManager extends RelationManager
 {
     protected static string $relationship = 'Properties';
 
-    public function form(Form $form): Form
+    /*public function form(Form $form): Form
     {
         return $form
             ->schema([
@@ -60,5 +60,5 @@ class PropertiesRelationManager extends RelationManager
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
-    }
+    }*/
 }

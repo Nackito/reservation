@@ -16,7 +16,7 @@ class MessageResource extends Resource
 {
     protected static ?string $model = Message::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-chat-bubble-left-ellipsis';
+    /*protected static ?string $navigationIcon = 'heroicon-o-chat-bubble-left-ellipsis';
 
     public static function form(Form $form): Form
     {
@@ -70,5 +70,5 @@ class MessageResource extends Resource
     public static function shouldRegisterNavigation(): bool
     {
         return false;
-    }
+    }*/
 }

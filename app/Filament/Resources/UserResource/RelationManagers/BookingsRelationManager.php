@@ -18,7 +18,7 @@ class BookingsRelationManager extends RelationManager
 {
     protected static string $relationship = 'Bookings';
 
-    public function form(Form $form): Form
+    /*public function form(Form $form): Form
     {
         return $form
             ->schema([
@@ -77,5 +77,5 @@ class BookingsRelationManager extends RelationManager
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
-    }
+    }*/
 }

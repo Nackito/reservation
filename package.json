@@ -24,6 +24,7 @@
         "flatpickr": "^4.6.13",
         "preline": "^3.0.1",
         "sweetalert2": "^11.17.2",
+        "swiper": "^11.2.10",
         "vanilla-calendar-pro": "^3.0.3"
     }
 }

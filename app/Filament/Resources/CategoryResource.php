@@ -20,7 +20,7 @@ class CategoryResource extends Resource
 {
     protected static ?string $model = Category::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-tag';
+    /*protected static ?string $navigationIcon = 'heroicon-o-tag';
 
     public static function form(Form $form): Form
     {
@@ -108,5 +108,5 @@ class CategoryResource extends Resource
     public static function shouldRegisterNavigation(): bool
     {
         return false;
-    }
+    }*/
 }

@@ -10,45 +10,25 @@ use App\Filament\Resources\BookingResource\Pages;
 use App\Models\Booking;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
+use Filament\Support\Enums\IconName;
+use Filament\Actions\EditAction;
+use Filament\Actions\Action;
 
 class BookingResource extends Resource
 {
     protected static ?string $model = Booking::class;
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    //protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
     protected static ?string $recordTitleAttribute = 'id';
     protected static ?int $navigationSort = 3;
 
-    public static function form(Form $form): Form
-    {
-        return $form
-            ->schema([
-                Forms\Components\TextInput::make('property_id')
-                    ->required()
-                    ->numeric(),
-                Forms\Components\TextInput::make('user_id')
-                    ->required()
-                    ->numeric(),
-                Forms\Components\DatePicker::make('start_date')
-                    ->required(),
-                Forms\Components\DatePicker::make('end_date')
-                    ->required(),
-                Forms\Components\TextInput::make('total_price')
-                    ->required()
-                    ->numeric(),
-                Forms\Components\Select::make('status')
-                    ->required()
-                    ->options([
-                        'pending' => 'Pending',
-                        'accepted' => 'Accepted',
-                        'canceled' => 'Canceled',
-                    ]),
-            ]);
-    }
 
     public static function table(Table $table): Table
     {
@@ -84,8 +64,8 @@ class BookingResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\Action::make('accept')
+                EditAction::make(),
+                Action::make('accept')
                     ->label('Accepter')
                     ->action(function (Booking $record) {
                         $record->update(['status' => 'accepted']);
@@ -145,7 +125,7 @@ class BookingResource extends Resource
                                 "Sans paiement, nous ne pourrons vous garantir la disponibilité le jour-j.";
                             \App\Models\Message::create([
                                 'conversation_id' => $conversation->id,
-                                'sender_id' => 1, // 1 = admin ou système
+                                'sender_id' => 1,
                                 'receiver_id' => $user ? $user->id : null,
                                 'content' => $msgContent,
                             ]);
@@ -154,7 +134,7 @@ class BookingResource extends Resource
                     ->requiresConfirmation()
                     ->color('success')
                     ->visible(fn(Booking $record) => $record->status === 'pending'),
-                Tables\Actions\Action::make('cancel')
+                Action::make('cancel')
                     ->label('Annuler')
                     ->action(function (Booking $record) {
                         $record->update(['status' => 'canceled']);
@@ -202,7 +182,7 @@ class BookingResource extends Resource
                         if ($conversation) {
                             \App\Models\Message::create([
                                 'conversation_id' => $conversation->id,
-                                'sender_id' => 1, // 1 = admin ou système, à adapter selon votre logique
+                                'sender_id' => 1,
                                 'receiver_id' => $user ? $user->id : null,
                                 'content' => "Votre demande de réservation a été annulée par l'administrateur.",
                             ]);
@@ -213,8 +193,8 @@ class BookingResource extends Resource
                     ->visible(fn(Booking $record) => $record->status === 'pending'),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ]);
     }

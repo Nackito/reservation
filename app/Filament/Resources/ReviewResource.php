@@ -15,7 +15,7 @@ class ReviewResource extends Resource
 {
     protected static ?string $model = Reviews::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-tag';
+    /*protected static ?string $navigationIcon = 'heroicon-o-tag';
 
     protected static ?string $navigationLabel = 'Avis';
 
@@ -118,5 +118,5 @@ class ReviewResource extends Resource
             'create' => Pages\CreateReview::route('/create'),
             'edit' => Pages\EditReview::route('/{record}/edit'),
         ];
-    }
+    }*/
 }

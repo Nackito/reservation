@@ -53,9 +53,6 @@ class BookingResource extends Resource
                 ->required(),
             DatePicker::make('end_date')
                 ->required(),
-            TextInput::make('total_price')
-                ->numeric()
-                ->required(),
             Select::make('status')
                 ->options([
                     'pending' => 'En attente',

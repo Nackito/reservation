@@ -63,20 +63,6 @@ class BookingResource extends Resource
         ]);
     }
 
-    protected function afterCreate(Booking $record): void
-    {
-        // Exemple : envoi d'un mail à l'utilisateur
-        if ($record->user && $record->user->email) {
-            Mail::raw(
-                "Votre réservation a bien été créée. Merci !",
-                function ($message) use ($record) {
-                    $message->to($record->user->email)
-                        ->subject('Confirmation de réservation');
-                }
-            );
-        }
-    }
-
     protected function getCreatedNotificationTitle(): ?string
     {
         return 'Réservation créée avec succès !';

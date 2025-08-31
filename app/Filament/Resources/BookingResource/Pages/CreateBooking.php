@@ -15,9 +15,9 @@ class CreateBooking extends CreateRecord
     protected static string $resource = BookingResource::class;
 
 
-    protected function afterCreate(Booking $record): void
+    protected function afterCreate(): void
     {
-        // Exemple : envoi d'un mail à l'utilisateur
+        $record = $this->record;
         if ($record->user && $record->user->email) {
             Mail::raw(
                 "Votre réservation a bien été créée. Merci !",

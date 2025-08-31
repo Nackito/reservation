@@ -11,9 +11,16 @@ use App\Models\Booking;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateBooking extends CreateRecord
+
 {
     protected static string $resource = BookingResource::class;
 
+    protected function mutateFormDataBeforeCreate(array $data): array
+    {
+        $booking = new \App\Models\Booking($data);
+        $data['total_price'] = $booking->calculateTotalPrice();
+        return $data;
+    }
 
     protected function afterCreate(): void
     {

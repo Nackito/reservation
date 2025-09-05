@@ -68,7 +68,7 @@
         let citiesSwiper = null;
 
         function destroyCarousels() {
-            console.log('Destroying carousels...');
+            // console.log('Destroying carousels...');
             if (propertySwiper) {
                 propertySwiper.destroy(true, true);
                 propertySwiper = null;
@@ -80,7 +80,7 @@
         }
 
         function initializeCarousels() {
-            console.log('Initializing carousels...');
+            // console.log('Initializing carousels...');
 
             // Détruire d'abord les instances existantes
             destroyCarousels();
@@ -90,7 +90,7 @@
                 // Réinitialiser le carrousel des propriétés
                 const propertyCarousel = document.querySelector('.property-carousel');
                 if (propertyCarousel) {
-                    console.log('Creating property carousel...');
+                    // console.log('Creating property carousel...');
                     propertySwiper = new Swiper('.property-carousel', {
                         slidesPerView: 1,
                         spaceBetween: 10,
@@ -121,7 +121,7 @@
                         },
                         on: {
                             init: function() {
-                                console.log('Property carousel initialized');
+                                // console.log('Property carousel initialized');
                             }
                         }
                     });
@@ -130,7 +130,7 @@
                 // Réinitialiser le carrousel des villes
                 const citiesCarousel = document.querySelector('.cities-carousel');
                 if (citiesCarousel) {
-                    console.log('Creating cities carousel...');
+                    // console.log('Creating cities carousel...');
                     citiesSwiper = new Swiper('.cities-carousel', {
                         slidesPerView: 1,
                         spaceBetween: 15,
@@ -165,7 +165,7 @@
                         },
                         on: {
                             init: function() {
-                                console.log('Cities carousel initialized');
+                                // console.log('Cities carousel initialized');
                             }
                         }
                     });
@@ -175,15 +175,15 @@
 
         // Initialiser les carrousels au chargement de la page
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM loaded, initializing carousels...');
+            // console.log('DOM loaded, initializing carousels...');
             initializeCarousels();
         });
 
         // Gestion des événements Livewire
         document.addEventListener('livewire:init', () => {
-            console.log('Livewire initialized');
+            // console.log('Livewire initialized');
             Livewire.on('refresh-carousels', () => {
-                console.log('Received refresh-carousels event');
+                // console.log('Received refresh-carousels event');
                 setTimeout(() => {
                     initializeCarousels();
                 }, 500);
@@ -194,7 +194,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             if (typeof window.livewire !== 'undefined') {
                 window.livewire.on('refresh-carousels', () => {
-                    console.log('Received refresh-carousels event (v2)');
+                    // console.log('Received refresh-carousels event (v2)');
                     setTimeout(() => {
                         initializeCarousels();
                     }, 500);

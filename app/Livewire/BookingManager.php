@@ -146,9 +146,9 @@ class BookingManager extends Component
         }
         $this->validate();
 
-        // Découper la plage de dates (format Flatpickr : "YYYY-MM-DD to YYYY-MM-DD" ou "YYYY-MM-DD à YYYY-MM-DD" ou "YYYY-MM-DD - YYYY-MM-DD")
+        // Découper la plage de dates (tous séparateurs courants FR/EN, nettoyage des espaces insécables)
         if ($this->dateRange) {
-            $dates = preg_split('/\s*(to|à|-)\s*/', $this->dateRange);
+            $dates = preg_split('/\\s+(?:to|à|au|\\-|–|—)\\s+/ui', $this->dateRange);
             if (count($dates) === 2) {
                 $this->checkInDate = trim($dates[0]);
                 $this->checkOutDate = trim($dates[1]);

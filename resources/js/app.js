@@ -17,6 +17,7 @@ function initFlatpickrReservation() {
                 disable: occupiedDates,
                 minDate: "today",
                 locale: French,
+                //conjunction: " to ", // force le séparateur pour Livewire
             });
         }
     });

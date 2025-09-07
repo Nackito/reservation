@@ -32,18 +32,11 @@
                     </div>
 
                     <div class="w-full">
-                        <input type="text" wire:model="checkInDate" id="ReservationCheckInBottom" class="py-3 px-4 block w-full border-transparent rounded-lg text-sm
+                        <input type="text" wire:model.defer="dateRange" id="ReservationDateRange" class="py-3 px-4 block w-full border-transparent rounded-lg text-sm
                     focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50
                     disabled:pointer-events-none dark:bg-slate-900 dark:border-transparent
-                    dark:text-gray-400 dark:focus:ring-gray-600" placeholder="Date d'arrivée">
-                        @error('checkInDate') <span class="text-red-500">{{ $message }}</span> @enderror
-                    </div>
-                    <div class="w-full">
-                        <input type="text" wire:model="checkOutDate" id="ReservationCheckOutBottom" class="py-3 px-4 block w-full border-transparent rounded-lg text-sm
-                    focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50
-                    disabled:pointer-events-none dark:bg-slate-900 dark:border-transparent
-                    dark:text-gray-400 dark:focus:ring-gray-600" placeholder="Date de départ">
-                        @error('checkOutDate') <span class="text-red-500">{{ $message }}</span> @enderror
+                    dark:text-gray-400 dark:focus:ring-gray-600" placeholder="Dates de séjour (arrivée - départ)">
+                        @error('dateRange') <span class="text-red-500">{{ $message }}</span> @enderror
                     </div>
                     @if(Auth::check())
                     <button type="submit" wire:submit.prevent="addBooking" id="confirm-booking" class="bg-blue-500 text-white py-2 px-4 rounded">
@@ -359,7 +352,7 @@
 <div class="container mx-auto mt-8">
     <h1 class="block text-3xl font-bold text-gray-800 sm:text-4xl lg:text-2xl lg:leading-tight dark:text-black mt-6 mb-4 sm:mt-0 sm:mb-6 px-4 sm:px-0">Entrez vos dates</h1>
 
-    <form wire:submit.prevent="addBooking" class="mb-4">
+    <form wire:submit.prevent="addBooking" class="mb-4" id="Reservation">
         <div class="flex mt-4 flex-col sm:flex-row gap-2 sm:gap-3 items-center bg-white rounded-lg p-2 dark:bg-gray-800">
             <div class="w-full">
                 <p class="py-3 px-4 block w-full border-transparent rounded-lg text-sm
@@ -368,19 +361,12 @@
                     dark:text-gray-400 dark:focus:ring-gray-600" readonly> {{ $property->name ?? '' }} </p>
             </div>
 
-            <div class="w-full" id="Reservation">
-                <input type="text" id="ReservationCheckIn" wire:model="checkInDate" class="py-3 px-4 block w-full border-transparent rounded-lg text-sm cursor-pointer
-                    focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50
-                    disabled:pointer-events-none dark:bg-slate-900 dark:border-transparent
-                    dark:text-gray-400 dark:focus:ring-gray-600" placeholder="Date d'arrivée">
-                @error('checkInDate') <span class="text-red-500">{{ $message }}</span> @enderror
-            </div>
             <div class="w-full">
-                <input type="text" id="ReservationCheckOut" wire:model="checkOutDate" class="py-3 px-4 block w-full border-transparent rounded-lg text-sm cursor-pointer
+                <input type="text" wire:model.defer="dateRange" id="ReservationDateRange2" class="py-3 px-4 block w-full border-transparent rounded-lg text-sm cursor-pointer
                     focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50
                     disabled:pointer-events-none dark:bg-slate-900 dark:border-transparent
-                    dark:text-gray-400 dark:focus:ring-gray-600" placeholder="Date de départ">
-                @error('checkOutDate') <span class="text-red-500">{{ $message }}</span> @enderror
+                    dark:text-gray-400 dark:focus:ring-gray-600" placeholder="Dates de séjour (arrivée - départ)">
+                @error('dateRange') <span class="text-red-500">{{ $message }}</span> @enderror
             </div>
 
             @if(Auth::check())

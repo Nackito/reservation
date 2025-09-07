@@ -6,18 +6,14 @@ import { French } from "flatpickr/dist/l10n/fr.js";
 function initFlatpickrReservation() {
     if (typeof flatpickr !== "function") return;
     const occupiedDates = window.occupiedDates || [];
-    [
-        "#ReservationCheckIn",
-        "#ReservationCheckOut",
-        "#ReservationCheckInBottom",
-        "#ReservationCheckOutBottom",
-    ].forEach((selector) => {
+    ["#ReservationDateRange", "#ReservationDateRange2"].forEach((selector) => {
         const el = document.querySelector(selector);
         if (el) {
             flatpickr(el, {
-                dateFormat: "Y-m-d", // format de la valeur envoyée à Livewire
+                mode: "range",
+                dateFormat: "Y-m-d", // valeur envoyée à Livewire
                 altInput: true,
-                altFormat: "d-m-Y", // affichage utilisateur : jour-mois-année
+                altFormat: "j F Y", // affichage utilisateur
                 disable: occupiedDates,
                 minDate: "today",
                 locale: French,

@@ -202,10 +202,8 @@
             }
         });
     </script>
-    <!-- Flatpickr JS -->
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <!-- Swiper JS -->
-    <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+    <!--<script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>-->
 
     @livewireScripts
     @livewire('partials.footer')

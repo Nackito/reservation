@@ -17,13 +17,13 @@ class BookingManager extends Component
 {
     // Règles de validation Livewire
     public $rules = [
-        'checkInDate' => 'required|date|after_or_equal:today',
-        'checkOutDate' => 'required|date|after:checkInDate',
+        'dateRange' => 'required|string',
     ];
     public $property;
     public $propertyName;
     public $firstImage;
     public $propertyId;
+    public $dateRange;
     public $checkInDate;
     public $checkOutDate;
     public $totalPrice;
@@ -64,11 +64,9 @@ class BookingManager extends Component
         // Recupérer la propriété
         $this->property = Property::find($this->propertyId);
 
-        // Définir la date d'entrée par défaut à aujourd'hui si non définie
-        if (empty($this->checkInDate)) {
-            $this->checkInDate = now()->format('Y-m-d');
-        }
-
+        $this->dateRange = null;
+        $this->checkInDate = null;
+        $this->checkOutDate = null;
 
         // Convertir la description Markdown en HTML
         if ($this->property && $this->property->description) {
@@ -147,6 +145,27 @@ class BookingManager extends Component
             return redirect()->route('login');
         }
         $this->validate();
+
+        // Découper la plage de dates (format Flatpickr : "YYYY-MM-DD to YYYY-MM-DD" ou "YYYY-MM-DD à YYYY-MM-DD" ou "YYYY-MM-DD - YYYY-MM-DD")
+        if ($this->dateRange) {
+            $dates = preg_split('/\s*(to|à|-)\s*/', $this->dateRange);
+            if (count($dates) === 2) {
+                $this->checkInDate = trim($dates[0]);
+                $this->checkOutDate = trim($dates[1]);
+            } else {
+                $this->addError('dateRange', 'Format de plage de dates invalide.');
+                return;
+            }
+        } else {
+            $this->addError('dateRange', 'Veuillez sélectionner une plage de dates.');
+            return;
+        }
+
+        // Validation supplémentaire : checkIn < checkOut
+        if (!$this->checkInDate || !$this->checkOutDate || $this->checkInDate >= $this->checkOutDate) {
+            $this->addError('dateRange', 'La date de départ doit être postérieure à la date d\'arrivée.');
+            return;
+        }
 
         $property = Property::find($this->propertyId);
 

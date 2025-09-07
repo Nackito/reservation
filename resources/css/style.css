@@ -171,4 +171,12 @@
         width: 100%;
         display: block;
     }
+
+    .custom-mobile-reviews {
+        max-width: 24rem; /* équivalent à max-w-md */
+        margin-left: auto;
+        margin-right: auto;
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
 }

@@ -741,7 +741,7 @@
 
             {{-- Navigation du carrousel optimisée --}}
             @if(count($properties) > 1)
-            <div class="swiper-navigation">
+            <div class="swiper-navigation hidden sm:flex">
                 {{-- Bouton précédent --}}
                 <button class="swiper-button-prev carousel-nav-btn"
                     type="button"
@@ -826,7 +826,7 @@
 
                 {{-- Navigation du carrousel des villes --}}
                 @if(count($popularCities) > 1)
-                <div class="swiper-navigation">
+                <div class="swiper-navigation hidden sm:flex">
                     {{-- Bouton précédent --}}
                     <button class="swiper-button-prev cities-nav-btn"
                         type="button"

@@ -164,4 +164,11 @@
         padding-left: 0.75rem;
         padding-right: 0.75rem;
     }
+
+    .custom-mobile-reservation-form button[type="submit"],
+    .custom-mobile-reservation-form
+        button[onclick*="showReservationLoginNotification"] {
+        width: 100%;
+        display: block;
+    }
 }

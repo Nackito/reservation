@@ -18,7 +18,7 @@
                     @else
                     <div class="flex items-center md:hidden">
                         <a href="/chat" class="flex items-center py-2 px-2 rounded-lg text-sm text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-600">
-                            <i class="fas fa-comments text-blue-600 text-lg mr-2"></i>
+                            <i class="fas fa-envelope text-white text-lg mr-2"></i>
                         </a>
                         <a href="{{ route('user.menu') }}" class="flex items-center py-2 px-4 rounded-lg text-sm font-semibold border border-gray-300 text-gray-800 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-600">
                             <span>{{ Auth::user()->name }}</span>

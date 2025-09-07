@@ -353,7 +353,8 @@
     <h1 class="block text-3xl font-bold text-gray-800 sm:text-4xl lg:text-2xl lg:leading-tight dark:text-black mt-6 mb-4 sm:mt-0 sm:mb-6 px-4 sm:px-0">Entrez vos dates</h1>
 
     <form wire:submit.prevent="addBooking" class="mb-4" id="Reservation">
-        <div class="flex mt-4 flex-col sm:flex-row gap-2 sm:gap-3 items-center bg-white rounded-lg p-2 dark:bg-gray-800">
+        <div class="flex mt-4 flex-col sm:flex-row gap-2 sm:gap-3 items-center bg-white rounded-lg p-2 dark:bg-gray-800 custom-mobile-reservation-form">
+
             <div class="w-full">
                 <p class="py-3 px-4 block w-full border-transparent rounded-lg text-sm
                     focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50

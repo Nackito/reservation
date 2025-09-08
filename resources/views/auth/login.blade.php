@@ -48,6 +48,19 @@
                             <x-input-error :messages="$errors->get('password')" class="mt-2" />
                         </div>
 
+
+                        <!-- 2FA Code (si activé) -->
+                        @php
+                        $user = \App\Models\User::where('email', old('email'))->first();
+                        @endphp
+                        @if($user && $user->two_factor_secret)
+                        <div class="mt-4">
+                            <x-input-label for="two_factor_code" :value="'Code de vérification (2FA)'" />
+                            <x-text-input id="two_factor_code" class="block mt-1 w-full" type="text" name="two_factor_code" autocomplete="one-time-code" inputmode="numeric" pattern="[0-9]*" />
+                            <x-input-error :messages="$errors->get('two_factor_code')" class="mt-2" />
+                        </div>
+                        @endif
+
                         <!-- Remember Me -->
                         <div class="block mt-4">
                             <label for="remember_me" class="inline-flex items-center">

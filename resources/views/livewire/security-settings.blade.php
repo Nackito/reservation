@@ -13,13 +13,25 @@
           </h3>
           <div class="space-y-2">
             @if(Auth::user()->two_factor_secret)
-            <div class="flex items-center justify-between bg-green-50 text-green-700 px-4 py-3 rounded-lg">
-              <span>Double authentification activée</span>
-              <form method="POST" action="{{ route('two-factor.disable') }}">
-                @csrf
-                @method('DELETE')
-                <button type="submit" class="ml-4 px-4 py-2 rounded bg-red-500 text-white font-semibold hover:bg-red-600 transition">Désactiver</button>
-              </form>
+            <div class="flex flex-col gap-2 bg-green-50 text-green-700 px-4 py-3 rounded-lg">
+              <div class="flex items-center justify-between">
+                <span>Double authentification activée</span>
+                <form method="POST" action="{{ route('two-factor.disable') }}">
+                  @csrf
+                  @method('DELETE')
+                  <button type="submit" class="ml-4 px-4 py-2 rounded bg-red-500 text-white font-semibold hover:bg-red-600 transition">Désactiver</button>
+                </form>
+              </div>
+              @if(session('two_factor_qr'))
+                <div class="flex flex-col items-center mt-4">
+                  <span class="mb-2 text-sm text-gray-700">Scanne ce QR code avec ton application d'authentification :</span>
+                  <div class="bg-white p-2 rounded shadow">
+                    {!! session('two_factor_qr') !!}
+                  </div>
+                  <span class="mt-2 text-xs text-gray-600">Ou entre ce code manuellement :</span>
+                  <span class="font-mono text-base text-blue-700 bg-blue-100 px-2 py-1 rounded">{{ session('two_factor_secret') }}</span>
+                </div>
+              @endif
             </div>
             @else
             <form method="POST" action="{{ route('two-factor.enable') }}">

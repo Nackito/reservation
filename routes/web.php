@@ -18,6 +18,7 @@ use App\Http\Requests\Auth\RegisterRequest;
 // Nettoyage des imports inutiles
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
+use PragmaRX\Google2FA\Google2FA;
 // Détail des réservations par ville
 use App\Http\Controllers\UserReservationsCityController;
 use App\Livewire\UserCanceledReservationsCity;
@@ -81,10 +82,34 @@ Route::get('/auth/callback/google', function () {
 // Routes pour la double authentification
 Route::middleware(['auth'])->post('/two-factor/enable', function () {
     $user = Auth::user();
-    // Ici tu dois générer et stocker le secret 2FA (exemple simplifié)
-    $user->two_factor_secret = 'dummy-secret'; // Remplace par la vraie génération
+    $google2fa = new Google2FA();
+    $secret = $google2fa->generateSecretKey();
+    $user->two_factor_secret = $secret;
     $user->save();
-    return redirect()->route('security.settings')->with('status', 'Double authentification activée !');
+
+    // Générer l'URL du QR code
+    $company = config('app.name', 'ReservationApp');
+    $email = $user->email;
+    $qrUrl = $google2fa->getQRCodeUrl($company, $email, $secret);
+
+    // Générer le QR code inline avec BaconQrCode
+    $qrImage = null;
+    try {
+        $writer = new \BaconQrCode\Renderer\ImageRenderer(
+            new \BaconQrCode\Renderer\RendererStyle\RendererStyle(200),
+            new \BaconQrCode\Renderer\Image\SvgImageBackEnd()
+        );
+        $qrCode = new \BaconQrCode\Writer($writer);
+        $qrImage = $qrCode->writeString($qrUrl);
+    } catch (\Exception $e) {
+        $qrImage = null;
+    }
+
+    // Passer le QR code et le secret à la vue via la session
+    return redirect()->route('security.settings')
+        ->with('status', 'Double authentification activée !')
+        ->with('two_factor_qr', $qrImage)
+        ->with('two_factor_secret', $secret);
 })->name('two-factor.enable');
 
 Route::middleware(['auth'])->delete('/two-factor/disable', function () {
@@ -94,4 +119,4 @@ Route::middleware(['auth'])->delete('/two-factor/disable', function () {
     return redirect()->route('security.settings')->with('status', 'Double authentification désactivée.');
 })->name('two-factor.disable');
 
-require __DIR__ . '/auth.php';
+require_once __DIR__ . '/auth.php';

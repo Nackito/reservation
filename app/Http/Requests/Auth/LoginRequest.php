@@ -43,10 +43,28 @@ class LoginRequest extends FormRequest
 
         if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
-
             throw ValidationException::withMessages([
                 'email' => trans('auth.failed'),
             ]);
+        }
+
+        // Vérification du code 2FA si activé
+        $user = Auth::user();
+        if ($user && $user->two_factor_secret) {
+            $code = $this->input('two_factor_code');
+            if (empty($code)) {
+                Auth::logout();
+                throw ValidationException::withMessages([
+                    'two_factor_code' => 'Le code de vérification est requis.'
+                ]);
+            }
+            $google2fa = new \PragmaRX\Google2FA\Google2FA();
+            if (! $google2fa->verifyKey($user->two_factor_secret, $code)) {
+                Auth::logout();
+                throw ValidationException::withMessages([
+                    'two_factor_code' => 'Le code de vérification est invalide.'
+                ]);
+            }
         }
 
         RateLimiter::clear($this->throttleKey());

@@ -44,15 +44,21 @@ Route::middleware(['auth'])->group(function () {
 Route::middleware(['auth'])->get('/security-settings', App\Livewire\SecuritySettings::class)->name('security.settings');
 
 // Route pour mettre à jour le thème utilisateur
-Route::middleware(['auth'])->post('/user/theme', function (\Illuminate\Http\Request $request) {
+
+// Route unique pour mettre à jour toutes les préférences utilisateur
+Route::middleware(['auth'])->post('/user/preferences', function (\Illuminate\Http\Request $request) {
     $request->validate([
+        'currency' => 'required|string|in:EUR,USD,XOF,GBP,CAD',
+        'locale' => 'required|string|in:fr,en,es,de,pt',
         'theme' => 'required|string|in:light,dark,system',
     ]);
     $user = Auth::user();
+    $user->currency = $request->input('currency');
+    $user->locale = $request->input('locale');
     $user->theme = $request->input('theme');
     $user->save();
-    return back()->with('status', 'Thème mis à jour !');
-})->name('user.theme.update');
+    return back()->with('status', 'Préférences mises à jour !');
+})->name('user.preferences.update');
 
 
 
@@ -71,15 +77,7 @@ Route::middleware('auth')->group(function () {
 });
 
 // Route pour mettre à jour la langue utilisateur
-Route::middleware(['auth'])->post('/user/locale', function (\Illuminate\Http\Request $request) {
-    $request->validate([
-        'locale' => 'required|string|in:fr,en,es,de,pt',
-    ]);
-    $user = Auth::user();
-    $user->locale = $request->input('locale');
-    $user->save();
-    return back()->with('status', 'Langue mise à jour !');
-})->name('user.locale.update');
+
 
 // Auth Google Socialite
 Route::get('/auth/redirect/google', function () {
@@ -101,15 +99,7 @@ Route::get('/auth/callback/google', function () {
 });
 
 // Route pour mettre à jour la devise utilisateur
-Route::middleware(['auth'])->post('/user/currency', function (\Illuminate\Http\Request $request) {
-    $request->validate([
-        'currency' => 'required|string|in:EUR,USD,XOF,GBP,CAD',
-    ]);
-    $user = Auth::user();
-    $user->currency = $request->input('currency');
-    $user->save();
-    return back()->with('status', 'Devise mise à jour !');
-})->name('user.currency.update');
+
 
 // Routes pour la double authentification
 Route::middleware(['auth'])->post('/two-factor/enable', function () {

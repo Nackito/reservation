@@ -15,7 +15,18 @@
       <div>
         <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3 flex items-center"><i class="fas fa-sliders-h mr-2"></i>Préférences</h3>
         <div class="space-y-2">
-          <a href="#" class="block w-full px-4 py-3 rounded-lg bg-gray-50 text-gray-800 font-semibold hover:bg-gray-100 transition"><i class="fas fa-coins mr-2"></i>Devise</a>
+          <form method="POST" action="{{ route('user.currency.update') }}" class="block w-full">
+            @csrf
+            <label for="currency" class="block text-sm font-semibold text-gray-700 mb-1"><i class="fas fa-coins mr-2"></i>Devise</label>
+            <select name="currency" id="currency" class="w-full px-4 py-3 rounded-lg bg-gray-50 text-gray-800 font-semibold border border-gray-200 focus:ring-2 focus:ring-blue-500">
+              <option value="EUR" {{ Auth::user()->currency == 'EUR' ? 'selected' : '' }}>Euro (€)</option>
+              <option value="USD" {{ Auth::user()->currency == 'USD' ? 'selected' : '' }}>Dollar ($)</option>
+              <option value="XOF" {{ Auth::user()->currency == 'XOF' ? 'selected' : '' }}>Franc CFA (XOF)</option>
+              <option value="GBP" {{ Auth::user()->currency == 'GBP' ? 'selected' : '' }}>Livre Sterling (£)</option>
+              <option value="CAD" {{ Auth::user()->currency == 'CAD' ? 'selected' : '' }}>Dollar Canadien (CAD)</option>
+            </select>
+            <button type="submit" class="mt-2 w-full px-4 py-2 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 transition">Enregistrer</button>
+          </form>
           <a href="#" class="block w-full px-4 py-3 rounded-lg bg-gray-50 text-gray-800 font-semibold hover:bg-gray-100 transition"><i class="fas fa-language mr-2"></i>Langue</a>
           <a href="#" class="block w-full px-4 py-3 rounded-lg bg-gray-50 text-gray-800 font-semibold hover:bg-gray-100 transition"><i class="fas fa-desktop mr-2"></i>Affichage</a>
         </div>

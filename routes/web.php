@@ -79,6 +79,17 @@ Route::get('/auth/callback/google', function () {
     return redirect('/');
 });
 
+// Route pour mettre à jour la devise utilisateur
+Route::middleware(['auth'])->post('/user/currency', function (\Illuminate\Http\Request $request) {
+    $request->validate([
+        'currency' => 'required|string|in:EUR,USD,XOF,GBP,CAD',
+    ]);
+    $user = Auth::user();
+    $user->currency = $request->input('currency');
+    $user->save();
+    return back()->with('status', 'Devise mise à jour !');
+})->name('user.currency.update');
+
 // Routes pour la double authentification
 Route::middleware(['auth'])->post('/two-factor/enable', function () {
     $user = Auth::user();

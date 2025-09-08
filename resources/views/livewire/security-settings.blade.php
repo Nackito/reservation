@@ -23,14 +23,14 @@
                 </form>
               </div>
               @if(session('two_factor_qr'))
-                <div class="flex flex-col items-center mt-4">
-                  <span class="mb-2 text-sm text-gray-700">Scanne ce QR code avec ton application d'authentification :</span>
-                  <div class="bg-white p-2 rounded shadow">
-                    {!! session('two_factor_qr') !!}
-                  </div>
-                  <span class="mt-2 text-xs text-gray-600">Ou entre ce code manuellement :</span>
-                  <span class="font-mono text-base text-blue-700 bg-blue-100 px-2 py-1 rounded">{{ session('two_factor_secret') }}</span>
+              <div class="flex flex-col items-center mt-4">
+                <span class="mb-2 text-sm text-gray-700">Scanne ce QR code avec ton application d'authentification :</span>
+                <div class="bg-white p-2 rounded shadow">
+                  {!! session('two_factor_qr') !!}
                 </div>
+                <span class="mt-2 text-xs text-gray-600">Ou entre ce code manuellement :</span>
+                <span class="font-mono text-base text-blue-700 bg-blue-100 px-2 py-1 rounded">{{ session('two_factor_secret') }}</span>
+              </div>
               @endif
             </div>
             @else

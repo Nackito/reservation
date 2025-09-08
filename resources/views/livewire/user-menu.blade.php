@@ -7,7 +7,7 @@
         <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3 flex items-center"><i class="fas fa-user-cog mr-2"></i>Gérer mon compte</h3>
         <div class="space-y-2">
           <a href="{{ route('profile.edit') }}" class="block w-full px-4 py-3 rounded-lg bg-blue-50 text-blue-700 font-semibold hover:bg-blue-100 transition"><i class="fas fa-id-card mr-2"></i>Informations personnelles</a>
-          <a href="#" class="block w-full px-4 py-3 rounded-lg bg-blue-50 text-blue-700 font-semibold hover:bg-blue-100 transition"><i class="fas fa-shield-alt mr-2"></i>Paramètres de sécurité</a>
+          <a href="{{ route('security.settings') }}" class="block w-full px-4 py-3 rounded-lg bg-blue-50 text-blue-700 font-semibold hover:bg-blue-100 transition"><i class="fas fa-shield-alt mr-2"></i>Paramètres de sécurité</a>
         </div>
       </div>
 

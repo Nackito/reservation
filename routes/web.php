@@ -39,6 +39,9 @@ Route::middleware(['auth'])->group(function () {
     })->name('user.chat');
 });
 
+// Page paramètres de sécurité utilisateur (Livewire natif)
+Route::middleware(['auth'])->get('/security-settings', App\Livewire\SecuritySettings::class)->name('security.settings');
+
 
 
 
@@ -74,5 +77,21 @@ Route::get('/auth/callback/google', function () {
     Auth::login($user, true);
     return redirect('/');
 });
+
+// Routes pour la double authentification
+Route::middleware(['auth'])->post('/two-factor/enable', function () {
+    $user = Auth::user();
+    // Ici tu dois générer et stocker le secret 2FA (exemple simplifié)
+    $user->two_factor_secret = 'dummy-secret'; // Remplace par la vraie génération
+    $user->save();
+    return redirect()->route('security.settings')->with('status', 'Double authentification activée !');
+})->name('two-factor.enable');
+
+Route::middleware(['auth'])->delete('/two-factor/disable', function () {
+    $user = Auth::user();
+    $user->two_factor_secret = null;
+    $user->save();
+    return redirect()->route('security.settings')->with('status', 'Double authentification désactivée.');
+})->name('two-factor.disable');
 
 require __DIR__ . '/auth.php';

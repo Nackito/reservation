@@ -5,12 +5,27 @@ module.exports = {
         "./resources/js/**/*.vue",
         "node_modules/preline/dist/*.js",
     ],
-    //darkMode: "class", // or 'media' or 'class'
+    darkMode: "class", // active le mode sombre via la classe .dark
     theme: {
         extend: {
             colors: {
-                primary: "#1E40AF",
-                secondary: "#9333EA",
+                primary: {
+                    DEFAULT: "#2563eb", // bleu clair
+                    dark: "#1e293b", // bleu foncé pour dark
+                },
+                secondary: {
+                    DEFAULT: "#9333EA",
+                    dark: "#a78bfa",
+                },
+                background: {
+                    DEFAULT: "#f9fafb",
+                    dark: "#18181b",
+                },
+                surface: {
+                    DEFAULT: "#fff",
+                    dark: "#23272f",
+                },
+                // Ajoute d'autres couleurs personnalisées ici
             },
         },
     },

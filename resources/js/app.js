@@ -46,3 +46,35 @@ import "swiper/css/bundle";
 window.Alpine = Alpine;
 window.Swal = Swal;
 Alpine.start();
+
+// Gestion du thème sombre
+window.applyTheme = function (userTheme = null) {
+    // Si la valeur n'est pas passée, essaie de la récupérer via un meta ou data-attribute
+    if (!userTheme) {
+        const meta = document.querySelector('meta[name="user-theme"]');
+        userTheme = meta ? meta.content : "light";
+    }
+    if (userTheme === "dark") {
+        document.documentElement.classList.add("dark");
+    } else if (userTheme === "light") {
+        document.documentElement.classList.remove("dark");
+    } else if (userTheme === "system") {
+        if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+            document.documentElement.classList.add("dark");
+        } else {
+            document.documentElement.classList.remove("dark");
+        }
+    }
+};
+window.applyTheme();
+
+window
+    .matchMedia("(prefers-color-scheme: dark)")
+    .addEventListener("change", () => {
+        window.applyTheme();
+    });
+
+// Pour le switch instantané
+window.toggleTheme = function () {
+    document.documentElement.classList.toggle("dark");
+};

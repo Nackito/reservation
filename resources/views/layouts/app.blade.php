@@ -14,6 +14,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <!-- WebView & mobile friendly -->
     <meta name="theme-color" content="#2563eb">
+    <meta name="user-theme" content="{{ Auth::check() ? Auth::user()->theme : 'light' }}">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="icon" href="{{ asset('favicon.ico') }}">
@@ -44,7 +45,7 @@
     @livewireStyles
 </head>
 
-<body class="bg-white min-h-screen flex flex-col">
+<body class="bg-white dark:bg-background-dark min-h-screen flex flex-col">
     @livewire('partials.navbar')
 
     <!-- Page Heading -->

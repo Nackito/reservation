@@ -27,7 +27,18 @@
             </select>
             <button type="submit" class="mt-2 w-full px-4 py-2 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 transition">Enregistrer</button>
           </form>
-          <a href="#" class="block w-full px-4 py-3 rounded-lg bg-gray-50 text-gray-800 font-semibold hover:bg-gray-100 transition"><i class="fas fa-language mr-2"></i>Langue</a>
+          <form method="POST" action="{{ route('user.locale.update') }}" class="block w-full mt-4">
+            @csrf
+            <label for="locale" class="block text-sm font-semibold text-gray-700 mb-1"><i class="fas fa-language mr-2"></i>Langue</label>
+            <select name="locale" id="locale" class="w-full px-4 py-3 rounded-lg bg-gray-50 text-gray-800 font-semibold border border-gray-200 focus:ring-2 focus:ring-blue-500">
+              <option value="fr" {{ Auth::user()->locale == 'fr' ? 'selected' : '' }}>Français</option>
+              <option value="en" {{ Auth::user()->locale == 'en' ? 'selected' : '' }}>English</option>
+              <option value="es" {{ Auth::user()->locale == 'es' ? 'selected' : '' }}>Español</option>
+              <option value="de" {{ Auth::user()->locale == 'de' ? 'selected' : '' }}>Deutsch</option>
+              <option value="pt" {{ Auth::user()->locale == 'pt' ? 'selected' : '' }}>Português</option>
+            </select>
+            <button type="submit" class="mt-2 w-full px-4 py-2 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 transition">Enregistrer</button>
+          </form>
           <a href="#" class="block w-full px-4 py-3 rounded-lg bg-gray-50 text-gray-800 font-semibold hover:bg-gray-100 transition"><i class="fas fa-desktop mr-2"></i>Affichage</a>
         </div>
       </div>

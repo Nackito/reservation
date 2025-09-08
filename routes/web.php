@@ -60,6 +60,17 @@ Route::middleware('auth')->group(function () {
     // Ajout d'un lien vers la messagerie dans la vue du profil
 });
 
+// Route pour mettre à jour la langue utilisateur
+Route::middleware(['auth'])->post('/user/locale', function (\Illuminate\Http\Request $request) {
+    $request->validate([
+        'locale' => 'required|string|in:fr,en,es,de,pt',
+    ]);
+    $user = Auth::user();
+    $user->locale = $request->input('locale');
+    $user->save();
+    return back()->with('status', 'Langue mise à jour !');
+})->name('user.locale.update');
+
 // Auth Google Socialite
 Route::get('/auth/redirect/google', function () {
     return Socialite::driver('google')->redirect();

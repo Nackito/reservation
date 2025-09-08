@@ -32,11 +32,11 @@
                 - Recherche par quartier/municipality depuis la BDD
                 - Recherche automatique en temps réel
             --}}
-            <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-6">
+            <div class="max-w-4xl mx-auto bg-white dark:bg-gray-900 rounded-lg shadow-lg p-6 transition-colors duration-300">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                     {{-- Champ de recherche universel (ville, commune ou quartier) --}}
                     <div class="col-span-1 md:col-span-2 lg:col-span-3">
-                        <label for="searchQuery" class="block text-sm font-medium text-gray-700 mb-2">
+                        <label for="searchQuery" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                             <i class="fas fa-search mr-1"></i>Ville, commune ou quartier
                         </label>
                         <div class="relative">
@@ -46,20 +46,20 @@
                                 wire:model.live="searchQuery"
                                 wire:key="searchQuery-{{ $searchQuery }}"
                                 placeholder="Entrez une ville, une commune ou un quartier..."
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:bg-gray-800 dark:text-gray-100 transition-colors duration-300"
                                 autocomplete="on">
 
                             {{-- Suggestions d'autocomplétion universelles --}}
                             @if($showSuggestions && count($suggestions) > 0)
-                            <div class="autocomplete-dropdown absolute w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto" wire:ignore.self>
+                            <div class="autocomplete-dropdown absolute w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-lg max-h-48 overflow-y-auto transition-colors duration-300" wire:ignore.self>
                                 @foreach($suggestions as $index => $suggestion)
                                 <button type="button"
                                     wire:key="suggestion-{{ $index }}"
                                     wire:click="selectSuggestion('{{ $suggestion }}')"
-                                    class="autocomplete-item w-full text-left px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0 flex items-center transition duration-150"
+                                    class="autocomplete-item w-full text-left px-4 py-3 hover:bg-blue-50 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-100 dark:border-gray-700 last:border-b-0 flex items-center transition duration-150"
                                     onclick="event.stopPropagation();">
                                     <i class="fas fa-search text-blue-500 mr-3"></i>
-                                    <span class="text-gray-900">{{ $suggestion }}</span>
+                                    <span class="text-gray-900 dark:text-gray-100">{{ $suggestion }}</span>
                                 </button>
                                 @endforeach
                             </div>
@@ -77,14 +77,14 @@
                         <button
                             type="button"
                             wire:click="clearSearch"
-                            class="w-full bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 px-4 rounded-lg transition duration-200 flex items-center justify-center"
+                            class="w-full bg-gray-500 hover:bg-gray-600 dark:bg-gray-700 dark:hover:bg-gray-600 text-white font-semibold py-3 px-4 rounded-lg transition duration-200 flex items-center justify-center"
                             title="Effacer la recherche">
                             <i class="fas fa-times mr-2"></i>
                             Effacer la recherche
                         </button>
                         @else
                         {{-- Message informatif quand pas de recherche active --}}
-                        <div class="w-full text-center py-3 text-gray-500 text-sm">
+                        <div class="w-full text-center py-3 text-gray-500 dark:text-gray-400 text-sm">
                             <i class="fas fa-info-circle mr-1"></i>
                             Les filtres apparaîtront après votre recherche
                         </div>
@@ -94,7 +94,7 @@
 
                 {{-- Info sur la recherche automatique --}}
                 <div class="mt-3 text-center">
-                    <p class="text-sm text-gray-500">
+                    <p class="text-sm text-gray-500 dark:text-gray-400">
                         <i class="fas fa-magic mr-1"></i>
                         La recherche se fait automatiquement pendant que vous tapez
                     </p>

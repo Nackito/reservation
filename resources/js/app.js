@@ -43,6 +43,7 @@ import "./echo";
 import "./leaflet"; // Importation de Leaflet
 // Swiper importé via Vite
 import "swiper/css/bundle";
+import "./carousels";
 window.Alpine = Alpine;
 window.Swal = Swal;
 Alpine.start();

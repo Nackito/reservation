@@ -24,6 +24,8 @@ class HomePage extends Component
     public $maxRooms = '';
     public $selectedAmenities = [];
     public $showFilters = false;
+    public $showCitySuggestions = false;
+    public $showMunicipalitySuggestions = false;
 
     public $ivorianCities = [
         'Abidjan',
@@ -100,6 +102,8 @@ class HomePage extends Component
                 session()->flash('error', 'Erreur lors de la modification de la wishlist');
             }
         }
+        // Réinitialise le carrousel après modification de la wishlist
+        $this->dispatch('refresh-carousels');
     }
 
     public function updatedSearchQuery()
@@ -163,6 +167,7 @@ class HomePage extends Component
         $this->showResults = true;
         $this->showCitySuggestions = false;
         $this->showMunicipalitySuggestions = false;
+        $this->dispatch('refresh-carousels');
     }
 
     public function clearSearch()
@@ -173,6 +178,7 @@ class HomePage extends Component
         // Vider les suggestions en premier
         $this->showSuggestions = false;
         $this->suggestions = [];
+        $this->dispatch('refresh-carousels');
 
         // Vider les filtres avant les champs de recherche
         $this->propertyType = '';
@@ -181,12 +187,15 @@ class HomePage extends Component
         $this->minRooms = '';
         $this->maxRooms = '';
         $this->selectedAmenities = [];
+        $this->dispatch('refresh-carousels');
 
         // Vider les champs de recherche en dernier
         $this->searchQuery = '';
+        $this->dispatch('refresh-carousels');
 
         // Masquer les filtres mobiles si affichés
         $this->showFilters = false;
+        $this->dispatch('refresh-carousels');
 
         // Déclencher l'événement pour réinitialiser les carrousels
         $this->dispatch('refresh-carousels');
@@ -205,42 +214,50 @@ class HomePage extends Component
         $this->minRooms = '';
         $this->maxRooms = '';
         $this->selectedAmenities = [];
+        $this->dispatch('refresh-carousels');
 
         // Si aucun autre critère de recherche n'est actif, revenir à l'affichage par défaut
         if (empty($this->searchQuery)) {
             $this->showResults = false;
         }
+        $this->dispatch('refresh-carousels');
     }
 
     // Méthodes pour déclencher automatiquement la recherche quand les filtres changent
     public function updatedPropertyType()
     {
         $this->showResults = true;
+        $this->dispatch('refresh-carousels');
     }
 
     public function updatedMinPrice()
     {
         $this->showResults = true;
+        $this->dispatch('refresh-carousels');
     }
 
     public function updatedMaxPrice()
     {
         $this->showResults = true;
+        $this->dispatch('refresh-carousels');
     }
 
     public function updatedMinRooms()
     {
         $this->showResults = true;
+        $this->dispatch('refresh-carousels');
     }
 
     public function updatedMaxRooms()
     {
         $this->showResults = true;
+        $this->dispatch('refresh-carousels');
     }
 
     public function updatedSelectedAmenities()
     {
         $this->showResults = true;
+        $this->dispatch('refresh-carousels');
     }
 
     public function searchByCity($city)
@@ -249,6 +266,7 @@ class HomePage extends Component
         $this->showResults = true;
         $this->showSuggestions = false;
         $this->suggestions = [];
+        $this->dispatch('refresh-carousels');
     }
 
     public function render()

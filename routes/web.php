@@ -43,6 +43,16 @@ Route::middleware(['auth'])->group(function () {
 // Page paramètres de sécurité utilisateur (Livewire natif)
 Route::middleware(['auth'])->get('/security-settings', App\Livewire\SecuritySettings::class)->name('security.settings');
 
+// Route pour mettre à jour le thème utilisateur
+Route::middleware(['auth'])->post('/user/theme', function (\Illuminate\Http\Request $request) {
+    $request->validate([
+        'theme' => 'required|string|in:light,dark,system',
+    ]);
+    $user = Auth::user();
+    $user->theme = $request->input('theme');
+    $user->save();
+    return back()->with('status', 'Thème mis à jour !');
+})->name('user.theme.update');
 
 
 

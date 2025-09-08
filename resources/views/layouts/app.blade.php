@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" @if(Auth::check() && Auth::user()->theme == 'dark') class="dark" @endif>
 
 <head>
     <style>

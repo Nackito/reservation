@@ -144,21 +144,13 @@
 
         <div class="info-item">
           <span class="label">Adresse complète :</span><br>
-          <span class="value">{{ $etablissement['adresse'] ?? 'Non spécifiée' }}</span>
-        </div>
-
-        @if($etablissement['latitude'] && $etablissement['longitude'])
-        <div class="info-item">
-          <span class="label">Coordonnées GPS :</span><br>
           <span class="value">
-            Latitude: {{ number_format($etablissement['latitude'], 6) }}<br>
-            Longitude: {{ number_format($etablissement['longitude'], 6) }}<br>
-            <a href="https://www.google.com/maps?q={{ $etablissement['latitude'] }},{{ $etablissement['longitude'] }}" target="_blank" style="color: #3B82F6;">
-              📍 Voir sur Google Maps
-            </a>
+            {{ $etablissement['ville'] }}
+            @if(!empty($etablissement['commune']))<br>Commune : {{ $etablissement['commune'] }}@endif
+            @if(!empty($etablissement['quartier']))<br>Quartier : {{ $etablissement['quartier'] }}@endif
+            @if(!empty($etablissement['plus_details']))<br>Détails : {{ $etablissement['plus_details'] }}@endif
           </span>
         </div>
-        @endif
 
         <div class="info-grid">
           <div class="info-item">

@@ -82,8 +82,16 @@ class PropertiesResource extends Resource
                 ->label('Longitude'),
             \Filament\Forms\Components\TextInput::make('latitude')
                 ->label('Latitude'),
-            \Filament\Forms\Components\TextInput::make('image')
-                ->label('Image (URL ou chemin)'),
+            \Filament\Forms\Components\FileUpload::make('image')
+                ->label('Images')
+                ->image()
+                ->multiple()
+                ->directory('properties/images')
+                ->disk('public')
+                ->visibility('public')
+                ->imageEditor()
+                ->openable()
+                ->downloadable(),
             \Filament\Forms\Components\TextInput::make('features')
                 ->label('Caractéristiques'),
             DatePicker::make('created_at')

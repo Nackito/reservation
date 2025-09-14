@@ -18,6 +18,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\DatePicker;
 use Filament\Schemas\Components\Section;
 use BackedEnum;
+use Illuminate\Support\Str;
 
 class PropertiesResource extends Resource
 {
@@ -36,17 +37,45 @@ class PropertiesResource extends Resource
             \Filament\Schemas\Components\Section::make('Informations principales')
                 ->inlineLabel()
                 ->schema([
-                    \Filament\Forms\Components\TextInput::make('name')->label('Nom')->required(),
-                    \Filament\Forms\Components\TextInput::make('slug')->label('Slug')->required(),
-                    \Filament\Forms\Components\Textarea::make('description')->label('Description'),
-                    \Filament\Forms\Components\TextInput::make('features')->label('Caractéristiques'),
+                    \Filament\Forms\Components\TextInput::make('name')
+                        ->label('Nom')
+                        ->required()
+                        ->reactive()
+                        ->afterStateUpdated(function ($state, callable $set) {
+                            $set('slug', Str::slug($state));
+                        }),
+                    \Filament\Forms\Components\TextInput::make('slug')
+                        ->label('Slug')
+                        ->required()
+                        ->readOnly(),
+                    \Filament\Forms\Components\Textarea::make('description')
+                        ->label('Description')
+                        ->rows(12),
+                ])->columns(1),
+
+            \Filament\Schemas\Components\Section::make('Caractéristiques')
+                ->inlineLabel()
+                ->schema([
+                    \Filament\Forms\Components\CheckboxList::make('features')
+                        ->label('Caractéristiques')
+                        ->options([
+                            'wifi' => 'Wi-Fi',
+                            'parking' => 'Parking',
+                            'clim' => 'Climatisation',
+                            'piscine' => 'Piscine',
+                            'jardin' => 'Jardin',
+                            'balcon' => 'Balcon',
+                            'ascenseur' => 'Ascenseur',
+                            'meuble' => 'Meublé',
+                            'terrasse' => 'Terrasse',
+                        ]),
                 ])->columns(1),
             \Filament\Schemas\Components\Section::make('Localisation')
                 ->inlineLabel()
                 ->schema([
+                    \Filament\Forms\Components\TextInput::make('city')->label('Ville'),
                     \Filament\Forms\Components\TextInput::make('municipality')->label('Commune'),
                     \Filament\Forms\Components\TextInput::make('district')->label('District'),
-                    \Filament\Forms\Components\TextInput::make('city')->label('Ville'),
                     \Filament\Forms\Components\TextInput::make('longitude')->label('Longitude'),
                     \Filament\Forms\Components\TextInput::make('latitude')->label('Latitude'),
                 ])->columns(2),

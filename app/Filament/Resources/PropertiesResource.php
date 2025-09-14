@@ -75,20 +75,31 @@ class PropertiesResource extends Resource
                     }),
             ])
             ->actions([
-                EditAction::make(),
                 Action::make('view')
-                    ->label('View')
-                    ->url(fn(Property $record) => route('properties.show', $record))
+                    ->label('Afficher')
+                    ->icon('heroicon-m-eye')
+                    ->color('info')
+                    ->url(fn(Property $record) => static::getUrl('view', ['record' => $record]))
                     ->openUrlInNewTab(),
+                Action::make('edit')
+                    ->label('Modifier')
+                    ->icon('heroicon-m-pencil-square')
+                    ->color('primary')
+                    ->url(fn(Property $record) => static::getUrl('edit', ['record' => $record]))
+                    ->openUrlInNewTab(),
+            ])
+            ->headerActions([
+                Action::make('create')
+                    ->label('Créer')
+                    ->icon('heroicon-m-plus')
+                    ->color('success')
+                    ->url(route('filament.admin.resources.properties.create'))
+                    ->button(),
             ])
             ->bulkActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),
-                Action::make('export')
-                    ->label('Export')
-                    ->url(fn() => route('properties.export'))
-                    ->openUrlInNewTab(),
             ]);
     }
     public static function getRelations(): array
@@ -103,6 +114,7 @@ class PropertiesResource extends Resource
             'index' => Pages\ListProperties::route('/'),
             'create' => Pages\CreateProperties::route('/create'),
             'edit' => Pages\EditProperties::route('/{record}/edit'),
+            'view' => Pages\ViewProperties::route('/{record}'),
         ];
     }
     /*public static function canAccessPanel(): bool

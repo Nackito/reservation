@@ -16,6 +16,7 @@ use Filament\Actions\EditAction;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\DatePicker;
+use Filament\Schemas\Components\Section;
 use BackedEnum;
 
 class PropertiesResource extends Resource
@@ -31,79 +32,68 @@ class PropertiesResource extends Resource
 
     public static function form(\Filament\Schemas\Schema $schema): \Filament\Schemas\Schema
     {
-        return $schema->schema([
-            Select::make('user_id')
-                ->label('Propriétaire')
-                ->relationship('user', 'name')
-                ->searchable()
-                ->required(),
-            Select::make('category_id')
-                ->label('Catégorie')
-                ->relationship('category', 'name')
-                ->searchable(),
-            Select::make('status')
-                ->label('Statut')
-                ->options([
-                    'available' => 'Disponible',
-                    'rented' => 'Loué',
-                    'maintenance' => 'Maintenance',
-                ])
-                ->required(),
-            Select::make('property_type')
-                ->label('Type de bien')
-                ->options([
-                    'house' => 'Maison',
-                    'apartment' => 'Appartement',
-                    'studio' => 'Studio',
-                    'villa' => 'Villa',
-                    'other' => 'Autre',
-                ]),
-            \Filament\Forms\Components\TextInput::make('name')
-                ->label('Nom')
-                ->required(),
-            \Filament\Forms\Components\TextInput::make('slug')
-                ->label('Slug')
-                ->required(),
-            \Filament\Forms\Components\TextInput::make('municipality')
-                ->label('Commune'),
-            \Filament\Forms\Components\TextInput::make('district')
-                ->label('District'),
-            \Filament\Forms\Components\TextInput::make('city')
-                ->label('Ville'),
-            \Filament\Forms\Components\TextInput::make('price_per_night')
-                ->label('Prix par nuit')
-                ->numeric(),
-            \Filament\Forms\Components\TextInput::make('number_of_rooms')
-                ->label('Nombre de pièces')
-                ->numeric(),
-            \Filament\Forms\Components\Textarea::make('description')
-                ->label('Description'),
-            \Filament\Forms\Components\TextInput::make('longitude')
-                ->label('Longitude'),
-            \Filament\Forms\Components\TextInput::make('latitude')
-                ->label('Latitude'),
-            \Filament\Forms\Components\FileUpload::make('image')
-                ->label('Images')
-                ->image()
-                ->multiple()
-                ->directory('properties/images')
-                ->disk('public')
-                ->visibility('public')
-                ->imageEditor()
-                ->openable()
-                ->downloadable(),
-            \Filament\Forms\Components\TextInput::make('features')
-                ->label('Caractéristiques'),
-            DatePicker::make('created_at')
-                ->label('Créé le')
-                ->disabled()
-                ->displayFormat('d/m/Y H:i')
-                ->withoutSeconds(),
-            DatePicker::make('updated_at')
-                ->label('Modifié le')
-                ->disabled()
-                ->displayFormat('d/m/Y H:i')
-                ->withoutSeconds(),
+        return $schema->components([
+            \Filament\Schemas\Components\Section::make('Informations principales')
+                ->inlineLabel()
+                ->schema([
+                    \Filament\Forms\Components\TextInput::make('name')->label('Nom')->required(),
+                    \Filament\Forms\Components\TextInput::make('slug')->label('Slug')->required(),
+                    \Filament\Forms\Components\Textarea::make('description')->label('Description'),
+                    \Filament\Forms\Components\TextInput::make('features')->label('Caractéristiques'),
+                ])->columns(1),
+            \Filament\Schemas\Components\Section::make('Localisation')
+                ->inlineLabel()
+                ->schema([
+                    \Filament\Forms\Components\TextInput::make('municipality')->label('Commune'),
+                    \Filament\Forms\Components\TextInput::make('district')->label('District'),
+                    \Filament\Forms\Components\TextInput::make('city')->label('Ville'),
+                    \Filament\Forms\Components\TextInput::make('longitude')->label('Longitude'),
+                    \Filament\Forms\Components\TextInput::make('latitude')->label('Latitude'),
+                ])->columns(2),
+            \Filament\Schemas\Components\Section::make('Détails')
+                ->inlineLabel()
+                ->schema([
+                    \Filament\Forms\Components\TextInput::make('price_per_night')->label('Prix par nuit')->numeric(),
+                    \Filament\Forms\Components\TextInput::make('number_of_rooms')->label('Nombre de pièces')->numeric(),
+                ])->columns(2),
+            \Filament\Schemas\Components\Section::make('Statut & Catégorie')
+                ->inlineLabel()
+                ->schema([
+                    Select::make('user_id')->label('Propriétaire')->relationship('user', 'name')->searchable()->required(),
+                    Select::make('category_id')->label('Catégorie')->relationship('category', 'name')->searchable(),
+                    Select::make('status')->label('Statut')->options([
+                        'available' => 'Disponible',
+                        'rented' => 'Loué',
+                        'maintenance' => 'Maintenance',
+                    ])->required(),
+                    Select::make('property_type')->label('Type de bien')->options([
+                        'house' => 'Maison',
+                        'apartment' => 'Appartement',
+                        'studio' => 'Studio',
+                        'villa' => 'Villa',
+                        'other' => 'Autre',
+                    ]),
+                ])->columns(2),
+            \Filament\Schemas\Components\Section::make('Dates système')
+                ->inlineLabel()
+                ->schema([
+                    DatePicker::make('created_at')->label('Créé le')->disabled()->displayFormat('d/m/Y H:i')->withoutSeconds(),
+                    DatePicker::make('updated_at')->label('Modifié le')->disabled()->displayFormat('d/m/Y H:i')->withoutSeconds(),
+                ])->columns(2),
+            \Filament\Schemas\Components\Section::make('Images')
+                ->inlineLabel()
+                ->schema([
+                    \Filament\Forms\Components\FileUpload::make('image')
+                        ->label('Images')
+                        ->image()
+                        ->multiple()
+                        ->directory('properties/images')
+                        ->disk('public')
+                        ->visibility('public')
+                        ->imageEditor()
+                        ->openable()
+                        ->downloadable(),
+                ])->columns(1),
         ]);
     }
 

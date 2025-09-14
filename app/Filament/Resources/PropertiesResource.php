@@ -76,9 +76,27 @@ class PropertiesResource extends Resource
                     Select::make('city')
                         ->label('Ville')
                         ->options(static::getIvoryCoastCities())
-                        ->searchable(),
-                    \Filament\Forms\Components\TextInput::make('municipality')->label('Commune'),
-                    \Filament\Forms\Components\TextInput::make('district')->label('District'),
+                        ->searchable()
+                        ->reactive(),
+                    Select::make('municipality')
+                        ->label('Commune')
+                        ->options([
+                            'Abobo' => 'Abobo',
+                            'Adjamé' => 'Adjamé',
+                            'Attécoubé' => 'Attécoubé',
+                            'Cocody' => 'Cocody',
+                            'Koumassi' => 'Koumassi',
+                            'Marcory' => 'Marcory',
+                            'Plateau' => 'Plateau',
+                            'Port-Bouët' => 'Port-Bouët',
+                            'Treichville' => 'Treichville',
+                            'Yopougon' => 'Yopougon',
+                            'Songon' => 'Songon',
+                            'Bingerville' => 'Bingerville',
+                        ])
+                        ->searchable()
+                        ->visible(fn($get) => $get('city') === 'Abidjan'),
+                    \Filament\Forms\Components\TextInput::make('district')->label('Quartier'),
                     \Filament\Forms\Components\TextInput::make('longitude')->label('Longitude'),
                     \Filament\Forms\Components\TextInput::make('latitude')->label('Latitude'),
                 ])->columns(2),

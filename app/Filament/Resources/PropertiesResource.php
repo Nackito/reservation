@@ -109,7 +109,12 @@ class PropertiesResource extends Resource
             \Filament\Schemas\Components\Section::make('Statut & Catégorie')
                 ->inlineLabel()
                 ->schema([
-                    Select::make('user_id')->label('Propriétaire')->relationship('user', 'name')->searchable()->required(),
+                    Select::make('user_id')
+                        ->label('Propriétaire')
+                        ->relationship('user', 'name', fn($query) => $query->orderBy('name'))
+                        ->searchable()
+                        ->preload()
+                        ->required(),
                     Select::make('category_id')->label('Catégorie')->relationship('category', 'name')->searchable(),
                     Select::make('status')->label('Statut')->options([
                         'available' => 'Disponible',

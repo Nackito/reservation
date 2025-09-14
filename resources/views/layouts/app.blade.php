@@ -22,9 +22,6 @@
     <title>{{ $title ?? 'Afridayz'}}</title>
 
 
-    <!-- Flatpickr CSS (optionnel, à activer si besoin) -->
-    <!--<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">-->
-
     <!-- leaflet -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
@@ -57,15 +54,8 @@
 
     </main>
 
-
-    <!-- Inclure les scripts Preline -->
-    <!-- <script src="https://cdn.jsdelivr.net/npm/preline@1.0.0/dist/preline.min.js"></script> -->
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
-    <!-- Swiper JS -->
-    <!--<script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>-->
 
     @livewireScripts
     @livewire('partials.footer')

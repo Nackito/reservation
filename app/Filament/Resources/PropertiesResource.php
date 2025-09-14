@@ -34,7 +34,7 @@ class PropertiesResource extends Resource
     public static function form(\Filament\Schemas\Schema $schema): \Filament\Schemas\Schema
     {
         return $schema->components([
-            \Filament\Schemas\Components\Section::make('Informations principales')
+            Section::make('Informations principales')
                 ->inlineLabel()
                 ->schema([
                     \Filament\Forms\Components\TextInput::make('name')
@@ -53,7 +53,7 @@ class PropertiesResource extends Resource
                         ->rows(12),
                 ])->columns(1),
 
-            \Filament\Schemas\Components\Section::make('Caractéristiques')
+            Section::make('Caractéristiques')
                 ->inlineLabel()
                 ->schema([
                     \Filament\Forms\Components\CheckboxList::make('features')
@@ -70,7 +70,7 @@ class PropertiesResource extends Resource
                             'terrasse' => 'Terrasse',
                         ]),
                 ])->columns(1),
-            \Filament\Schemas\Components\Section::make('Localisation')
+            Section::make('Localisation')
                 ->inlineLabel()
                 ->schema([
                     Select::make('city')
@@ -100,13 +100,13 @@ class PropertiesResource extends Resource
                     \Filament\Forms\Components\TextInput::make('longitude')->label('Longitude'),
                     \Filament\Forms\Components\TextInput::make('latitude')->label('Latitude'),
                 ])->columns(2),
-            \Filament\Schemas\Components\Section::make('Détails')
+            Section::make('Détails')
                 ->inlineLabel()
                 ->schema([
                     \Filament\Forms\Components\TextInput::make('price_per_night')->label('Prix par nuit')->numeric(),
                     \Filament\Forms\Components\TextInput::make('number_of_rooms')->label('Nombre de pièces')->numeric(),
                 ])->columns(2),
-            \Filament\Schemas\Components\Section::make('Statut & Catégorie')
+            Section::make('Statut & Catégorie')
                 ->inlineLabel()
                 ->schema([
                     Select::make('user_id')
@@ -115,27 +115,35 @@ class PropertiesResource extends Resource
                         ->searchable()
                         ->preload()
                         ->required(),
-                    Select::make('category_id')->label('Catégorie')->relationship('category', 'name')->searchable(),
+                    Select::make('category_id')
+                        ->label('Catégorie')
+                        ->relationship('category', 'name', fn($query) => $query->orderBy('name'))
+                        ->searchable()
+                        ->preload()
+                        ->reactive(),
                     Select::make('status')->label('Statut')->options([
                         'available' => 'Disponible',
-                        'rented' => 'Loué',
+                        'rented' => 'Occupé',
                         'maintenance' => 'Maintenance',
                     ])->required(),
-                    Select::make('property_type')->label('Type de bien')->options([
-                        'house' => 'Maison',
-                        'apartment' => 'Appartement',
-                        'studio' => 'Studio',
-                        'villa' => 'Villa',
-                        'other' => 'Autre',
-                    ]),
+                    Select::make('property_type')
+                        ->label('Type de résidence')
+                        ->options([
+                            'house' => 'Maison',
+                            'apartment' => 'Appartement',
+                            'studio' => 'Studio',
+                            'villa' => 'Villa',
+                            'other' => 'Autre',
+                        ])
+                        ->visible(fn($get) => optional(\App\Models\Category::find($get('category_id')))?->name === 'Résidence meublée'),
                 ])->columns(2),
-            \Filament\Schemas\Components\Section::make('Dates système')
+            Section::make('Dates système')
                 ->inlineLabel()
                 ->schema([
                     DatePicker::make('created_at')->label('Créé le')->disabled()->displayFormat('d/m/Y H:i')->withoutSeconds(),
                     DatePicker::make('updated_at')->label('Modifié le')->disabled()->displayFormat('d/m/Y H:i')->withoutSeconds(),
                 ])->columns(2),
-            \Filament\Schemas\Components\Section::make('Images')
+            Section::make('Images')
                 ->inlineLabel()
                 ->schema([
                     \Filament\Forms\Components\FileUpload::make('image')

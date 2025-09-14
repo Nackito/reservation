@@ -73,7 +73,10 @@ class PropertiesResource extends Resource
             \Filament\Schemas\Components\Section::make('Localisation')
                 ->inlineLabel()
                 ->schema([
-                    \Filament\Forms\Components\TextInput::make('city')->label('Ville'),
+                    Select::make('city')
+                        ->label('Ville')
+                        ->options(static::getIvoryCoastCities())
+                        ->searchable(),
                     \Filament\Forms\Components\TextInput::make('municipality')->label('Commune'),
                     \Filament\Forms\Components\TextInput::make('district')->label('District'),
                     \Filament\Forms\Components\TextInput::make('longitude')->label('Longitude'),
@@ -219,4 +222,75 @@ class PropertiesResource extends Resource
     {
         return Auth::user() && Auth::user()->email === 'admin@example.com';
     }*/
+
+    /**
+     * Retourne la liste unique des villes de Côte d'Ivoire pour le champ Select.
+     */
+    protected static function getIvoryCoastCities(): array
+    {
+        return [
+            'Abidjan' => 'Abidjan',
+            'Yamoussoukro' => 'Yamoussoukro',
+            'Bouaké' => 'Bouaké',
+            'Daloa' => 'Daloa',
+            'San Pedro' => 'San Pedro',
+            'Korhogo' => 'Korhogo',
+            'Man' => 'Man',
+            'Gagnoa' => 'Gagnoa',
+            'Abengourou' => 'Abengourou',
+            'Agboville' => 'Agboville',
+            'Divo' => 'Divo',
+            'Anyama' => 'Anyama',
+            'Bondoukou' => 'Bondoukou',
+            'Séguéla' => 'Séguéla',
+            'Odienné' => 'Odienné',
+            'Ferkessédougou' => 'Ferkessédougou',
+            'Sinfra' => 'Sinfra',
+            'Issia' => 'Issia',
+            'Sassandra' => 'Sassandra',
+            'Toumodi' => 'Toumodi',
+            'Soubré' => 'Soubré',
+            'Aboisso' => 'Aboisso',
+            'Grand-Bassam' => 'Grand-Bassam',
+            'Dabou' => 'Dabou',
+            'Bingerville' => 'Bingerville',
+            'Adzopé' => 'Adzopé',
+            'Bouaflé' => 'Bouaflé',
+            'Daoukro' => 'Daoukro',
+            'Touba' => 'Touba',
+            'Vavoua' => 'Vavoua',
+            'Guiglo' => 'Guiglo',
+            'Danané' => 'Danané',
+            'Tiassalé' => 'Tiassalé',
+            'Akoupé' => 'Akoupé',
+            'Tabou' => 'Tabou',
+            'Lakota' => 'Lakota',
+            'Bouna' => 'Bouna',
+            'Tanda' => 'Tanda',
+            'Mankono' => 'Mankono',
+            'Béoumi' => 'Béoumi',
+            'Dimbokro' => 'Dimbokro',
+            'Tiébissou' => 'Tiébissou',
+            'Arrah' => 'Arrah',
+            'Jacqueville' => 'Jacqueville',
+            'Katiola' => 'Katiola',
+            'Zuénoula' => 'Zuénoula',
+            'Bangolo' => 'Bangolo',
+            'Grand-Lahou' => 'Grand-Lahou',
+            'Sakassou' => 'Sakassou',
+            'Bocanda' => 'Bocanda',
+            'Agnibilékrou' => 'Agnibilékrou',
+            'Djekanou' => 'Djekanou',
+            'Koun-Fao' => 'Koun-Fao',
+            'Prikro' => 'Prikro',
+            'Oumé' => 'Oumé',
+            'Guitry' => 'Guitry',
+            'Samatiguila' => 'Samatiguila',
+            'Minignan' => 'Minignan',
+            'Koro' => 'Koro',
+            'Kouassi-Kouassikro' => 'Kouassi-Kouassikro',
+            'Kouibly' => 'Kouibly',
+            'Kouassi-Datékro' => 'Kouassi-Datékro',
+        ];
+    }
 }

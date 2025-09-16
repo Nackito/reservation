@@ -41,6 +41,7 @@ class PropertiesResource extends Resource
                         ->label('Nom')
                         ->required()
                         ->reactive()
+                        ->debounce(1200)
                         ->afterStateUpdated(function ($state, callable $set) {
                             $set('slug', Str::slug($state));
                         }),

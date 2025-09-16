@@ -25,10 +25,12 @@
             <form wire:submit.prevent="addBooking" class="mb-4 hidden md:block">
                 <div class="flex mt-4 flex-col sm:flex-row gap-2 sm:gap-3 items-center bg-white rounded-lg p-2 dark:bg-gray-800">
                     <div class="w-full">
-                        <p class="py-3 px-4 block w-full border-transparent rounded-lg text-sm
-                    focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50
-                    disabled:pointer-events-none dark:bg-slate-900 dark:border-transparent
-                    dark:text-gray-400 dark:focus:ring-gray-600" readonly> {{ $property->name ?? '' }} </p>
+                        <input type="text" value="{{ $property->name ?? '' }}" readonly
+                            class="py-3 px-4 block w-full border border-blue-400 bg-white text-gray-900 placeholder-gray-500 rounded-lg text-sm
+                            focus:border-blue-600 focus:ring-blue-500 disabled:opacity-50
+                            disabled:pointer-events-none dark:bg-slate-900 dark:border-transparent
+                            dark:text-gray-400 dark:focus:ring-gray-600"
+                            placeholder="Nom de l'établissement">
                     </div>
 
                     <div class="w-full">
@@ -356,10 +358,12 @@
         <div class="flex mt-4 flex-col sm:flex-row gap-2 sm:gap-3 items-center bg-white rounded-lg p-2 dark:bg-gray-800 custom-mobile-reservation-form">
 
             <div class="w-full">
-                <p class="py-3 px-4 block w-full border-transparent rounded-lg text-sm
-                    focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50
+                <input type="text" value="{{ $property->name ?? '' }}" readonly
+                    class="py-3 px-4 block w-full border border-blue-400 bg-white text-gray-900 placeholder-gray-500 rounded-lg text-sm
+                    focus:border-blue-600 focus:ring-blue-500 disabled:opacity-50
                     disabled:pointer-events-none dark:bg-slate-900 dark:border-transparent
-                    dark:text-gray-400 dark:focus:ring-gray-600" readonly> {{ $property->name ?? '' }} </p>
+                    dark:text-gray-400 dark:focus:ring-gray-600"
+                    placeholder="Nom de l'établissement">
             </div>
 
             <div class="w-full">

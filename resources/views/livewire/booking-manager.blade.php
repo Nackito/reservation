@@ -32,10 +32,10 @@
                     </div>
 
                     <div class="w-full">
-                        <input type="text" wire:model.defer="dateRange" id="ReservationDateRange" class="py-3 px-4 block w-full border-transparent rounded-lg text-sm
-                    focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50
+                        <input type="text" wire:model.defer="dateRange" id="ReservationDateRange" class="py-3 px-4 block w-full border border-blue-400 bg-white text-gray-900 placeholder-gray-500 rounded-lg text-sm
+                    focus:border-blue-600 focus:ring-blue-500 disabled:opacity-50
                     disabled:pointer-events-none dark:bg-slate-900 dark:border-transparent
-                    dark:text-gray-400 dark:focus:ring-gray-600" placeholder="Dates de séjour (arrivée - départ)">
+                    dark:text-gray-400 dark:focus:ring-gray-600" placeholder="Choisissez vos dates (arrivée - départ)">
                         @error('dateRange') <span class="text-red-500">{{ $message }}</span> @enderror
                     </div>
                     @if(Auth::check())
@@ -363,10 +363,10 @@
             </div>
 
             <div class="w-full">
-                <input type="text" wire:model.defer="dateRange" id="ReservationDateRange2" class="py-3 px-4 block w-full border-transparent rounded-lg text-sm cursor-pointer
-                    focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50
+                <input type="text" wire:model.defer="dateRange" id="ReservationDateRange2" class="py-3 px-4 block w-full border border-blue-400 bg-white text-gray-900 placeholder-gray-500 rounded-lg text-sm cursor-pointer
+                    focus:border-blue-600 focus:ring-blue-500 disabled:opacity-50
                     disabled:pointer-events-none dark:bg-slate-900 dark:border-transparent
-                    dark:text-gray-400 dark:focus:ring-gray-600" placeholder="Dates de séjour (arrivée - départ)">
+                    dark:text-gray-400 dark:focus:ring-gray-600" placeholder="Choisissez vos dates (arrivée - départ)">
                 @error('dateRange') <span class="text-red-500">{{ $message }}</span> @enderror
             </div>
 

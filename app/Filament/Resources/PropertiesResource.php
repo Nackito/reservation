@@ -146,7 +146,7 @@ class PropertiesResource extends Resource
             Section::make('Images')
                 ->inlineLabel()
                 ->schema([
-                    \Filament\Forms\Components\FileUpload::make('image')
+                    \Filament\Forms\Components\FileUpload::make('images')
                         ->label('Images')
                         ->image()
                         ->multiple()

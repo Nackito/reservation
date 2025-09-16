@@ -14,7 +14,7 @@ class Property extends Model
         return $this->belongsTo(Category::class);
     }
 
-    protected $fillable = ['name', 'description', 'price_per_night', 'user_id', 'property_type', 'number_of_rooms', 'city', 'municipality', 'district', 'status', 'slug', 'features'];
+    protected $fillable = ['name', 'description', 'price_per_night', 'user_id', 'property_type', 'number_of_rooms', 'city', 'municipality', 'district', 'status', 'slug', 'features', 'latitude', 'longitude'];
 
     public function images()
     {

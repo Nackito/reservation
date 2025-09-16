@@ -12,12 +12,11 @@ class CreateProperties extends CreateRecord
 
     protected function afterCreate(): void
     {
-        $images = $this->data['images'] ?? []; // Récupère les images depuis le formulaire
-
+        $images = $this->data['images'] ?? [];
         foreach ($images as $image) {
             PropertyImage::create([
-                'property_id' => $this->record->id, // Associe l'image à la propriété créée
-                'image_path' => $image, // Enregistre le chemin de l'image
+                'property_id' => $this->record->id,
+                'image_path' => $image,
             ]);
         }
     }

@@ -303,9 +303,9 @@
             </div>
         </div>
         <div class="p-4">
-            <p class="text-gray-500 dark:text-gray-300 mt-5">
+            <div class="prose dark:prose-invert max-w-none text-gray-800 dark:text-gray-100 mt-5">
                 {!! $property->description ?? 'Description non disponible' !!}
-            </p>
+            </div>
             <p id="pricing" class="text-gray-600 dark:text-gray-200 mt-5">Vous pouvez disposez de ce logement à <span class="text-xl font-bold"> {{ $property->price_per_night }} FrCFA par nuit</span></p>
         </div>
         <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mt-8 mb-4 pl-4">Emplacement de l'établissement</h2>
@@ -350,7 +350,7 @@
 
 <!--2nd Reservation form -->
 <div class="container mx-auto mt-8">
-    <h1 class="block text-3xl font-bold text-gray-800 sm:text-4xl lg:text-2xl lg:leading-tight dark:text-black mt-6 mb-4 sm:mt-0 sm:mb-6 px-4 sm:px-0">Entrez vos dates</h1>
+    <h1 class="block text-3xl font-bold text-gray-800 dark:text-gray-100 sm:text-4xl lg:text-2xl lg:leading-tight mt-6 mb-4 sm:mt-0 sm:mb-6 px-4 sm:px-0">Entrez vos dates</h1>
 
     <form wire:submit.prevent="addBooking" class="mb-4" id="Reservation">
         <div class="flex mt-4 flex-col sm:flex-row gap-2 sm:gap-3 items-center bg-white rounded-lg p-2 dark:bg-gray-800 custom-mobile-reservation-form">

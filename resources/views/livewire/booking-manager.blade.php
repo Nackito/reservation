@@ -7,7 +7,7 @@
         @endphp
 
         @if($isOccupied)
-        <div class="mb-4 p-3 bg-yellow-100 text-yellow-800 rounded text-center">
+        <div class="mb-4 p-3 bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 rounded text-center">
             Ce bien est actuellement <span class="font-semibold">occupé</span>. La réservation n'est pas possible pour le moment.
         </div>
         @endif
@@ -16,7 +16,7 @@
             {{-- Statut de la propriété --}}
             {{-- $isOccupied est déjà défini en haut du fichier --}}
             <div class="mb-4">
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold {{ $isOccupied ? 'bg-gray-200 text-gray-700' : 'bg-green-100 text-green-800' }}">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold {{ $isOccupied ? 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200' : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' }}">
                     <i class="fas {{ $isOccupied ? 'fa-lock' : 'fa-unlock' }} mr-2"></i>
                     {{ $isOccupied ? 'Occupé' : 'Disponible' }}
                 </span>
@@ -28,16 +28,14 @@
                         <input type="text" value="{{ $property->name ?? '' }}" readonly
                             class="py-3 px-4 block w-full border border-blue-400 bg-white text-gray-900 placeholder-gray-500 rounded-lg text-lg font-bold shadow-sm
                             focus:border-blue-600 focus:ring-blue-500 disabled:opacity-50
-                            disabled:pointer-events-none dark:bg-slate-900 dark:border-transparent
-                            dark:text-gray-400 dark:focus:ring-gray-600"
+                            disabled:pointer-events-none dark:bg-gray-900 dark:border-blue-700 dark:text-gray-100 dark:placeholder-gray-400 dark:focus:ring-blue-400"
                             placeholder="Nom de l'établissement">
                     </div>
 
                     <div class="w-full">
                         <input type="text" wire:model.defer="dateRange" id="ReservationDateRange" class="py-3 px-4 block w-full border border-blue-400 bg-white text-gray-900 placeholder-gray-500 rounded-lg text-sm
                     focus:border-blue-600 focus:ring-blue-500 disabled:opacity-50
-                    disabled:pointer-events-none dark:bg-slate-900 dark:border-transparent
-                    dark:text-gray-400 dark:focus:ring-gray-600" placeholder="Choisissez vos dates (arrivée - départ)">
+                    disabled:pointer-events-none dark:bg-gray-900 dark:border-blue-700 dark:text-gray-100 dark:placeholder-gray-400 dark:focus:ring-blue-400" placeholder="Choisissez vos dates (arrivée - départ)">
                         @error('dateRange') <span class="text-red-500">{{ $message }}</span> @enderror
                     </div>
                     @if(Auth::check())
@@ -63,13 +61,13 @@
             </nav>
         </div>
 
-        <div class="container bg-white mx-auto mt-8">
+        <div class="container bg-white dark:bg-gray-900 mx-auto mt-8">
             <!-- Overview section -->
-            <div id="overview" class="bg-white shadow-md rounded-lg overflow-hidden w-61 h-90">
+            <div id="overview" class="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden w-61 h-90">
                 <div class="flex justify-between items-start pl-4 pt-6 pr-4">
                     <div>
-                        <h2 class="text-2xl lg:text-3xl text-gray-800 font-inter font-extrabold">{{ $property->name ?? 'Nom non disponible' }}</h2>
-                        <p class="text-lg lg:text-xl text-gray-700">
+                        <h2 class="text-2xl lg:text-3xl text-gray-800 dark:text-gray-100 font-inter font-extrabold">{{ $property->name ?? 'Nom non disponible' }}</h2>
+                        <p class="text-lg lg:text-xl text-gray-700 dark:text-gray-300">
                             <a href="#map" title="Voir la carte">
                                 <i class="fas fa-map-marker-alt text-blue-500 mr-2 cursor-pointer"></i>
                             </a>
@@ -257,9 +255,9 @@
 
             <!-- Section "House rules" (1/3) -->
             <div class="p-4 flex flex-col justify-between h-full">
-                <div id="house-rules" class="bg-white shadow-md rounded-lg p-4 ">
-                    <h2 class="text-2xl font-bold text-gray-800 dark:text-dark">Les équipements de l'établissement</h2>
-                    <ul class="list-none mt-4 text-gray-600 dark:text-gray-400">
+                <div id="house-rules" class="bg-white dark:bg-gray-800 shadow-md rounded-lg p-4 ">
+                    <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100">Les équipements de l'établissement</h2>
+                    <ul class="list-none mt-4 text-gray-600 dark:text-gray-300">
                         @forelse($property->features as $feature)
                         <li class="flex items-center mb-2">
                             @php
@@ -273,7 +271,7 @@
                         @endforelse
                     </ul>
                     <div class="p-4">
-                        <p class="text-gray-600 text-right font-bold mt-5">{{ $property->price_per_night ?? 'Prix non disponible' }} FrCFA par nuit</p>
+                        <p class="text-gray-600 dark:text-gray-200 text-right font-bold mt-5">{{ $property->price_per_night ?? 'Prix non disponible' }} FrCFA par nuit</p>
                         <div class="mt-4">
                             <a href="#Reservation" class="border border-blue-500 bg-white-500 text-blue-500 text-center py-2 px-4 rounded block w-full">Réserver cette résidence</a>
                         </div>
@@ -305,12 +303,12 @@
             </div>
         </div>
         <div class="p-4">
-            <p class="text-gray-500 mt-5">
+            <p class="text-gray-500 dark:text-gray-300 mt-5">
                 {!! $property->description ?? 'Description non disponible' !!}
             </p>
-            <p id="pricing" class="text-gray-600  mt-5">Vous pouvez disposez de ce logement à <span class="text-xl font-bold"> {{ $property->price_per_night }} FrCFA par nuit</span></p>
+            <p id="pricing" class="text-gray-600 dark:text-gray-200 mt-5">Vous pouvez disposez de ce logement à <span class="text-xl font-bold"> {{ $property->price_per_night }} FrCFA par nuit</span></p>
         </div>
-        <h2 class="text-2xl font-bold text-gray-800 dark:text-dark mt-8 mb-4 pl-4">Emplacement de l'établissement</h2>
+        <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mt-8 mb-4 pl-4">Emplacement de l'établissement</h2>
         <div id="map"
             data-lat="{{ $property->latitude }}"
             data-lng="{{ $property->longitude }}"
@@ -328,8 +326,8 @@
 </div>
 
 <!-- Info section -->
-<div class="container bg-white mx-auto mt-8">
-    <div id="info" class="text-gray-500 mt-5 bg-white shadow-md rounded-lg p-4">
+<div class="container bg-white dark:bg-gray-900 mx-auto mt-8">
+    <div id="info" class="text-gray-500 dark:text-gray-300 mt-5 bg-white dark:bg-gray-800 shadow-md rounded-lg p-4">
         <p class="p-4">
             Vous devrez présenter une pièce d'identité avec photo lors de le remise des clés. Veuillez noter que toutes les demandes spéciales seront satisfaites sous réserve de disponibilité et pourront entraîner des frais supplémentaires.
         </p>
@@ -361,16 +359,14 @@
                 <input type="text" value="{{ $property->name ?? '' }}" readonly
                     class="py-3 px-4 block w-full border border-blue-400 bg-white text-gray-900 placeholder-gray-500 rounded-lg text-lg font-bold shadow-sm
                     focus:border-blue-600 focus:ring-blue-500 disabled:opacity-50
-                    disabled:pointer-events-none dark:bg-slate-900 dark:border-transparent
-                    dark:text-gray-400 dark:focus:ring-gray-600"
+                    disabled:pointer-events-none dark:bg-gray-900 dark:border-blue-700 dark:text-gray-100 dark:placeholder-gray-400 dark:focus:ring-blue-400"
                     placeholder="Nom de l'établissement">
             </div>
 
             <div class="w-full">
                 <input type="text" wire:model.defer="dateRange" id="ReservationDateRange2" class="py-3 px-4 block w-full border border-blue-400 bg-white text-gray-900 placeholder-gray-500 rounded-lg text-sm cursor-pointer
                     focus:border-blue-600 focus:ring-blue-500 disabled:opacity-50
-                    disabled:pointer-events-none dark:bg-slate-900 dark:border-transparent
-                    dark:text-gray-400 dark:focus:ring-gray-600" placeholder="Choisissez vos dates (arrivée - départ)">
+                    disabled:pointer-events-none dark:bg-gray-900 dark:border-blue-700 dark:text-gray-100 dark:placeholder-gray-400 dark:focus:ring-blue-400" placeholder="Choisissez vos dates (arrivée - départ)">
                 @error('dateRange') <span class="text-red-500">{{ $message }}</span> @enderror
             </div>
 
@@ -400,7 +396,7 @@
         @if(!$reviews || $reviews->isEmpty())
         <div class="flex justify-center">
             <div class="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-6 w-full max-w-lg shadow">
-                <p class="text-xl italic font-medium text-gray-700 dark:text-white text-center">Aucun avis pour cette propriété pour le moment.</p>
+                <p class="text-xl italic font-medium text-gray-700 dark:text-gray-200 text-center">Aucun avis pour cette propriété pour le moment.</p>
             </div>
         </div>
         @else
@@ -408,7 +404,7 @@
             @foreach($reviews as $review)
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col gap-3 border border-gray-100 dark:border-gray-700">
                 <div class="flex items-center gap-3 mb-2">
-                    <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-2xl font-bold text-blue-600">
+                    <div class="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-2xl font-bold text-blue-600 dark:text-blue-300">
                         <span>
                             @if(isset($review->user->name))
                             {{ strtoupper(mb_substr($review->user->name, 0, 1)) }}
@@ -420,7 +416,7 @@
                     <div>
                         <div class="flex items-center gap-1">
                             @for($i = 1; $i <= 5; $i++)
-                                <svg class="w-5 h-5 {{ $i <= $review->rating ? 'text-yellow-400' : 'text-gray-300' }}" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-5 h-5 {{ $i <= $review->rating ? 'text-yellow-400' : 'text-gray-600 dark:text-gray-400' }}" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.868 1.464 8.826L12 18.896l-7.4 4.104 1.464-8.826L0 9.306l8.332-1.151z" />
                                 </svg>
                                 @endfor
@@ -428,7 +424,7 @@
                         <div class="text-sm text-gray-700 dark:text-gray-300 font-semibold">
                             {{ $review->user->name ?? 'Utilisateur inconnu' }}
                         </div>
-                        <div class="text-xs text-gray-400">Posté le {{ $review->created_at->format('d/m/Y') }}</div>
+                        <div class="text-xs text-gray-400 dark:text-gray-400">Posté le {{ $review->created_at->format('d/m/Y') }}</div>
                     </div>
                 </div>
                 <div class="flex-1">

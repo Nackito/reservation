@@ -18,7 +18,7 @@
 
 <div>
     {{-- Section de bienvenue avec image d'arrière-plan --}}
-    <div class="welcome-section relative bg-cover bg-center bg-no-repeat text-white" style="--welcome-bg: url('{{ asset('images/welcome-bg.jpg') }}')">
+    <div class="welcome-section relative bg-cover bg-center bg-no-repeat text-white dark:text-white" style="--welcome-bg: url('{{ asset('images/welcome-bg.jpg') }}')">
         <div class="container mx-auto py-16 px-4">
             {{-- Titre et sous-titre de bienvenue --}}
             <div class="text-center mb-8">
@@ -46,7 +46,7 @@
                                 wire:model.live="searchQuery"
                                 wire:key="searchQuery-{{ $searchQuery }}"
                                 placeholder="Entrez une ville, une commune ou un quartier..."
-                                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:bg-gray-800 dark:text-gray-100 transition-colors duration-300"
+                                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:bg-gray-800 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 transition-colors duration-300"
                                 autocomplete="on">
 
                             {{-- Suggestions d'autocomplétion universelles --}}
@@ -112,15 +112,15 @@
             {{-- Sidebar des filtres (à gauche) --}}
             <div class="hidden lg:block lg:w-1/4 xl:w-1/5">
                 {{-- Filtres permanents dans la sidebar --}}
-                <div class="bg-white rounded-lg shadow-lg p-6 sticky top-24">
+                <div class="bg-white dark:bg-gray-900 rounded-lg shadow-lg p-6 sticky top-24 transition-colors duration-300">
                     <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center">
                             <i class="fas fa-sliders-h mr-2 text-blue-600"></i>
                             Filtres
                         </h3>
                         <button
                             wire:click="clearFilters"
-                            class="text-sm text-gray-500 hover:text-gray-700 flex items-center transition duration-200">
+                            class="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 flex items-center transition duration-200">
                             <i class="fas fa-times mr-1"></i>
                             Effacer
                         </button>
@@ -150,7 +150,7 @@
                         $userCurrency = $user && $user->currency ? $user->currency : 'XOF';
                         @endphp
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                                 <span class="font-bold mr-1">{{ $userCurrency }}</span>Prix par nuit
                             </label>
                             <div class="grid grid-cols-2 gap-2">
@@ -159,25 +159,25 @@
                                     wire:model.live="minPrice"
                                     placeholder="Min ({{ $userCurrency }})"
                                     min="0"
-                                    class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900">
+                                    class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:bg-gray-800 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 transition-colors duration-300">
                                 <input
                                     type="number"
                                     wire:model.live="maxPrice"
                                     placeholder="Max ({{ $userCurrency }})"
                                     min="0"
-                                    class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900">
+                                    class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:bg-gray-800 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 transition-colors duration-300">
                             </div>
                         </div>
 
                         {{-- Filtre nombre de chambres --}}
                         <div>
-                            <label for="minRooms" class="block text-sm font-medium text-gray-700 mb-2">
+                            <label for="minRooms" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                                 <i class="fas fa-bed mr-1"></i>Chambres
                             </label>
                             <select
                                 id="minRooms"
                                 wire:model.live="minRooms"
-                                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900">
+                                class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:bg-gray-800 dark:text-gray-100 transition-colors duration-300">
                                 <option value="">Peu importe</option>
                                 <option value="1">1+ chambre</option>
                                 <option value="2">2+ chambres</option>
@@ -189,18 +189,18 @@
 
                         {{-- Commodités --}}
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-3">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">
                                 <i class="fas fa-star mr-1 text-yellow-600"></i>Commodités
                             </label>
                             <div class="space-y-2 max-h-48 overflow-y-auto">
                                 @foreach($availableAmenities as $amenity)
-                                <label class="flex items-center space-x-2 p-2 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition duration-150">
+                                <label class="flex items-center space-x-2 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition duration-150">
                                     <input
                                         type="checkbox"
                                         wire:model.live="selectedAmenities"
                                         value="{{ $amenity }}"
                                         class="text-blue-600 border-gray-300 rounded focus:ring-blue-500 focus:ring-2">
-                                    <span class="text-sm text-gray-700 flex items-center">
+                                    <span class="text-sm text-gray-700 dark:text-gray-200 flex items-center">
                                         @switch(strtolower($amenity))
                                         @case('wifi')
                                         @case('wi-fi')
@@ -265,8 +265,8 @@
                     </div>
 
                     {{-- Info sur les filtres automatiques --}}
-                    <div class="mt-4 pt-4 border-t border-gray-200">
-                        <div class="text-xs text-gray-500 text-center">
+                    <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <div class="text-xs text-gray-500 dark:text-gray-400 text-center">
                             <i class="fas fa-info-circle mr-1"></i>
                             Les filtres s'appliquent automatiquement
                         </div>
@@ -629,12 +629,12 @@
         @else
         {{-- Affichage par défaut : propriétés populaires avec carrousel Swiper optimisé --}}
         <div class="mb-6">
-            <h2 class="text-3xl font-bold text-gray-800 mb-2">Nos propriétés populaires</h2>
-            <p class="text-gray-600">Découvrez les hébergements les plus appréciés en Côte d'Ivoire</p>
+            <h2 class="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-2">Nos propriétés populaires</h2>
+            <p class="text-gray-600 dark:text-gray-300">Découvrez les hébergements les plus appréciés en Côte d'Ivoire</p>
         </div>
 
         {{-- Conteneur Swiper optimisé pour le carrousel des propriétés --}}
-        <div class="swiper-container property-carousel max-w-full mx-auto relative"
+        <div class="swiper-container property-carousel max-w-full mx-auto relative bg-white dark:bg-gray-900 dark:shadow-lg rounded-lg transition-colors duration-300"
             data-swiper-slides="{{ count($properties) }}"
             wire:key="property-carousel-{{ md5(json_encode($properties->pluck('id')->toArray())) }}">
 
@@ -644,7 +644,7 @@
                 @foreach($properties as $index => $property)
                 <div class="swiper-slide" data-swiper-slide-index="{{ $index }}">
                     {{-- Carte de propriété optimisée dans le carrousel --}}
-                    <div class="shadow-md rounded-lg overflow-hidden max-w-md w-full h-full hover:shadow-lg transition-shadow duration-300 mx-auto relative bg-white flex flex-col">
+                    <div class="shadow-md dark:shadow-lg rounded-lg overflow-hidden max-w-md w-full h-full hover:shadow-lg dark:hover:shadow-2xl transition-shadow duration-300 mx-auto relative bg-white dark:bg-gray-900 flex flex-col">
                         {{-- Statut de la propriété --}}
                         @php
                         $isOccupied = $property->bookings()->where('status', 'accepted')
@@ -680,12 +680,12 @@
                                 </a>
                             </div> {{-- Contenu de la carte optimisé --}}
                             <div class="flex flex-col flex-1 p-4 h-80 overflow-hidden">
-                                <h3 class="text-lg font-semibold text-gray-800 mb-1 truncate">
+                                <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-1 truncate">
                                     <a href="{{ route('booking-manager', ['propertyId' => $property->id]) }}" class="hover:text-blue-600 transition-colors duration-200">
                                         {{ $property->name ?? 'Nom non disponible' }}
                                     </a>
                                 </h3>
-                                <div class="flex items-center text-gray-600 text-sm mb-2">
+                                <div class="flex items-center text-gray-600 dark:text-gray-300 text-sm mb-2">
                                     <i class="fas fa-map-marker-alt mr-1"></i>
                                     {{ $property->city }}@if($property->municipality), {{ $property->municipality }}@endif
                                 </div>
@@ -705,13 +705,13 @@
                                     @endif
                                 </div>
                                 @endif
-                                <p class="text-gray-500 text-sm mb-2 line-clamp-2">
+                                <p class="text-gray-500 dark:text-gray-300 text-sm mb-2 line-clamp-2">
                                     {{ Str::words($property->description ?? 'Description non disponible', 15, '...') }}
                                 </p>
                                 @if($property->features && count($property->features) > 0)
                                 <div class="mb-2 flex flex-wrap gap-1 min-h-[24px]">
                                     @foreach(array_slice($property->features, 0, 2) as $feature)
-                                    <span class="inline-flex items-center px-1.5 py-0.5 bg-gray-50 text-gray-600 rounded text-xs">
+                                    <span class="inline-flex items-center px-1.5 py-0.5 bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-200 rounded text-xs">
                                         @switch(strtolower($feature))
                                         @case('wifi')
                                         @case('wi-fi')
@@ -736,15 +736,21 @@
                                     </span>
                                     @endforeach
                                     @if(count($property->features) > 2)
-                                    <span class="inline-flex items-center px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded text-xs">
+                                    <span class="inline-flex items-center px-1.5 py-0.5 bg-blue-50 dark:bg-blue-900 text-blue-600 dark:text-blue-300 rounded text-xs">
                                         +{{ count($property->features) - 2 }} autres
                                     </span>
                                     @endif
                                 </div>
                                 @endif
                                 <div class="flex items-center justify-between mt-auto pt-2">
+                                    @php
+                                    $user = auth()->user();
+                                    $userCurrency = $user && $user->currency ? $user->currency : 'XOF';
+                                    $rate = app('App\\Livewire\\BookingManager')->getExchangeRate('XOF', $userCurrency);
+                                    $converted = $rate ? round($property->price_per_night * $rate, 2) : $property->price_per_night;
+                                    @endphp
                                     <span class="text-lg font-bold text-blue-600">
-                                        {{ $property->price_per_night ?? 'N/A' }} FrCFA/nuit
+                                        {{ number_format($converted, 2) }} {{ $userCurrency }} / nuit
                                     </span>
                                 </div>
                             </div>
@@ -786,12 +792,12 @@
         {{-- Section carrousel des villes populaires --}}
         <div class="mt-16">
             <div class="mb-6">
-                <h2 class="text-3xl font-bold text-gray-800 mb-2">Explorez par ville</h2>
-                <p class="text-gray-600">Découvrez les destinations les plus populaires en Côte d'Ivoire</p>
+                <h2 class="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-2">Explorez par ville</h2>
+                <p class="text-gray-600 dark:text-gray-300">Découvrez les destinations les plus populaires en Côte d'Ivoire</p>
             </div>
 
             {{-- Conteneur Swiper pour les villes --}}
-            <div class="swiper-container cities-carousel max-w-full mx-auto relative"
+            <div class="swiper-container cities-carousel max-w-full mx-auto relative bg-white dark:bg-gray-900 dark:shadow-lg rounded-lg transition-colors duration-300"
                 data-swiper-slides="{{ count($popularCities) }}"
                 wire:key="cities-carousel-{{ md5(json_encode($popularCities->pluck('city')->toArray())) }}">
 
@@ -800,7 +806,7 @@
                     @foreach($popularCities as $index => $cityData)
                     <div class="swiper-slide" data-swiper-slide-index="{{ $index }}">
                         {{-- Carte de ville --}}
-                        <div class="city-card bg-white shadow-md rounded-lg overflow-hidden w-full h-full hover:shadow-lg transition-shadow duration-300 cursor-pointer"
+                        <div class="city-card bg-white dark:bg-gray-900 shadow-md dark:shadow-lg rounded-lg overflow-hidden w-full h-full hover:shadow-lg dark:hover:shadow-2xl transition-shadow duration-300 cursor-pointer"
                             wire:click="searchByCity('{{ $cityData->city }}')">
 
                             {{-- Image de ville (placeholder pour le moment) --}}
@@ -820,14 +826,14 @@
 
                             {{-- Contenu de la carte ville --}}
                             <div class="city-content p-4">
-                                <h3 class="city-title text-lg font-semibold text-gray-800 mb-2">
+                                <h3 class="city-title text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2">
                                     {{ $cityData->city }}
                                 </h3>
-                                <p class="text-gray-600 text-sm mb-3">
+                                <p class="text-gray-600 dark:text-gray-300 text-sm mb-3">
                                     {{ $cityData->properties_count }} hébergement{{ $cityData->properties_count > 1 ? 's' : '' }} disponible{{ $cityData->properties_count > 1 ? 's' : '' }}
                                 </p>
                                 <div class="city-cta">
-                                    <span class="inline-flex items-center text-blue-600 text-sm font-medium hover:text-blue-700 transition-colors duration-200">
+                                    <span class="inline-flex items-center text-blue-600 dark:text-blue-300 text-sm font-medium hover:text-blue-700 dark:hover:text-blue-400 transition-colors duration-200">
                                         <i class="fas fa-arrow-right mr-2"></i>
                                         Découvrir
                                     </span>
@@ -866,8 +872,8 @@
         @if(!empty($topPropertiesByCity))
         <div class="mt-16">
             <div class="mb-8">
-                <h2 class="text-3xl font-bold text-gray-800 mb-2">Hébergements les plus visités</h2>
-                <p class="text-gray-600">Découvrez les propriétés les plus populaires dans chaque ville</p>
+                <h2 class="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-2">Hébergements les plus visités</h2>
+                <p class="text-gray-600 dark:text-gray-300">Découvrez les propriétés les plus populaires dans chaque ville</p>
             </div>
 
             @foreach($topPropertiesByCity as $cityName => $cityProperties)
@@ -892,7 +898,7 @@
                 {{-- Grille des propriétés populaires de cette ville --}}
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     @foreach($cityProperties as $property)
-                    <div class="popular-property-card bg-white shadow-lg rounded-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 relative">
+                    <div class="popular-property-card bg-white dark:bg-gray-900 shadow-lg dark:shadow-lg rounded-lg overflow-hidden hover:shadow-xl dark:hover:shadow-2xl transition-shadow duration-300 relative">
                         {{-- Badge "Populaire" --}}
                         <div class="absolute top-3 left-3 z-10 flex flex-col gap-1">
                             <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800">
@@ -947,7 +953,7 @@
                         {{-- Contenu de la carte --}}
                         <div class="p-4">
                             {{-- Nom de la propriété --}}
-                            <h4 class="text-lg font-semibold text-gray-800 mb-2">
+                            <h4 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2">
                                 <a href="{{ route('booking-manager', ['propertyId' => $property->id]) }}"
                                     class="hover:text-blue-600 transition-colors duration-200"
                                     aria-label="Réserver {{ $property->name }}">
@@ -956,7 +962,7 @@
                             </h4>
 
                             {{-- Localisation --}}
-                            <p class="text-gray-600 mb-2 flex items-center">
+                            <p class="text-gray-600 dark:text-gray-300 mb-2 flex items-center">
                                 <i class="fas fa-map-marker-alt mr-1"></i>
                                 {{ $property->city }}
                                 @if($property->municipality)
@@ -968,13 +974,13 @@
                             @if($property->property_type || $property->number_of_rooms)
                             <div class="mb-3 flex flex-wrap gap-2">
                                 @if($property->property_type)
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-300">
                                     <i class="fas fa-home mr-1"></i>
                                     {{ ucfirst($property->property_type) }}
                                 </span>
                                 @endif
                                 @if($property->number_of_rooms)
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200">
                                     <i class="fas fa-bed mr-1"></i>
                                     {{ $property->number_of_rooms }} chambre{{ $property->number_of_rooms > 1 ? 's' : '' }}
                                 </span>
@@ -986,7 +992,7 @@
                             @if($property->features && count($property->features) > 0)
                             <div class="mb-3 flex flex-wrap gap-1">
                                 @foreach(array_slice($property->features, 0, 2) as $feature)
-                                <span class="inline-flex items-center px-2 py-1 bg-gray-50 text-gray-600 rounded text-xs">
+                                <span class="inline-flex items-center px-2 py-1 bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-200 rounded text-xs">
                                     @switch(strtolower($feature))
                                     @case('wifi')
                                     @case('wi-fi')
@@ -1011,7 +1017,7 @@
                                 </span>
                                 @endforeach
                                 @if(count($property->features) > 2)
-                                <span class="inline-flex items-center px-2 py-1 bg-blue-50 text-blue-600 rounded text-xs">
+                                <span class="inline-flex items-center px-2 py-1 bg-blue-50 dark:bg-blue-900 text-blue-600 dark:text-blue-300 rounded text-xs">
                                     +{{ count($property->features) - 2 }} autres
                                 </span>
                                 @endif

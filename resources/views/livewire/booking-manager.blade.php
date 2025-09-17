@@ -271,12 +271,14 @@
                         @endforelse
                     </ul>
                     <div class="p-4">
+                        @php
+                        $user = auth()->user();
+                        $userCurrency = $user && $user->currency ? $user->currency : 'XOF';
+                        $rate = app('App\\Livewire\\BookingManager')->getExchangeRate('XOF', $userCurrency);
+                        $converted = $rate ? round($property->price_per_night * $rate, 2) : $property->price_per_night;
+                        @endphp
                         <p class="text-gray-600 dark:text-gray-200 text-right font-bold mt-5">
-                            @if(isset($convertedPrice) && isset($convertedCurrency))
-                            {{ number_format($convertedPrice, 2) }} {{ $convertedCurrency }} par nuit
-                            @else
-                            {{ $property->price_per_night ?? 'Prix non disponible' }} FrCFA par nuit
-                            @endif
+                            {{ number_format($converted, 2) }} {{ $userCurrency }} par nuit
                         </p>
                         <div class="mt-4">
                             <a href="#Reservation" class="border border-blue-500 bg-white-500 text-blue-500 text-center py-2 px-4 rounded block w-full">Réserver cette résidence</a>
@@ -313,11 +315,13 @@
                 {!! $property->description ?? 'Description non disponible' !!}
             </div>
             <p id="pricing" class="text-gray-600 dark:text-gray-200 mt-5">
-                @if(isset($convertedPrice) && isset($convertedCurrency))
-                Vous pouvez disposez de ce logement à <span class="text-xl font-bold">{{ number_format($convertedPrice, 2) }} {{ $convertedCurrency }} par nuit</span>
-                @else
-                Vous pouvez disposez de ce logement à <span class="text-xl font-bold">{{ $property->price_per_night }} FrCFA par nuit</span>
-                @endif
+                @php
+                $user = auth()->user();
+                $userCurrency = $user && $user->currency ? $user->currency : 'XOF';
+                $rate = app('App\\Livewire\\BookingManager')->getExchangeRate('XOF', $userCurrency);
+                $converted = $rate ? round($property->price_per_night * $rate, 2) : $property->price_per_night;
+                @endphp
+                Vous pouvez disposez de ce logement à <span class="text-xl font-bold">{{ number_format($converted, 2) }} {{ $userCurrency }} par nuit</span>
             </p>
         </div>
         <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mt-8 mb-4 pl-4">Emplacement de l'établissement</h2>

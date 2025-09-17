@@ -55,14 +55,23 @@
 
         <!-- Boutons pour changer d'onglet -->
         <div class="pt-4">
+            <button
+                wire:click="setActiveTab('past')"
+                class="py-2.5 px-5 me-2 mb-2 text-sm font-medium focus:outline-none rounded-lg border focus:z-10 focus:ring-4
+        {{ $activeTab === 'past'
+            ? 'bg-blue-500 text-white border-blue-500 focus:ring-blue-200'
+            : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-700 dark:hover:text-white focus:ring-gray-100 dark:focus:ring-gray-700' }}">
+                Passés
+            </button>
 
-            <button wire:click="setActiveTab('past')" class="py-2.5 px-5 me-2 mb-2 text-sm font-medium text-gray-900 dark:text-gray-100 focus:outline-none bg-white dark:bg-gray-800 rounded-lg 
-        border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-700 dark:hover:text-white focus:z-10
-        focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 {{ $activeTab === 'past' ? 'bg-blue-500 text-white' : '' }}">Passés</button>
-
-            <button wire:click="setActiveTab('canceled')" class="py-2.5 px-5 me-2 mb-2 text-sm font-medium text-gray-900 dark:text-gray-100 focus:outline-none bg-white dark:bg-gray-800 rounded-lg 
-        border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-700 dark:hover:text-white focus:z-10
-        focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 {{ $activeTab === 'canceled' ? 'bg-blue-500 text-white' : '' }}">Annulés</button>
+            <button
+                wire:click="setActiveTab('canceled')"
+                class="py-2.5 px-5 me-2 mb-2 text-sm font-medium focus:outline-none rounded-lg border focus:z-10 focus:ring-4
+        {{ $activeTab === 'canceled'
+            ? 'bg-blue-500 text-white border-blue-500 focus:ring-blue-200'
+            : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-700 dark:hover:text-white focus:ring-gray-100 dark:focus:ring-gray-700' }}">
+                Annulés
+            </button>
         </div>
 
         <!-- Affichage des réservations -->

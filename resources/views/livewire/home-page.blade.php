@@ -104,7 +104,7 @@
     </div>
 
     {{-- Section d'affichage des résultats de recherche ou des propriétés populaires --}}
-    <div class="container mx-auto mt-8 px-4">
+    <div class="container mx-auto mt-8 px-4 bg-white dark:bg-gray-900 rounded-lg shadow-lg transition-colors duration-300">
         {{-- Condition : affichage différent selon si une recherche est active --}}
         @if($showResults)
         {{-- Layout avec sidebar pour les filtres --}}
@@ -112,15 +112,15 @@
             {{-- Sidebar des filtres (à gauche) --}}
             <div class="hidden lg:block lg:w-1/4 xl:w-1/5">
                 {{-- Filtres permanents dans la sidebar --}}
-                <div class="bg-white dark:bg-gray-900 rounded-lg shadow-lg p-6 sticky top-24 transition-colors duration-300">
+                <div class="bg-white dark:bg-gray-900 rounded-lg shadow-lg p-6 sticky top-24 transition-colors duration-300 border border-gray-200 dark:border-gray-800">
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center">
-                            <i class="fas fa-sliders-h mr-2 text-blue-600"></i>
+                            <i class="fas fa-sliders-h mr-2 text-blue-600 dark:text-blue-400"></i>
                             Filtres
                         </h3>
                         <button
                             wire:click="clearFilters"
-                            class="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 flex items-center transition duration-200">
+                            class="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white flex items-center transition duration-200">
                             <i class="fas fa-times mr-1"></i>
                             Effacer
                         </button>
@@ -275,13 +275,13 @@
             </div>
 
             {{-- Contenu principal (à droite) --}}
-            <div class="lg:w-3/4 xl:w-4/5">
+            <div class="lg:w-3/4 xl:w-4/5 bg-white dark:bg-gray-900 rounded-lg shadow-lg transition-colors duration-300">
                 {{-- En-tête des résultats de recherche avec critères dynamiques --}}
                 <div class="mb-6">
-                    <h2 class="text-3xl font-bold text-gray-800 mb-2">
+                    <h2 class="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-2">
                         Résultats de recherche
                         @if($searchQuery)
-                        pour <span class="text-blue-600">"{{ $searchQuery }}"</span>
+                        pour <span class="text-blue-600 dark:text-blue-400">"{{ $searchQuery }}"</span>
                         @endif
                     </h2>
 
@@ -289,28 +289,28 @@
                     @if($propertyType || $minPrice || $maxPrice || $minRooms || !empty($selectedAmenities))
                     <div class="mb-3 flex flex-wrap gap-2">
                         @if($propertyType)
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-300">
                             <i class="fas fa-home mr-1"></i>
                             {{ ucfirst($propertyType) }}
                         </span>
                         @endif
 
                         @if($minPrice)
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800">
-                            <span class="font-bold mr-1">FrCFA</span>
-                            Min: {{ $minPrice }} FrCFA
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-300">
+                            <span class="font-bold mr-1">{{ $userCurrency }}</span>
+                            Min: {{ $minPrice }} {{ $userCurrency }}
                         </span>
                         @endif
 
                         @if($maxPrice)
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800">
-                            <span class="font-bold mr-1">FrCFA</span>
-                            Max: {{ $maxPrice }} FrCFA
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-300">
+                            <span class="font-bold mr-1">{{ $userCurrency }}</span>
+                            Max: {{ $maxPrice }} {{ $userCurrency }}
                         </span>
                         @endif
 
                         @if($minRooms)
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-purple-100 text-purple-800">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-300">
                             <i class="fas fa-bed mr-1"></i>
                             {{ $minRooms }}+ chambres
                         </span>
@@ -318,7 +318,7 @@
 
                         @if(!empty($selectedAmenities))
                         @foreach($selectedAmenities as $amenity)
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-yellow-100 text-yellow-800">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-300">
                             <i class="fas fa-star mr-1"></i>
                             {{ ucfirst($amenity) }}
                         </span>
@@ -330,7 +330,7 @@
                     {{-- Actions de tri et vue mobile --}}
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
                         {{-- Compteur de propriétés trouvées --}}
-                        <p class="text-gray-600 text-lg mb-2 sm:mb-0">{{ count($properties) }} propriété(s) trouvée(s)</p>
+                        <p class="text-gray-600 dark:text-gray-300 text-lg mb-2 sm:mb-0">{{ count($properties) }} propriété(s) trouvée(s)</p>
 
                         {{-- Bouton pour afficher les filtres sur mobile --}}
                         <div class="lg:hidden">
@@ -352,8 +352,8 @@
                 {{-- Filtres mobiles (masqués par défaut) --}}
                 @if($showFilters)
                 <div class="lg:hidden mb-6">
-                    <div class="bg-white rounded-lg shadow-lg p-4 border">
-                        <h3 class="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                    <div class="bg-white dark:bg-gray-900 rounded-lg shadow-lg p-4 border border-gray-200 dark:border-gray-800 transition-colors duration-300">
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4 flex items-center">
                             <i class="fas fa-sliders-h mr-2 text-blue-600"></i>
                             Filtres
                         </h3>
@@ -361,13 +361,13 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             {{-- Filtre type de propriété --}}
                             <div>
-                                <label for="propertyTypeMobile" class="block text-sm font-medium text-gray-700 mb-2">
+                                <label for="propertyTypeMobile" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                                     <i class="fas fa-home mr-1"></i>Type de logement
                                 </label>
                                 <select
                                     id="propertyTypeMobile"
                                     wire:model.live="propertyType"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900">
+                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:bg-gray-800 dark:text-gray-100 transition-colors duration-300">
                                     <option value="">Tous les types</option>
                                     @foreach($propertyTypes as $type)
                                     <option value="{{ $type }}">{{ ucfirst($type) }}</option>
@@ -381,7 +381,7 @@
                             $userCurrency = $user && $user->currency ? $user->currency : 'XOF';
                             @endphp
                             <div>
-                                <label for="minPriceMobile" class="block text-sm font-medium text-gray-700 mb-2">
+                                <label for="minPriceMobile" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                                     <span class="font-bold mr-1">{{ $userCurrency }}</span>Prix min./nuit
                                 </label>
                                 <input
@@ -390,12 +390,12 @@
                                     wire:model.live="minPrice"
                                     placeholder="Prix minimum ({{ $userCurrency }})"
                                     min="0"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900">
+                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:bg-gray-800 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 transition-colors duration-300">
                             </div>
 
                             {{-- Filtre prix maximum --}}
                             <div>
-                                <label for="maxPriceMobile" class="block text-sm font-medium text-gray-700 mb-2">
+                                <label for="maxPriceMobile" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                                     <span class="font-bold mr-1">{{ $userCurrency }}</span>Prix max./nuit
                                 </label>
                                 <input
@@ -404,18 +404,18 @@
                                     wire:model.live="maxPrice"
                                     placeholder="Prix maximum ({{ $userCurrency }})"
                                     min="0"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900">
+                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:bg-gray-800 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 transition-colors duration-300">
                             </div>
 
                             {{-- Filtre nombre de chambres --}}
                             <div>
-                                <label for="minRoomsMobile" class="block text-sm font-medium text-gray-700 mb-2">
+                                <label for="minRoomsMobile" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                                     <i class="fas fa-bed mr-1"></i>Chambres
                                 </label>
                                 <select
                                     id="minRoomsMobile"
                                     wire:model.live="minRooms"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900">
+                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:bg-gray-800 dark:text-gray-100 transition-colors duration-300">
                                     <option value="">Peu importe</option>
                                     <option value="1">1+ chambre</option>
                                     <option value="2">2+ chambres</option>
@@ -434,7 +434,7 @@
                             </h4>
                             <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-32 overflow-y-auto">
                                 @foreach($availableAmenities as $amenity)
-                                <label class="flex items-center space-x-2 p-2 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 cursor-pointer transition duration-150">
+                                <label class="flex items-center space-x-2 p-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition duration-150">
                                     <input
                                         type="checkbox"
                                         wire:model.live="selectedAmenities"
@@ -452,7 +452,7 @@
                                 <button
                                     type="button"
                                     wire:click="clearFilters"
-                                    class="flex-1 text-gray-600 hover:text-gray-800 text-sm font-medium flex items-center justify-center transition duration-200 border border-gray-300 rounded-lg py-2">
+                                    class="flex-1 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white text-sm font-medium flex items-center justify-center transition duration-200 border border-gray-300 dark:border-gray-700 rounded-lg py-2">
                                     <i class="fas fa-eraser mr-1"></i>
                                     Effacer
                                 </button>
@@ -476,7 +476,7 @@
                     {{-- Boucle sur chaque propriété trouvée --}}
                     @foreach($properties as $property)
                     {{-- Carte de propriété avec effet hover --}}
-                    <div class="shadow-lg rounded-lg overflow-hidden hover:shadow-xl transition duration-200">
+                    <div class="shadow-lg dark:shadow-lg rounded-lg overflow-hidden hover:shadow-xl dark:hover:shadow-2xl transition duration-200 bg-white dark:bg-gray-900">
                         {{-- Statut de la propriété --}}
                         @php
                         $isOccupied = $property->bookings()->where('status', 'accepted')
@@ -508,7 +508,7 @@
                             {{-- Contenu de la carte --}}
                             <div class="p-4">
                                 {{-- Nom de la propriété avec lien --}}
-                                <h3 class="text-lg font-semibold text-gray-800 mb-2">
+                                <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2">
                                     <a href="{{ route('booking-manager', ['propertyId' => $property->id]) }}"
                                         class="hover:text-blue-600 transition-colors duration-200"
                                         aria-label="Réserver {{ $property->name }}">
@@ -517,7 +517,7 @@
                                 </h3>
 
                                 {{-- Localisation : ville et quartier --}}
-                                <p class="text-gray-600 mb-2">
+                                <p class="text-gray-600 dark:text-gray-300 mb-2">
                                     <i class="fas fa-map-marker-alt mr-1"></i>
                                     {{ $property->city ?? 'Ville non disponible' }}
                                     @if($property->municipality)
@@ -528,13 +528,13 @@
                                 {{-- Type de logement --}}
                                 @if($property->property_type)
                                 <div class="mb-2">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-300">
                                         <i class="fas fa-home mr-1"></i>
                                         {{ ucfirst($property->property_type) }}
                                     </span>
                                     {{-- Nombre de chambres --}}
                                     @if($property->number_of_rooms)
-                                    <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                    <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200">
                                         <i class="fas fa-bed mr-1"></i>
                                         {{ $property->number_of_rooms }} chambre{{ $property->number_of_rooms > 1 ? 's' : '' }}
                                     </span>
@@ -542,7 +542,7 @@
                                 </div>
                                 @elseif($property->number_of_rooms)
                                 <div class="mb-2">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200">
                                         <i class="fas fa-bed mr-1"></i>
                                         {{ $property->number_of_rooms }} chambre{{ $property->number_of_rooms > 1 ? 's' : '' }}
                                     </span>
@@ -550,7 +550,7 @@
                                 @endif
 
                                 {{-- Description tronquée --}}
-                                <p class="text-gray-500 mb-3">
+                                <p class="text-gray-500 dark:text-gray-300 mb-3">
                                     {{ Str::words($property->description ?? 'Description non disponible', 15, '...') }}
                                 </p>
 
@@ -558,7 +558,7 @@
                                 @if($property->features && count($property->features) > 0)
                                 <div class="mb-3 flex flex-wrap gap-1">
                                     @foreach(array_slice($property->features, 0, 3) as $feature)
-                                    <span class="inline-flex items-center px-2 py-1 bg-gray-50 text-gray-600 rounded text-xs">
+                                    <span class="inline-flex items-center px-2 py-1 bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-200 rounded text-xs">
                                         @switch(strtolower($feature))
                                         @case('wifi')
                                         @case('wi-fi')
@@ -583,7 +583,7 @@
                                     </span>
                                     @endforeach
                                     @if(count($property->features) > 3)
-                                    <span class="inline-flex items-center px-2 py-1 bg-blue-50 text-blue-600 rounded text-xs">
+                                    <span class="inline-flex items-center px-2 py-1 bg-blue-50 dark:bg-blue-900 text-blue-600 dark:text-blue-300 rounded text-xs">
                                         +{{ count($property->features) - 3 }} autres
                                     </span>
                                     @endif
@@ -599,7 +599,7 @@
                                     $rate = app('App\\Livewire\\BookingManager')->getExchangeRate('XOF', $userCurrency);
                                     $converted = $rate ? round($property->price_per_night * $rate, 2) : $property->price_per_night;
                                     @endphp
-                                    <span class="text-lg font-bold text-blue-600">
+                                    <span class="text-lg font-bold text-blue-600 dark:text-blue-400">
                                         {{ number_format($converted, 2) }} {{ $userCurrency }}/nuit
                                     </span>
                                 </div>
@@ -609,12 +609,12 @@
                 </div>
                 @else
                 {{-- Message affiché quand aucune propriété ne correspond aux critères --}}
-                <div class="text-center py-12">
-                    <div class="text-gray-400 mb-4">
+                <div class="text-center py-12 bg-white dark:bg-gray-900 rounded-lg shadow-lg transition-colors duration-300">
+                    <div class="text-gray-400 dark:text-gray-500 mb-4">
                         <i class="fas fa-search text-6xl"></i>
                     </div>
-                    <h3 class="text-xl font-semibold text-gray-600 mb-2">Aucune propriété trouvée</h3>
-                    <p class="text-gray-500 mb-4">
+                    <h3 class="text-xl font-semibold text-gray-600 dark:text-gray-200 mb-2">Aucune propriété trouvée</h3>
+                    <p class="text-gray-500 dark:text-gray-400 mb-4">
                         Essayez de modifier vos critères de recherche ou explorez toutes nos propriétés
                     </p>
                     {{-- Bouton pour effacer la recherche et voir toutes les propriétés --}}

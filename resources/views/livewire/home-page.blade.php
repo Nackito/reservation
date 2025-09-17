@@ -867,7 +867,7 @@
             <div class="mb-12">
                 {{-- En-tête de la ville --}}
                 <div class="flex items-center justify-between mb-6">
-                    <h3 class="text-2xl font-semibold text-gray-800 flex items-center">
+                    <h3 class="text-2xl font-semibold text-gray-800 dark:text-gray-100 flex items-center">
                         <i class="fas fa-city text-blue-600 mr-3"></i>
                         {{ $cityName }}
                         <span class="ml-2 text-sm font-normal text-gray-500">

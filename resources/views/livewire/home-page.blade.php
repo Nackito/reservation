@@ -452,26 +452,6 @@
                                 @endforeach
                             </div>
                         </div>
-
-                        {{-- Boutons d'action des filtres mobiles --}}
-                        <div class="flex justify-between items-center mt-4 pt-4 border-t border-gray-200">
-                            <div class="flex gap-2 w-full">
-                                <button
-                                    type="button"
-                                    wire:click="clearFilters"
-                                    class="flex-1 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white text-sm font-medium flex items-center justify-center transition duration-200 border border-gray-300 dark:border-gray-700 rounded-lg py-2">
-                                    <i class="fas fa-eraser mr-1"></i>
-                                    Effacer
-                                </button>
-                                <button
-                                    type="button"
-                                    wire:click="applyFilters"
-                                    class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium flex items-center justify-center rounded-lg py-2 transition duration-200">
-                                    <i class="fas fa-check mr-1"></i>
-                                    Appliquer
-                                </button>
-                            </div>
-                        </div>
                     </div>
                 </div>
                 @endif

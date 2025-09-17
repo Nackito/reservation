@@ -11,6 +11,13 @@ use Illuminate\Support\Facades\Auth;
 #[Title('Home Page - Afridays')]
 class HomePage extends Component
 {
+    // Appliquer les filtres depuis le bouton mobile
+    public function applyFilters()
+    {
+        $this->showResults = true;
+        $this->showFilters = false;
+        $this->dispatch('refresh-carousels');
+    }
     public $searchQuery = '';
     public $showResults = false;
     public $suggestions = [];

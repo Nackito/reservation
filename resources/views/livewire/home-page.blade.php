@@ -40,14 +40,21 @@
                             <i class="fas fa-search mr-1"></i>Ville, commune ou quartier
                         </label>
                         <div class="relative">
-                            <input
-                                type="text"
-                                id="searchQuery"
-                                wire:model.live="searchQuery"
-                                wire:key="searchQuery-{{ $searchQuery }}"
-                                placeholder="Entrez une ville, une commune ou un quartier..."
-                                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:bg-gray-800 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 transition-colors duration-300"
-                                autocomplete="on">
+                            <form wire:submit.prevent="search" class="flex gap-2">
+                                <input
+                                    type="text"
+                                    id="searchQuery"
+                                    wire:model="searchQuery"
+                                    wire:key="searchQuery-{{ $searchQuery }}"
+                                    placeholder="Entrez une ville, une commune ou un quartier..."
+                                    class="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:bg-gray-800 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 transition-colors duration-300"
+                                    autocomplete="on">
+                                <button type="submit"
+                                    class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors duration-200 flex items-center justify-center"
+                                    aria-label="Lancer la recherche">
+                                    <i class="fas fa-search mr-2"></i>Rechercher
+                                </button>
+                            </form>
 
                             {{-- Suggestions d'autocomplétion universelles --}}
                             @if($showSuggestions && count($suggestions) > 0)
@@ -92,11 +99,11 @@
                     </div>
                 </div>
 
-                {{-- Info sur la recherche automatique --}}
+                {{-- Info sur la recherche manuelle --}}
                 <div class="mt-3 text-center">
                     <p class="text-sm text-gray-500 dark:text-gray-400">
-                        <i class="fas fa-magic mr-1"></i>
-                        La recherche se fait automatiquement pendant que vous tapez
+                        <i class="fas fa-mouse-pointer mr-1"></i>
+                        Cliquez sur <span class="font-semibold text-blue-600 dark:text-blue-400">Rechercher</span> pour lancer la recherche
                     </p>
                 </div>
             </div>

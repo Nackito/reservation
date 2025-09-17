@@ -13,6 +13,13 @@ use Illuminate\Support\Facades\Auth;
 use Jantinnerezo\LivewireAlert\Facades\LivewireAlert;
 use Carbon\Carbon;
 
+/**
+ * Récupère le taux de change depuis une API externe (exchangerate-api.com)
+ * @param string $from Devise source (ex: 'XOF')
+ * @param string $to Devise cible (ex: 'EUR')
+ * @return float|null
+ */
+
 class BookingManager extends Component
 {
     // Règles de validation Livewire
@@ -55,6 +62,47 @@ class BookingManager extends Component
         'Canal+' => 'fa-tv',
         'Netflix' => 'fa-tv',
     ];
+    public function getExchangeRate($from, $to)
+    {
+        if ($from === $to) return 1.0;
+        // Remplacez par votre clé API réelle
+        $apiKey = config('services.exchangerate.key', 'YOUR_API_KEY');
+        $url = "https://v6.exchangerate-api.com/v6/{$apiKey}/pair/{$from}/{$to}";
+        try {
+            $response = @file_get_contents($url);
+            if ($response === false) return null;
+            $data = json_decode($response, true);
+            if (isset($data['conversion_rate'])) {
+                return (float) $data['conversion_rate'];
+            }
+        } catch (\Exception $e) {
+            // Log::error($e->getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * Retourne le prix converti selon la devise de l'utilisateur connecté
+     * @param float $amount Montant en XOF (devise de base)
+     * @return array ['amount' => float, 'currency' => string]
+     */
+    public function getConvertedPrice($amount)
+    {
+        $user = Auth::user();
+        $userCurrency = $user && $user->currency ? $user->currency : 'XOF';
+        if ($userCurrency === 'XOF') {
+            return ['amount' => $amount, 'currency' => 'XOF'];
+        }
+        $rate = $this->getExchangeRate('XOF', $userCurrency);
+        if ($rate) {
+            return [
+                'amount' => round($amount * $rate, 2),
+                'currency' => $userCurrency
+            ];
+        }
+        // Fallback : retourne le montant d'origine
+        return ['amount' => $amount, 'currency' => 'XOF'];
+    }
 
     // The following code should be moved to a lifecycle method such as mount() or a custom method.
     // Example: Move initialization logic to mount()
@@ -135,8 +183,14 @@ class BookingManager extends Component
         $checkOut = strtotime($this->checkOutDate);
         $days = ($checkOut - $checkIn) / 86400; // 86400 seconds in a day
         $this->totalPrice = $days * $property->price_per_night;
-        // Plus d'alerte ni d'affichage du prix ici
+        // Conversion pour affichage (facultatif, à utiliser dans la vue)
+        $converted = $this->getConvertedPrice($this->totalPrice);
+        $this->convertedPrice = $converted['amount'];
+        $this->convertedCurrency = $converted['currency'];
     }
+    // Ajoute ces propriétés publiques pour l'affichage dans la vue
+    public $convertedPrice;
+    public $convertedCurrency;
 
 
     public function addBooking()

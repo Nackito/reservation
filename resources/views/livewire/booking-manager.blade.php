@@ -271,7 +271,13 @@
                         @endforelse
                     </ul>
                     <div class="p-4">
-                        <p class="text-gray-600 dark:text-gray-200 text-right font-bold mt-5">{{ $property->price_per_night ?? 'Prix non disponible' }} FrCFA par nuit</p>
+                        <p class="text-gray-600 dark:text-gray-200 text-right font-bold mt-5">
+                            @if(isset($convertedPrice) && isset($convertedCurrency))
+                            {{ number_format($convertedPrice, 2) }} {{ $convertedCurrency }} par nuit
+                            @else
+                            {{ $property->price_per_night ?? 'Prix non disponible' }} FrCFA par nuit
+                            @endif
+                        </p>
                         <div class="mt-4">
                             <a href="#Reservation" class="border border-blue-500 bg-white-500 text-blue-500 text-center py-2 px-4 rounded block w-full">Réserver cette résidence</a>
                         </div>
@@ -306,7 +312,13 @@
             <div class="prose dark:prose-invert max-w-none text-gray-800 dark:text-gray-100 mt-5">
                 {!! $property->description ?? 'Description non disponible' !!}
             </div>
-            <p id="pricing" class="text-gray-600 dark:text-gray-200 mt-5">Vous pouvez disposez de ce logement à <span class="text-xl font-bold"> {{ $property->price_per_night }} FrCFA par nuit</span></p>
+            <p id="pricing" class="text-gray-600 dark:text-gray-200 mt-5">
+                @if(isset($convertedPrice) && isset($convertedCurrency))
+                Vous pouvez disposez de ce logement à <span class="text-xl font-bold">{{ number_format($convertedPrice, 2) }} {{ $convertedCurrency }} par nuit</span>
+                @else
+                Vous pouvez disposez de ce logement à <span class="text-xl font-bold">{{ $property->price_per_night }} FrCFA par nuit</span>
+                @endif
+            </p>
         </div>
         <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mt-8 mb-4 pl-4">Emplacement de l'établissement</h2>
         <div id="map"

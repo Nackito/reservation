@@ -29,7 +29,15 @@
             <div class="flex flex-col justify-between p-3 flex-1">
                 <h5 class="text-base font-bold text-gray-800 dark:text-gray-100">{{ $booking->property->name ?? 'Nom non disponible' }}</h5>
                 <p class="text-gray-700 dark:text-gray-300 text-sm">{{ $booking->start_date }} - {{ $booking->end_date }}</p>
-                <p class="text-gray-500 dark:text-gray-200 text-xs">{{ $booking->total_price }} FrCFA</p>
+                @php
+                $user = auth()->user();
+                $userCurrency = $user && $user->currency ? $user->currency : 'XOF';
+                $rate = app('App\\Livewire\\BookingManager')->getExchangeRate('XOF', $userCurrency);
+                $converted = $rate ? round($booking->total_price * $rate, 2) : $booking->total_price;
+                @endphp
+                <p class="text-gray-500 dark:text-gray-200 text-xs">
+                    {{ number_format($converted, 2) }} {{ $userCurrency }}
+                </p>
                 <p class="text-gray-400 dark:text-gray-400 text-xs">Soumis le : {{ $booking->created_at }}</p>
                 <div class="mt-2 flex justify-between">
                     @php $userReview = $booking->property->reviews->first(); @endphp

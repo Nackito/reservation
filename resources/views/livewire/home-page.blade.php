@@ -584,9 +584,15 @@
 
                                 {{-- Ligne de bas : prix et bouton de réservation --}}
                                 <div class="flex justify-between items-center">
-                                    {{-- Prix par nuit --}}
+                                    {{-- Prix par nuit (converti) --}}
+                                    @php
+                                    $user = auth()->user();
+                                    $userCurrency = $user && $user->currency ? $user->currency : 'XOF';
+                                    $rate = app('App\\Livewire\\BookingManager')->getExchangeRate('XOF', $userCurrency);
+                                    $converted = $rate ? round($property->price_per_night * $rate, 2) : $property->price_per_night;
+                                    @endphp
                                     <span class="text-lg font-bold text-blue-600">
-                                        {{ $property->price_per_night ?? 'Prix non disponible' }} FrCFA/nuit
+                                        {{ number_format($converted, 2) }} {{ $userCurrency }}/nuit
                                     </span>
                                 </div>
                             </div>
@@ -1007,8 +1013,14 @@
                             {{-- Note moyenne, prix et bouton de réservation --}}
                             <div class="flex justify-between items-center mt-4">
 
+                                @php
+                                $user = auth()->user();
+                                $userCurrency = $user && $user->currency ? $user->currency : 'XOF';
+                                $rate = app('App\\Livewire\\BookingManager')->getExchangeRate('XOF', $userCurrency);
+                                $converted = $rate ? round($property->price_per_night * $rate, 2) : $property->price_per_night;
+                                @endphp
                                 <span class="text-lg font-bold text-blue-600">
-                                    {{ $property->price_per_night ?? 'Prix non disponible' }} FrCFA/nuit
+                                    {{ number_format($converted, 2) }} {{ $userCurrency }}/nuit
                                 </span>
                                 <a href="{{ route('booking-manager', ['propertyId' => $property->id]) }}"
                                     class="inline-flex items-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 ml-2">

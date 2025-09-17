@@ -9,7 +9,14 @@
       <img src="{{ $wishlist->property->images->first() ? asset('storage/' . $wishlist->property->images->first()->image_path) : 'https://via.placeholder.com/300x200' }}" alt="Image de la propriété" class="w-full h-48 object-cover rounded mb-4 bg-gray-100 dark:bg-gray-700">
       <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-2 group-hover:text-pink-600 dark:group-hover:text-pink-400">{{ $wishlist->property->name }}</h2>
       <p class="text-gray-600 dark:text-gray-300 mb-2">{{ $wishlist->property->city }}, {{ $wishlist->property->municipality }}</p>
-      <p class="text-gray-700 dark:text-gray-200 mb-4">{{ Str::limit($wishlist->property->description, 80) }}</p>
+      <p class="text-gray-700 dark:text-gray-200 mb-2">{{ Str::limit($wishlist->property->description, 80) }}</p>
+      @php
+      $user = auth()->user();
+      $userCurrency = $user && $user->currency ? $user->currency : 'XOF';
+      $rate = app('App\\Livewire\\BookingManager')->getExchangeRate('XOF', $userCurrency);
+      $converted = $rate ? round($wishlist->property->price_per_night * $rate, 2) : $wishlist->property->price_per_night;
+      @endphp
+      <p class="text-blue-600 dark:text-blue-300 font-bold mb-4">{{ number_format($converted, 2) }} {{ $userCurrency }} / nuit</p>
       <button wire:click.stop="removeFromWishlist({{ $wishlist->id }})" class="mt-2 px-3 py-2 bg-pink-100 dark:bg-pink-900 hover:bg-pink-200 dark:hover:bg-pink-800 text-pink-600 dark:text-pink-200 rounded shadow flex items-center gap-2 self-end" title="Retirer de la liste de souhaits">
         <i class="fas fa-heart-broken"></i> Retirer
       </button>

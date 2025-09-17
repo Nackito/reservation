@@ -145,21 +145,25 @@
                         </div>
 
                         {{-- Filtre prix --}}
+                        @php
+                        $user = auth()->user();
+                        $userCurrency = $user && $user->currency ? $user->currency : 'XOF';
+                        @endphp
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">
-                                <span class="font-bold mr-1">FrCFA</span>Prix par nuit
+                                <span class="font-bold mr-1">{{ $userCurrency }}</span>Prix par nuit
                             </label>
                             <div class="grid grid-cols-2 gap-2">
                                 <input
                                     type="number"
                                     wire:model.live="minPrice"
-                                    placeholder="Min"
+                                    placeholder="Min ({{ $userCurrency }})"
                                     min="0"
                                     class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900">
                                 <input
                                     type="number"
                                     wire:model.live="maxPrice"
-                                    placeholder="Max"
+                                    placeholder="Max ({{ $userCurrency }})"
                                     min="0"
                                     class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900">
                             </div>
@@ -372,15 +376,19 @@
                             </div>
 
                             {{-- Filtre prix minimum --}}
+                            @php
+                            $user = auth()->user();
+                            $userCurrency = $user && $user->currency ? $user->currency : 'XOF';
+                            @endphp
                             <div>
                                 <label for="minPriceMobile" class="block text-sm font-medium text-gray-700 mb-2">
-                                    <span class="font-bold mr-1">FrCFA</span>Prix min./nuit
+                                    <span class="font-bold mr-1">{{ $userCurrency }}</span>Prix min./nuit
                                 </label>
                                 <input
                                     type="number"
                                     id="minPriceMobile"
                                     wire:model.live="minPrice"
-                                    placeholder="Prix minimum"
+                                    placeholder="Prix minimum ({{ $userCurrency }})"
                                     min="0"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900">
                             </div>
@@ -388,13 +396,13 @@
                             {{-- Filtre prix maximum --}}
                             <div>
                                 <label for="maxPriceMobile" class="block text-sm font-medium text-gray-700 mb-2">
-                                    <span class="font-bold mr-1">FrCFA</span>Prix max./nuit
+                                    <span class="font-bold mr-1">{{ $userCurrency }}</span>Prix max./nuit
                                 </label>
                                 <input
                                     type="number"
                                     id="maxPriceMobile"
                                     wire:model.live="maxPrice"
-                                    placeholder="Prix maximum"
+                                    placeholder="Prix maximum ({{ $userCurrency }})"
                                     min="0"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900">
                             </div>

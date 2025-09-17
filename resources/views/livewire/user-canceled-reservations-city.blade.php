@@ -23,7 +23,13 @@
         <div>
           <div class="font-bold text-lg">{{ $booking->property->name }}</div>
           <div class="text-gray-600 text-sm">{{ $booking->start_date }} - {{ $booking->end_date }}</div>
-          <div class="text-gray-800 text-lg">{{ $booking->total_price }} FrCFA</div>
+          @php
+          $user = auth()->user();
+          $userCurrency = $user && $user->currency ? $user->currency : 'XOF';
+          $rate = app('App\\Livewire\\BookingManager')->getExchangeRate('XOF', $userCurrency);
+          $converted = $rate ? round($booking->total_price * $rate, 2) : $booking->total_price;
+          @endphp
+          <div class="text-gray-800 text-lg">{{ number_format($converted, 2) }} {{ $userCurrency }}</div>
         </div>
       </div>
       <div class="flex items-center space-x-1">

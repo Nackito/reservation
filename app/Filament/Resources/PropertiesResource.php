@@ -10,6 +10,8 @@ use Filament\Tables\Table;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Illuminate\Database\Eloquent\Builder;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\FileUpload;
 use Illuminate\Support\Facades\Auth;
 use Filament\Support\Enums\IconName;
 use Filament\Actions\EditAction;
@@ -37,7 +39,7 @@ class PropertiesResource extends Resource
             Section::make('Informations principales')
                 ->inlineLabel()
                 ->schema([
-                    \Filament\Forms\Components\TextInput::make('name')
+                    TextInput::make('name')
                         ->label('Nom')
                         ->required()
                         ->reactive()
@@ -45,7 +47,7 @@ class PropertiesResource extends Resource
                         ->afterStateUpdated(function ($state, callable $set) {
                             $set('slug', Str::slug($state));
                         }),
-                    \Filament\Forms\Components\TextInput::make('slug')
+                    TextInput::make('slug')
                         ->label('Slug')
                         ->required()
                         ->readOnly(),
@@ -97,15 +99,15 @@ class PropertiesResource extends Resource
                         ])
                         ->searchable()
                         ->visible(fn($get) => $get('city') === 'Abidjan'),
-                    \Filament\Forms\Components\TextInput::make('district')->label('Quartier'),
-                    \Filament\Forms\Components\TextInput::make('longitude')->label('Longitude'),
-                    \Filament\Forms\Components\TextInput::make('latitude')->label('Latitude'),
+                    TextInput::make('district')->label('Quartier'),
+                    TextInput::make('longitude')->label('Longitude'),
+                    TextInput::make('latitude')->label('Latitude'),
                 ])->columns(2),
             Section::make('Détails')
                 ->inlineLabel()
                 ->schema([
-                    \Filament\Forms\Components\TextInput::make('price_per_night')->label('Prix par nuit')->numeric(),
-                    \Filament\Forms\Components\TextInput::make('number_of_rooms')->label('Nombre de pièces')->numeric(),
+                    TextInput::make('price_per_night')->label('Prix par nuit')->numeric(),
+                    TextInput::make('number_of_rooms')->label('Nombre de pièces')->numeric(),
                 ])->columns(2),
             Section::make('Statut & Catégorie')
                 ->inlineLabel()
@@ -138,22 +140,16 @@ class PropertiesResource extends Resource
                         ])
                         ->visible(fn($get) => optional(\App\Models\Category::find($get('category_id')))?->name === 'Résidence meublée'),
                 ])->columns(2),
-            Section::make('Dates système')
-                ->inlineLabel()
-                ->schema([
-                    DatePicker::make('created_at')->label('Créé le')->disabled()->displayFormat('d/m/Y H:i')->withoutSeconds(),
-                    DatePicker::make('updated_at')->label('Modifié le')->disabled()->displayFormat('d/m/Y H:i')->withoutSeconds(),
-                ])->columns(2),
             Section::make('Images')
                 ->inlineLabel()
                 ->schema([
-                    \Filament\Forms\Components\FileUpload::make('images')
+                    FileUpload::make('images')
                         ->label('Images')
                         ->image()
                         ->multiple()
-                        ->directory('properties/images')
+                        ->directory('properties')
                         ->disk('public')
-                        ->visibility('public')
+                        ->preserveFilenames()
                         ->imageEditor()
                         ->openable()
                         ->downloadable(),

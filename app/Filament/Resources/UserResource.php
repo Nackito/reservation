@@ -37,7 +37,10 @@ class UserResource extends Resource
             ->components([
                 TextInput::make('name')->required(),
                 TextInput::make('firstname')->required(),
-                TextInput::make('email')->email()->required(),
+                TextInput::make('email')
+                    ->email()
+                    ->unique(ignoreRecord: true)
+                    ->required(),
                 Forms\Components\Select::make('country_code')
                     ->label('Code pays')
                     ->options([

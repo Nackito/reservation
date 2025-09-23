@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\User\Schemas\UserForm;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Section;
 
 use Filament\Support\Enums\IconName;
 
@@ -35,9 +36,26 @@ class UserResource extends Resource
         return $schema
             ->components([
                 TextInput::make('name')->required(),
+                TextInput::make('firstname')->required(),
                 TextInput::make('email')->email()->required(),
+                Forms\Components\Select::make('country_code')
+                    ->label('Code pays')
+                    ->options([
+                        '+225' => '+225 (Côte d\'Ivoire)',
+                        '+33' => '+33 (France)',
+                        '+221' => '+221 (Sénégal)',
+                        '+226' => '+226 (Burkina Faso)',
+                        '+229' => '+229 (Bénin)',
+                        '+1' => '+1 (USA/Canada)',
+                        // Ajoute d'autres si besoin
+                    ])
+                    ->searchable()
+                    ->required(),
+                TextInput::make('phone')->tel()->label('Téléphone')->required(),
+                TextInput::make('password')->password()->required()->minLength(8)->maxLength(255),
                 // ...
-            ]);
+            ])
+            ->columns(2);
     }
 
     public static function table(Table $table): Table
@@ -107,6 +125,6 @@ class UserResource extends Resource
     // Désactive la navigation pour cette ressource (Filament 4)
     public static function shouldRegisterNavigation(): bool
     {
-        return false;
+        return true;
     }
 }

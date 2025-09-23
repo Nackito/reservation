@@ -14,4 +14,9 @@ class Chat extends Page
     {
         return false;
     }*/
+    // Désactive la navigation pour cette ressource (Filament 4)
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
+    }
 }

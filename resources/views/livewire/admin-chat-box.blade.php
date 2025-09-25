@@ -41,6 +41,14 @@
         </div>
         @endif
 
+        @if ($firstUnreadMessageId && $unreadCount > 0 && $message->id === $firstUnreadMessageId)
+        <div class="flex items-center justify-center my-2">
+          <span class="px-3 py-1 text-[11px] rounded-full bg-blue-100 text-blue-700 ring-1 ring-inset ring-blue-200">
+            {{ $unreadCount }} {{ $unreadCount > 1 ? 'messages non lus' : 'message non lu' }}
+          </span>
+        </div>
+        @endif
+
         <div class="flex {{ $isMine ? 'justify-end' : 'justify-start' }}">
           <div class="max-w-[70%]">
             <div class="px-4 py-2 rounded-2xl shadow {{ $isMine ? 'bg-blue-600 text-white rounded-br-sm' : 'bg-white text-gray-800 border rounded-bl-sm' }}">
@@ -49,6 +57,9 @@
             <div class="text-[11px] text-gray-400 mt-1 {{ $isMine ? 'text-right' : 'text-left' }}">
               {{ $message->created_at ? $message->created_at->format('H:i') : '' }}
             </div>
+            @if ($isMine && $lastOutgoingSeenMessageId && $message->id === $lastOutgoingSeenMessageId)
+            <div class="text-[11px] text-gray-400 mt-1 text-right">Vu • {{ $lastOutgoingSeenAt }}</div>
+            @endif
           </div>
         </div>
         @empty
@@ -198,3 +209,5 @@
       });
     });
   </script>
+
+  <!-- EOF -->

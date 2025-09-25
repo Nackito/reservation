@@ -20,68 +20,20 @@ class AdminChatBox extends Component
   public $messages;
   public $loginID;
   public $lastSeen = [];
+  // Métadonnées pour l'affichage: barre non-lus et indicateur "Vu"
+  public $firstUnreadMessageId = null; // id du premier message entrant non lu
+  public $unreadCount = 0; // nombre de messages entrants non lus
+  public $lastOutgoingSeenMessageId = null; // id du dernier message sortant considéré "vu"
+  public $lastOutgoingSeenAt = null; // heure de "vu" (string HH:mm)
 
   public function mount()
   {
-    // Charger tous les utilisateurs sauf l'admin sous forme d'array sérialisable
-    $userItems = User::whereNot('id', Auth::id())
-      ->latest()
-      ->get()
-      ->map(function (User $u) {
-        // Dernier message de la discussion directe
-        $last = Message::query()
-          ->where(function ($q) use ($u) {
-            $q->where('sender_id', Auth::id())->where('receiver_id', $u->id);
-          })
-          ->orWhere(function ($q) use ($u) {
-            $q->where('sender_id', $u->id)->where('receiver_id', Auth::id());
-          })
-          ->latest('created_at')
-          ->first();
-
-        $preview = $last?->content ? \Illuminate\Support\Str::limit($last->content, 55) : '';
-        $lastAt = $last?->created_at ? $last->created_at->locale('fr')->isoFormat(self::DATE_BADGE_FORMAT) : '';
-        $lastAtSort = $last?->created_at ? $last->created_at->getTimestamp() : 0;
-
-        return [
-          'id' => (string) $u->id,
-          'name' => $u->name,
-          'email' => $u->email,
-          'last_preview' => $preview,
-          'last_at' => $lastAt,
-          'last_at_sort' => $lastAtSort,
-          'last_sender_id' => $last?->sender_id,
-        ];
-      });
-
-    // Ajouter tous les canaux admin groupés (un par réservation)
-    $adminChannels = \App\Models\Conversation::where('is_admin_channel', true)
-      ->orderByDesc('created_at')->get();
-    $adminUsers = collect();
-    foreach ($adminChannels as $adminChannel) {
-      $booking = $adminChannel->booking_id ? \App\Models\Booking::find($adminChannel->booking_id) : null;
-      $propertyName = $booking && $booking->property ? $booking->property->name : 'Canal Admin';
-      $last = Message::where('conversation_id', $adminChannel->id)->latest('created_at')->first();
-      $preview = $last?->content ? \Illuminate\Support\Str::limit($last->content, 55) : '';
-      $lastAt = $last?->created_at ? $last->created_at->locale('fr')->isoFormat(self::DATE_BADGE_FORMAT) : '';
-      $lastAtSort = $last?->created_at ? $last->created_at->getTimestamp() : 0;
-      $adminUsers->push([
-        'id' => 'admin_channel_' . $adminChannel->id,
-        'name' => $propertyName,
-        'email' => 'Canal de réservation',
-        'conversation_id' => $adminChannel->id,
-        'last_preview' => $preview,
-        'last_at' => $lastAt,
-        'last_at_sort' => $lastAtSort,
-        'last_sender_id' => $last?->sender_id,
-      ]);
-    }
-    // Fusionner les canaux admin groupés et les utilisateurs privés
-    $this->users = $adminUsers->concat($userItems)->values()->all();
-    // Trier par date du dernier message décroissante
-    usort($this->users, function ($a, $b) {
-      return ($b['last_at_sort'] ?? 0) <=> ($a['last_at_sort'] ?? 0);
-    });
+    // Charger les items utilisateurs privés et canaux admin
+    $userItems = $this->buildPrivateUserItems();
+    $adminUsers = $this->buildAdminChannelItems();
+    // Fusionner et trier par date du dernier message décroissante
+    $this->users = array_values(array_merge($adminUsers, $userItems));
+    $this->sortUsersByLastAt();
 
     // Ne pas pré-sélectionner: on attend le clic utilisateur
     $this->selectedUser = null;
@@ -90,6 +42,12 @@ class AdminChatBox extends Component
     if ($this->selectedUser) {
       $this->lastSeen[$this->selectedUser['id']] = time();
     }
+
+    // Initialiser les métadonnées d'affichage
+    $this->firstUnreadMessageId = null;
+    $this->unreadCount = 0;
+    $this->lastOutgoingSeenMessageId = null;
+    $this->lastOutgoingSeenAt = null;
 
     //$first = $this->users->first();
     //$this->selectedUserId = $first?->id;
@@ -140,7 +98,10 @@ class AdminChatBox extends Component
         ];
       }
     }
+    // Conserver l'ancien lastSeen pour calculer la barre des non-lus
+    $previousSeen = $this->lastSeen[(string)$id] ?? 0;
     $this->loadMessages();
+    $this->computeConversationMeta($previousSeen);
     // Passer en mode chat et marquer comme vu maintenant
     $this->showChat = true;
     $this->lastSeen[(string)$id] = time();
@@ -217,6 +178,10 @@ class AdminChatBox extends Component
       if (($message['conversation_id'] ?? null) == ($this->selectedUser['conversation_id'] ?? null)) {
         $messageObj = Message::find($message['id']);
         $this->messages->push($messageObj);
+        // Conversation ouverte: mettre à jour le vu immédiat (pas de barre non-lus live)
+        $this->lastSeen[$this->selectedUser['id']] = max($this->lastSeen[$this->selectedUser['id']] ?? 0, $messageObj->created_at?->getTimestamp() ?? time());
+        // Recalculer uniquement l'indicateur "Vu" (les non-lus restent à 0 quand on est dans la vue)
+        $this->computeConversationMeta($this->lastSeen[$this->selectedUser['id']] ?? 0);
       }
       // Mettre à jour la vignette de la conversation correspondante
       if (isset($message['conversation_id'])) {
@@ -229,6 +194,10 @@ class AdminChatBox extends Component
     if ((string) ($message['sender_id'] ?? '') === (string) $this->selectedUser['id']) {
       $messageObj = Message::find($message['id']);
       $this->messages->push($messageObj);
+      // Conversation ouverte: marquer comme vu maintenant
+      $this->lastSeen[$this->selectedUser['id']] = max($this->lastSeen[$this->selectedUser['id']] ?? 0, $messageObj->created_at?->getTimestamp() ?? time());
+      // Recalculer uniquement l'indicateur "Vu"
+      $this->computeConversationMeta($this->lastSeen[$this->selectedUser['id']] ?? 0);
     }
     // Bump aussi la conversation (pair = sender ou receiver différent de moi)
     $peerId = (string) (($message['sender_id'] ?? null) == Auth::id() ? ($message['receiver_id'] ?? '') : ($message['sender_id'] ?? ''));
@@ -251,9 +220,142 @@ class AdminChatBox extends Component
       }
     }
     unset($u);
+    $this->sortUsersByLastAt();
+  }
+
+  /**
+   * Calcule les métadonnées d'affichage pour la conversation sélectionnée:
+   * - premier message entrant non lu et son compteur
+   * - dernier message sortant considéré comme "vu" (heuristique: réponse reçue après)
+   * @param int|null $previousSeenTs timestamp lastSeen avant ouverture (si null, utilise l'état courant)
+   */
+  private function computeConversationMeta(?int $previousSeenTs = null): void
+  {
+    // Reset meta
+    $this->firstUnreadMessageId = null;
+    $this->unreadCount = 0;
+    $this->lastOutgoingSeenMessageId = null;
+    $this->lastOutgoingSeenAt = null;
+
+    if (!$this->selectedUser) {
+      return;
+    }
+
+    $seenThreshold = $previousSeenTs ?? ($this->lastSeen[$this->selectedUser['id']] ?? 0);
+    $isAdminChannel = str_starts_with($this->selectedUser['id'], 'admin_channel_');
+    $me = Auth::id();
+
+    // Deux passes indépendantes pour réduire la complexité
+    $this->computeUnreadMetaForMessages($this->messages, $seenThreshold, $me);
+    $this->computeSeenMetaForMessages($this->messages, $isAdminChannel, $me);
+  }
+
+  // --- Helpers d'extraction pour réduire la complexité ---
+
+  private function buildPrivateUserItems(): array
+  {
+    return User::whereNot('id', Auth::id())
+      ->latest()
+      ->get()
+      ->map(function (User $u) {
+        $last = Message::query()
+          ->where(function ($q) use ($u) {
+            $q->where('sender_id', Auth::id())->where('receiver_id', $u->id);
+          })
+          ->orWhere(function ($q) use ($u) {
+            $q->where('sender_id', $u->id)->where('receiver_id', Auth::id());
+          })
+          ->latest('created_at')
+          ->first();
+
+        $preview = $last?->content ? \Illuminate\Support\Str::limit($last->content, 55) : '';
+        $lastAt = $last?->created_at ? $last->created_at->locale('fr')->isoFormat(self::DATE_BADGE_FORMAT) : '';
+        $lastAtSort = $last?->created_at ? $last->created_at->getTimestamp() : 0;
+
+        return [
+          'id' => (string) $u->id,
+          'name' => $u->name,
+          'email' => $u->email,
+          'last_preview' => $preview,
+          'last_at' => $lastAt,
+          'last_at_sort' => $lastAtSort,
+          'last_sender_id' => $last?->sender_id,
+        ];
+      })
+      ->values()
+      ->all();
+  }
+
+  private function buildAdminChannelItems(): array
+  {
+    $adminChannels = \App\Models\Conversation::where('is_admin_channel', true)
+      ->orderByDesc('created_at')
+      ->get();
+
+    $items = [];
+    foreach ($adminChannels as $adminChannel) {
+      $booking = $adminChannel->booking_id ? \App\Models\Booking::find($adminChannel->booking_id) : null;
+      $propertyName = $booking && $booking->property ? $booking->property->name : 'Canal Admin';
+      $last = Message::where('conversation_id', $adminChannel->id)->latest('created_at')->first();
+      $preview = $last?->content ? \Illuminate\Support\Str::limit($last->content, 55) : '';
+      $lastAt = $last?->created_at ? $last->created_at->locale('fr')->isoFormat(self::DATE_BADGE_FORMAT) : '';
+      $lastAtSort = $last?->created_at ? $last->created_at->getTimestamp() : 0;
+      $items[] = [
+        'id' => 'admin_channel_' . $adminChannel->id,
+        'name' => $propertyName,
+        'email' => 'Canal de réservation',
+        'conversation_id' => $adminChannel->id,
+        'last_preview' => $preview,
+        'last_at' => $lastAt,
+        'last_at_sort' => $lastAtSort,
+        'last_sender_id' => $last?->sender_id,
+      ];
+    }
+    return $items;
+  }
+
+  private function sortUsersByLastAt(): void
+  {
     usort($this->users, function ($a, $b) {
       return ($b['last_at_sort'] ?? 0) <=> ($a['last_at_sort'] ?? 0);
     });
+  }
+
+  private function computeUnreadMetaForMessages($messages, int $seenThreshold, int $me): void
+  {
+    $this->firstUnreadMessageId = null;
+    $this->unreadCount = 0;
+    foreach ($messages as $m) {
+      $ts = $m->created_at ? $m->created_at->getTimestamp() : 0;
+      $isMine = (int)$m->sender_id === (int)$me;
+      if (!$isMine && $ts > $seenThreshold) {
+        if ($this->firstUnreadMessageId === null) {
+          $this->firstUnreadMessageId = $m->id;
+        }
+        $this->unreadCount++;
+      }
+    }
+  }
+
+  private function computeSeenMetaForMessages($messages, bool $isAdminChannel, int $me): void
+  {
+    $this->lastOutgoingSeenMessageId = null;
+    $this->lastOutgoingSeenAt = null;
+    if ($isAdminChannel) {
+      return; // désactivé pour canaux admin
+    }
+    $lastMyMessage = null;
+    foreach ($messages as $m) {
+      $isMine = (int)$m->sender_id === (int)$me;
+      if ($isMine) {
+        $lastMyMessage = $m;
+      } else {
+        if ($lastMyMessage && ($m->created_at && $lastMyMessage->created_at && $m->created_at->gt($lastMyMessage->created_at))) {
+          $this->lastOutgoingSeenMessageId = $lastMyMessage->id;
+          $this->lastOutgoingSeenAt = $m->created_at->format('H:i');
+        }
+      }
+    }
   }
 
   public function render()

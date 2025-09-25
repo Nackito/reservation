@@ -14,6 +14,23 @@ class EditUser extends EditRecord
     {
         return [
             Actions\DeleteAction::make(),
+            Actions\Action::make('resend_verification_email')
+                ->label('Renvoyer l’email de vérification')
+                ->icon('heroicon-o-envelope')
+                ->visible(fn() => $this->record && !$this->record->hasVerifiedEmail())
+                ->action(function () {
+                    $this->record->sendEmailVerificationNotification();
+                    $this->notify('success', 'Email de vérification renvoyé à l’utilisateur.');
+                }),
         ];
+    }
+
+    protected function saved(): void
+    {
+        // Si l'email a changé et n'est pas vérifié, renvoyer la notification
+        if ($this->record && !$this->record->hasVerifiedEmail()) {
+            $this->record->sendEmailVerificationNotification();
+            $this->notify('success', 'Un email de vérification a été envoyé à l’utilisateur.');
+        }
     }
 }

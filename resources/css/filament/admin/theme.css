@@ -1,8 +1,8 @@
-/* Uniquement les utilitaires Tailwind pour tes classes perso dans le panel. */
+/* Uniquement les utilitaires Tailwind à compiler pour la page du chat */
 @tailwind utilities;
 
-/* Petits overrides en CSS pur */
-.fi-link,
-a {
+/* Scoper les overrides pour ne toucher que la page Conversations */
+.admin-chat .fi-link,
+.admin-chat a {
     cursor: pointer;
 }

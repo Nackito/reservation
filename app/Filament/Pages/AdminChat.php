@@ -9,10 +9,10 @@ use App\Models\Message;
 
 class AdminChat extends Page
 {
-  /*protected static ?string $navigationIcon = 'heroicon-o-chat-alt-2';
+  //protected static ?string $navigationIcon = 'heroicon-o-chat-alt-2';
   protected static ?string $navigationLabel = 'Conversations';
 
-  protected static string $view = 'filament.pages.admin-chat';
+  protected string $view = 'filament.pages.admin-chat';
 
   public static function canView(): bool
   {
@@ -61,5 +61,5 @@ class AdminChat extends Page
       $q->where('sender_id', $this->selectedUserId)
         ->where('receiver_id', $userId);
     })->orderBy('created_at')->get();
-  }*/
+  }
 }

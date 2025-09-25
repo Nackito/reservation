@@ -1,0 +1,8 @@
+/* Uniquement les utilitaires Tailwind pour tes classes perso dans le panel. */
+@tailwind utilities;
+
+/* Petits overrides en CSS pur */
+.fi-link,
+a {
+    cursor: pointer;
+}

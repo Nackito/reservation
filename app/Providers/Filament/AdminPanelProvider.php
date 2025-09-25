@@ -29,6 +29,12 @@ class AdminPanelProvider extends PanelProvider
             ->login()
             // Lien inverse sur la page de login Filament
             ->renderHook('panels::auth.login.form.after', fn() => view('partials.filament-login-back-link'))
+            // N'injecte le CSS du chat que sur la page Conversations
+            ->renderHook('panels::head.end', function () {
+                return request()->routeIs(\App\Filament\Pages\AdminChat::getRouteName())
+                    ? view('partials.filament-chat-css')
+                    : null;
+            })
             ->colors([
                 'primary' => Color::Amber,
                 'danger' => Color::Rose,

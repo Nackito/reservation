@@ -2,13 +2,5 @@
 @tailwind components;
 @tailwind utilities;
 
-@source "../views";
-
-@import "tailwindcss";
-
-/* Preline UI */
-@import "../../node_modules/preline/variants.css";
-@source "../../node_modules/preline/dist/*.js";
-
-/* Plugins */
-/* @plugin "@tailwindcss/forms"; */
+/* Optionnel: variantes Preline si nécessaires (laisser commenté si inutile) */
+/* @import "../../node_modules/preline/variants.css"; */

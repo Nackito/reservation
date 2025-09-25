@@ -4,6 +4,8 @@ module.exports = {
         "./resources/views/**/*.blade.php",
         "./resources/js/**/*.vue",
         "node_modules/preline/dist/*.js",
+        "./resources/css/filament/admin/theme.css",
+        "./vendor/filament/**/*.blade.php",
     ],
     darkMode: "class", // active le mode sombre via la classe .dark
     theme: {

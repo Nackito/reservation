@@ -50,16 +50,4 @@ class AdminChat extends Page
     // Logique pour supprimer un chat sélectionné
     // Exemple : Message::where('id', $this->selectedChatId)->delete();
   }
-
-  public function getMessagesProperty()
-  {
-    $userId = Auth::id();
-    return Message::where(function ($q) use ($userId) {
-      $q->where('sender_id', $userId)
-        ->where('receiver_id', $this->selectedUserId);
-    })->orWhere(function ($q) use ($userId) {
-      $q->where('sender_id', $this->selectedUserId)
-        ->where('receiver_id', $userId);
-    })->orderBy('created_at')->get();
-  }
 }

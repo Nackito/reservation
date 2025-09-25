@@ -5,24 +5,24 @@
       <div class="p-4 font-bold text-gray-700 border-b mt-4">Demandes de réservation</div>
       <div class="divide-y">
         @foreach ($users as $user)
-        @if (str_starts_with($user->id, 'admin_channel_'))
-        <div wire:click="selectUser('{{ $user->id }}')"
-          class="p-3 cursor-pointer hover:bg-blue-100 transition {{ $selectedUser->id == $user->id ? 'bg-blue-50 font-semibold' : '' }}">
-          <div class="text-gray-800">{{ $user->name }}</div>
-          <div class="text-xs text-gray-500">{{ $user->email }}</div>
-        </div>
+        @if (str_starts_with($user['id'], 'admin_channel_'))
+        <button type="button" wire:key="user-{{ $user['id'] }}" wire:click.prevent="selectUser('{{ $user['id'] }}')"
+          class="w-full text-left p-3 cursor-pointer hover:bg-blue-100 transition {{ (isset($selectedUser['id']) && $selectedUser['id'] === $user['id']) ? 'bg-blue-50 font-semibold' : '' }}">
+          <div class="text-gray-800">{{ $user['name'] }}</div>
+          <div class="text-xs text-gray-500">{{ $user['email'] }}</div>
+        </button>
         @endif
         @endforeach
       </div>
       <div class="p-4 font-bold text-gray-700 border-b">Discussions directes</div>
       <div class="divide-y">
         @foreach ($users as $user)
-        @if (!str_starts_with($user->id, 'admin_channel_'))
-        <div wire:click="selectUser('{{ $user->id }}')"
-          class="p-3 cursor-pointer hover:bg-blue-100 transition {{ $selectedUser->id == $user->id ? 'bg-blue-50 font-semibold' : '' }}">
-          <div class="text-gray-800">{{ $user->name }}</div>
-          <div class="text-xs text-gray-500">{{ $user->email }}</div>
-        </div>
+        @if (!str_starts_with($user['id'], 'admin_channel_'))
+        <button type="button" wire:key="user-{{ $user['id'] }}" wire:click.prevent="selectUser('{{ $user['id'] }}')"
+          class="w-full text-left p-3 cursor-pointer hover:bg-blue-100 transition {{ (isset($selectedUser['id']) && $selectedUser['id'] === $user['id']) ? 'bg-blue-50 font-semibold' : '' }}">
+          <div class="text-gray-800">{{ $user['name'] }}</div>
+          <div class="text-xs text-gray-500">{{ $user['email'] }}</div>
+        </button>
         @endif
         @endforeach
       </div>
@@ -33,8 +33,8 @@
 
       <!-- Chat Header -->
       <div class="p-4 border-b bg-gray-50">
-        <div class="text-lg font-semibold text-gray-800">{{ $selectedUser->name }}</div>
-        <div class="text-xs text-gray-500">{{ $selectedUser->email }}</div>
+        <div class="text-lg font-semibold text-gray-800">{{ data_get($selectedUser, 'name', '') }}</div>
+        <div class="text-xs text-gray-500">{{ data_get($selectedUser, 'email', '') }}</div>
       </div>
 
       <!-- Chat Messages -->
@@ -56,7 +56,7 @@
       <div id="typing-indicator" class="px-4 pb-1 text-xs text-gray-400 italic"></div>
 
       <!-- Chat Input -->
-      <form wire:submit="submit" class="p-4 border-t bg-white flex items-center gap-2">
+      <form wire:submit.prevent="submit" class="p-4 border-t bg-white flex items-center gap-2">
         <input
           wire:model.live="newMessage"
           type="text"
@@ -71,20 +71,24 @@
   </div>
 
   <script>
-    document.addEventListener('livewire:initialized', () => {
+    // Livewire v3: utiliser l'événement 'livewire:init'
+    document.addEventListener('livewire:init', () => {
       Livewire.on('userTyping', (event) => {
-        console.log(event);
-        window.Echo.private(`chat.${event.selectedUserID}`)
-          .whisper('typing', {
-            userID: event.userID,
-            userName: event.userName
-          });
+        if (window.Echo && typeof window.Echo.private === 'function') {
+          window.Echo.private(`chat.${event.selectedUserID}`)
+            .whisper('typing', {
+              userID: event.userID,
+              userName: event.userName
+            });
+        }
       });
 
-      window.Echo.private(`chat.{{ $loginID }}`)
-        .listenForWhisper('typing', (event) => {
-          var t = document.getElementById('typing-indicator');
-          t.innerText = `${event.userName} is typing...`;
-        });
+      if (window.Echo && typeof window.Echo.private === 'function') {
+        window.Echo.private(`chat.{{ $loginID }}`)
+          .listenForWhisper('typing', (event) => {
+            const t = document.getElementById('typing-indicator');
+            if (t) t.innerText = `${event.userName} is typing...`;
+          });
+      }
     });
   </script>

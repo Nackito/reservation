@@ -27,6 +27,8 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+            // Lien inverse sur la page de login Filament
+            ->renderHook('panels::auth.login.form.after', fn() => view('partials.filament-login-back-link'))
             ->colors([
                 'primary' => Color::Amber,
                 'danger' => Color::Rose,

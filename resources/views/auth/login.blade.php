@@ -21,6 +21,9 @@
                                 Inscrivez-vous ici
                             </a>
                         </p>
+                        <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                            <span>Si vous êtes employé, <a href="/admin/login" class="text-blue-600 decoration-2 hover:underline font-medium">cliquez ici</a> pour accéder à l'espace employé.</span>
+                        </p>
                     </div>
 
                     <hr class="my-5 border-slate-300">

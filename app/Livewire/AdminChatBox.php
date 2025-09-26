@@ -152,6 +152,8 @@ class AdminChatBox extends Component
     $this->lastSeen[(string)$id] = time();
     // Demander le focus sur l'input message côté navigateur
     $this->dispatch('focusMessageInput');
+    // Notifier la page Filament qu'une conversation est sélectionnée
+    $this->dispatch('adminChatSelected');
   }
 
   public $showChat = false;
@@ -160,6 +162,8 @@ class AdminChatBox extends Component
   {
     $this->showChat = false;
     session()->forget('admin_chat.selected');
+    // Notifier la page Filament qu'il n'y a plus de sélection
+    $this->dispatch('adminChatCleared');
   }
 
   public function submit()
@@ -301,6 +305,7 @@ class AdminChatBox extends Component
     $this->messages = collect();
     $this->showChat = false;
     session()->forget('admin_chat.selected');
+    $this->dispatch('adminChatCleared');
   }
 
   #[On('bulkDeleteConversations')]
@@ -342,6 +347,8 @@ class AdminChatBox extends Component
     }
 
     $this->users = $this->activeTab === 'active' ? $this->usersActive : $this->usersArchived;
+    // Après suppression multiple, on reste sur la liste
+    $this->dispatch('adminChatCleared');
   }
 
   private function bumpConversationMeta(string $id, Message $message): void

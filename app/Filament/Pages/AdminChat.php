@@ -10,12 +10,19 @@ use Filament\Pages\Page;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use App\Models\User;
+use Livewire\Attributes\On;
 
 class AdminChat extends Page
 {
   //protected static ?string $navigationIcon = 'heroicon-o-chat-alt-2';
   protected static ?string $navigationLabel = 'Conversations';
   protected string $view = 'filament.pages.admin-chat';
+  public bool $hasSelected = false;
+
+  public function mount(): void
+  {
+    $this->hasSelected = (bool) Session::get('admin_chat.selected');
+  }
 
   public static function canView(): bool
   {
@@ -56,23 +63,22 @@ class AdminChat extends Page
             ->to(\App\Livewire\AdminChatBox::class);
         }),
 
+      // Supprimer Chat: visible uniquement si une conversation est ouverte
       Action::make('delete')
         ->label('Supprimer Chat')
         ->icon('heroicon-o-trash')
-        ->action(function () {
-          // Si une conversation est sélectionnée (via session), suppression directe
-          $selected = Session::get('admin_chat.selected');
-          if ($selected) {
-            $this->dispatch('deleteCurrentConversation')->to(\App\Livewire\AdminChatBox::class);
-            return;
-          }
-          // Sinon, ouvre la modale de sélection multiple
-          $this->mountAction('deleteBulk');
-        }),
+        ->visible(fn() => $this->hasSelected)
+        ->requiresConfirmation()
+        ->modalHeading('Supprimer la conversation courante ?')
+        ->modalDescription('Cette action supprimera définitivement les messages de la conversation sélectionnée.')
+        ->modalSubmitActionLabel('Supprimer')
+        ->action(fn() => $this->dispatch('deleteCurrentConversation')->to(\App\Livewire\AdminChatBox::class)),
 
+      // Supprimer des conversations (sélection multiple): visible quand AUCUNE conversation n'est ouverte
       Action::make('deleteBulk')
         ->label('Supprimer des conversations')
         ->icon('heroicon-o-trash')
+        ->visible(fn() => ! $this->hasSelected)
         ->modalHeading('Supprimer des conversations')
         ->form([
           CheckboxList::make('conversation_ids')
@@ -176,5 +182,17 @@ class AdminChat extends Page
           }
         }),
     ];
+  }
+
+  #[On('adminChatSelected')]
+  public function onAdminChatSelected(): void
+  {
+    $this->hasSelected = true;
+  }
+
+  #[On('adminChatCleared')]
+  public function onAdminChatCleared(): void
+  {
+    $this->hasSelected = false;
   }
 }

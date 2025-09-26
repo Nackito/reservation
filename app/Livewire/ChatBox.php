@@ -8,6 +8,7 @@ use App\Models\Conversation;
 use App\Models\User;
 use App\Events\MessageSent;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class ChatBox extends Component
 {
@@ -97,6 +98,18 @@ class ChatBox extends Component
     $items = [];
     foreach ($channels as $channel) {
       $booking = $channel->booking_id ? \App\Models\Booking::find($channel->booking_id) : null;
+
+      // Masquer côté utilisateur les conversations de réservation 2 jours après la date de sortie
+      $expired = false;
+      if ($booking && $booking->end_date) {
+        $end = $booking->end_date instanceof \Carbon\Carbon ? $booking->end_date->copy() : \Carbon\Carbon::parse($booking->end_date);
+        $cutoff = $end->endOfDay()->addDays(2);
+        $expired = \Carbon\Carbon::now()->greaterThan($cutoff);
+      }
+      if ($expired) {
+        continue;
+      }
+
       $propertyName = $booking && $booking->property ? $booking->property->name : 'Canal Admin';
       $last = Message::where('conversation_id', $channel->id)->latest('created_at')->first();
       $preview = $last?->content ? \Illuminate\Support\Str::limit($last->content, 55) : '';

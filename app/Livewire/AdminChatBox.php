@@ -37,7 +37,7 @@ class AdminChatBox extends Component
     $userItems = $this->buildPrivateUserItems();
     $adminUsers = $this->buildAdminChannelItems();
 
-    // Partitionner canaux admin entre actifs et archivés (+2 jours après date de sortie)
+    // Partitionner canaux admin entre actifs et archivés
     $adminActive = [];
     $adminArchived = [];
     foreach ($adminUsers as $item) {
@@ -48,12 +48,24 @@ class AdminChatBox extends Component
       }
     }
 
+    // Marquer l'archivage des discussions directes si inactives depuis X jours
+    $directInactiveDays = (int) config('chat.archive.direct_inactive_days', 14);
+    $nowTs = Carbon::now()->getTimestamp();
+    $inactivityThreshold = $nowTs - ($directInactiveDays * 86400);
+    foreach ($userItems as &$ui) {
+      $lastTs = (int) ($ui['last_at_sort'] ?? 0);
+      $ui['archived'] = $lastTs > 0 ? ($lastTs < $inactivityThreshold) : true; // si jamais aucune activité, considérer archivé
+    }
+    unset($ui);
+
     // Actifs = canaux admin actifs + discussions directes
-    $this->usersActive = array_values(array_merge($adminActive, $userItems));
+    $activeDirects = array_values(array_filter($userItems, fn($u) => empty($u['archived'])));
+    $archivedDirects = array_values(array_filter($userItems, fn($u) => !empty($u['archived'])));
+    $this->usersActive = array_values(array_merge($adminActive, $activeDirects));
     $this->sortArrayByLastAt($this->usersActive);
 
-    // Archivés = uniquement canaux admin archivés
-    $this->usersArchived = array_values($adminArchived);
+    // Archivés = canaux admin archivés + discussions directes archivées
+    $this->usersArchived = array_values(array_merge($adminArchived, $archivedDirects));
     $this->sortArrayByLastAt($this->usersArchived);
 
     // Liste affichée selon l'onglet courant
@@ -354,11 +366,12 @@ class AdminChatBox extends Component
     foreach ($adminChannels as $adminChannel) {
       $booking = $adminChannel->booking_id ? \App\Models\Booking::find($adminChannel->booking_id) : null;
       $propertyName = $booking && $booking->property ? $booking->property->name : 'Canal Admin';
-      // Archiver 2 jours après la fin du séjour si on a une réservation liée
+      // Archiver N jours après la fin du séjour si on a une réservation liée
       $archived = false;
       if ($booking && !empty($booking->end_date)) {
         try {
-          $expiry = Carbon::parse($booking->end_date)->endOfDay()->addDays(2);
+          $grace = (int) config('chat.archive.booking_grace_days', 2);
+          $expiry = Carbon::parse($booking->end_date)->endOfDay()->addDays($grace);
           $archived = Carbon::now()->greaterThan($expiry);
         } catch (\Throwable $e) {
           $archived = false;

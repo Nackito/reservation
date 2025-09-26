@@ -173,6 +173,29 @@
           @endif
           @endforeach
         </div>
+        @else
+        <div class="p-4 text-xs uppercase tracking-wide text-gray-500">Discussions directes archivées</div>
+        <div class="divide-y">
+          @foreach ($users as $user)
+          @if (!str_starts_with($user['id'], 'admin_channel_'))
+          @php
+          $isActive = isset($selectedUser['id']) && $selectedUser['id'] === $user['id'];
+          $initial = trim($user['name']) !== '' ? strtoupper(mb_substr($user['name'], 0, 1)) : '?';
+          @endphp
+          <button type="button" wire:key="user-{{ $user['id'] }}" wire:click.prevent="selectUser('{{ $user['id'] }}')"
+            class="w-full text-left p-3 flex items-center gap-3 transition {{ $isActive ? 'bg-blue-50 ring-1 ring-inset ring-blue-200' : 'hover:bg-blue-50' }}">
+            <span class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-gray-900 text-white text-sm font-semibold shrink-0">{{ $initial }}</span>
+            <div class="flex-1 min-w-0 overflow-hidden">
+              <div class="flex items-baseline gap-2">
+                <span class="truncate min-w-0 text-gray-900 font-medium {{ $isActive ? 'font-semibold' : '' }}">{{ $user['name'] }}</span>
+                <span class="ml-auto shrink-0 whitespace-nowrap text-[11px] text-gray-500">{{ $user['last_at'] ?? '' }}</span>
+              </div>
+              <div class="truncate text-gray-500 text-xs">{{ $user['last_preview'] ?? $user['email'] }}</div>
+            </div>
+          </button>
+          @endif
+          @endforeach
+        </div>
         @endif
       </div>
     </div>

@@ -12,6 +12,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Jantinnerezo\LivewireAlert\Facades\LivewireAlert;
 use Carbon\Carbon;
+use App\Events\MessageSent;
 
 /**
  * Récupère le taux de change depuis une API externe (exchangerate-api.com)
@@ -256,12 +257,48 @@ class BookingManager extends Component
         ]);
 
         $userName = Auth::user()->name ?? 'Utilisateur';
-        Message::create([
+        $userMessage = Message::create([
             'conversation_id' => $adminGroupConversation->id,
             'sender_id' => Auth::id(),
             'receiver_id' => 5, // ID d'un admin pour la contrainte SQL
             'content' => 'Bonjour, je suis Mr/Mme ' . $userName . ', je souhaite réserver ' . ($property ? $property->name : '') . ' du ' . $this->checkInDate . ' au ' . $this->checkOutDate . '. Merci de confirmer la disponibilité.',
         ]);
+
+        // Diffuser le message initial pour mise à jour temps réel côté admin
+        try {
+            broadcast(new MessageSent($userMessage));
+        } catch (\Throwable $e) {
+            // Silencieux en cas d'absence de broadcasting configuré
+        }
+
+        // Réponse automatique de l'admin dans le même canal (anti-doublon simple)
+        try {
+            $alreadyAutoReplied = Message::where('conversation_id', $adminGroupConversation->id)
+                ->where('sender_id', 5)
+                ->where('created_at', '>=', now()->subMinutes(10))
+                ->exists();
+
+            if (!$alreadyAutoReplied) {
+                $firstName = trim(Str::of($userName)->before(' '));
+                $autoContent = 'Bonjour ' . ($firstName !== '' ? $firstName : $userName) . ", votre demande de réservation a bien été reçue, nous vérifions la disponibilité et reviendrons vers vous dans un instant.";
+
+                $autoMessage = Message::create([
+                    'conversation_id' => $adminGroupConversation->id,
+                    'sender_id' => 5,
+                    'receiver_id' => Auth::id(),
+                    'content' => $autoContent,
+                ]);
+
+                // Diffuser la réponse automatique pour l'utilisateur
+                try {
+                    broadcast(new MessageSent($autoMessage));
+                } catch (\Throwable $e) {
+                    // Ignorer si broadcasting non configuré
+                }
+            }
+        } catch (\Throwable $e) {
+            // Ignorer discrètement si problème lors de l'auto-réponse
+        }
 
         // Envoi d'un mail à l'utilisateur
         try {

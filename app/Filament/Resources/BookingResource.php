@@ -18,6 +18,7 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Filament\Support\Enums\IconName;
 use Filament\Actions\EditAction;
 use Filament\Actions\Action;
@@ -114,20 +115,28 @@ class BookingResource extends Resource
                         $amount = method_exists($record, 'calculateTotalPrice') ? $record->calculateTotalPrice() : $record->total_price;
                         if ($user) {
                             // Notification Laravel (mail + database)
-                            $user->notify(new \App\Notifications\BookingAcceptedNotification($record));
+                            try {
+                                $user->notify(new \App\Notifications\BookingAcceptedNotification($record));
+                            } catch (\Throwable $e) {
+                                Log::warning('Notification acceptation non envoyée: ' . $e->getMessage());
+                            }
 
-                            // Envoi d'un mail personnalisé avec lien de paiement
-                            $mailContent = "Votre réservation a été acceptée, vous pouvez procéder au paiement en cliquant sur le lien ci-dessous.\n\n" .
-                                "Montant à payer : $amount FrCFA\n" .
-                                "Lien de paiement : $paymentUrl\n\n" .
-                                "Sans paiement, nous ne pourrons vous garantir la disponibilité le jour-j.";
-                            Mail::raw(
-                                $mailContent,
-                                function ($message) use ($user) {
-                                    $message->to($user->email)
-                                        ->subject('Votre réservation a été acceptée');
-                                }
-                            );
+                            // Envoi d'un mail personnalisé avec lien de paiement (protégé contre les erreurs SMTP)
+                            try {
+                                $mailContent = "Votre réservation a été acceptée, vous pouvez procéder au paiement en cliquant sur le lien ci-dessous.\n\n" .
+                                    "Montant à payer : $amount FrCFA\n" .
+                                    "Lien de paiement : $paymentUrl\n\n" .
+                                    "Sans paiement, nous ne pourrons vous garantir la disponibilité le jour-j.";
+                                Mail::raw(
+                                    $mailContent,
+                                    function ($message) use ($user) {
+                                        $message->to($user->email)
+                                            ->subject('Votre réservation a été acceptée');
+                                    }
+                                );
+                            } catch (\Throwable $e) {
+                                Log::warning('Email acceptation réservation non envoyé (rate-limit ou SMTP): ' . $e->getMessage());
+                            }
                         }
 
                         // Envoi d'un mail à l'admin avec les infos de la réservation
@@ -146,10 +155,14 @@ class BookingResource extends Resource
                                 "- Date de sortie : $endDate\n" .
                                 "- Date de soumission : $createdAt\n" .
                                 "- Action réalisée par : $adminName";
-                            Mail::raw($content, function ($message) use ($adminMail) {
-                                $message->to($adminMail)
-                                    ->subject('Réservation acceptée - Notification admin');
-                            });
+                            try {
+                                Mail::raw($content, function ($message) use ($adminMail) {
+                                    $message->to($adminMail)
+                                        ->subject('Réservation acceptée - Notification admin');
+                                });
+                            } catch (\Throwable $e) {
+                                Log::warning('Email admin acceptation non envoyé: ' . $e->getMessage());
+                            }
                         }
 
                         // Message système dans la conversation admin liée à la réservation avec lien de paiement
@@ -157,16 +170,29 @@ class BookingResource extends Resource
                             ->where('booking_id', $record->id)
                             ->first();
                         if ($conversation) {
-                            $msgContent = "Votre réservation a été acceptée, vous pouvez procéder au paiement.\n" .
-                                "Montant à payer : $amount FrCFA\n" .
-                                "Lien de paiement : $paymentUrl\n" .
-                                "Sans paiement, nous ne pourrons vous garantir la disponibilité le jour-j.";
-                            \App\Models\Message::create([
+                            // Version "Standard, clair et professionnel"
+                            $propertyName = $record->property->name ?? 'votre hébergement';
+                            $start = $record->start_date ? \Carbon\Carbon::parse($record->start_date)->format('d/m/Y') : '';
+                            $end = $record->end_date ? \Carbon\Carbon::parse($record->end_date)->format('d/m/Y') : '';
+                            $amountFmt = is_numeric($amount) ? number_format($amount, 0, ',', ' ') : (string)$amount;
+                            $msgContent = "Votre réservation pour {$propertyName} du {$start} au {$end} a été acceptée.\n" .
+                                "Montant à régler : {$amountFmt} FrCFA.\n" .
+                                "Veuillez procéder au paiement via ce lien sécurisé : {$paymentUrl}.\n" .
+                                "Sans règlement sous 24h, la disponibilité ne peut être garantie.";
+                            $message = \App\Models\Message::create([
                                 'conversation_id' => $conversation->id,
-                                'sender_id' => 1,
+                                'sender_id' => $admin ? $admin->id : 1,
                                 'receiver_id' => $user ? $user->id : null,
                                 'content' => $msgContent,
                             ]);
+                            // Diffuser en temps réel pour l'utilisateur (canal chat.{receiver_id})
+                            if ($user) {
+                                try {
+                                    broadcast(new \App\Events\MessageSent($message));
+                                } catch (\Throwable $e) {
+                                    // Ignorer si broadcasting non configuré
+                                }
+                            }
                         }
                     })
                     ->requiresConfirmation()
@@ -179,16 +205,24 @@ class BookingResource extends Resource
                         $user = $record->user;
                         $admin = Auth::user();
                         if ($user) {
-                            $user->notify(new \App\Notifications\BookingCanceledNotification($record));
+                            try {
+                                $user->notify(new \App\Notifications\BookingCanceledNotification($record));
+                            } catch (\Throwable $e) {
+                                Log::warning('Notification annulation non envoyée: ' . $e->getMessage());
+                            }
 
-                            // Envoi d'un mail personnalisé avec le même texte que le message système
-                            Mail::raw(
-                                "Votre demande de réservation a été annulée par l'administrateur.",
-                                function ($message) use ($user) {
-                                    $message->to($user->email)
-                                        ->subject('Votre réservation a été annulée');
-                                }
-                            );
+                            // Envoi d'un mail personnalisé avec le même texte que le message système (protégé)
+                            try {
+                                Mail::raw(
+                                    "Votre demande de réservation a été annulée par l'administrateur.",
+                                    function ($message) use ($user) {
+                                        $message->to($user->email)
+                                            ->subject('Votre réservation a été annulée');
+                                    }
+                                );
+                            } catch (\Throwable $e) {
+                                Log::warning('Email annulation utilisateur non envoyé: ' . $e->getMessage());
+                            }
                         }
 
                         // Envoi d'un mail à l'admin avec les infos de la réservation
@@ -207,10 +241,14 @@ class BookingResource extends Resource
                                 "- Date de sortie : $endDate\n" .
                                 "- Date de soumission : $createdAt\n" .
                                 "- Action réalisée par : $adminName";
-                            Mail::raw($content, function ($message) use ($adminMail) {
-                                $message->to($adminMail)
-                                    ->subject('Réservation annulée - Notification admin');
-                            });
+                            try {
+                                Mail::raw($content, function ($message) use ($adminMail) {
+                                    $message->to($adminMail)
+                                        ->subject('Réservation annulée - Notification admin');
+                                });
+                            } catch (\Throwable $e) {
+                                Log::warning('Email annulation admin non envoyé: ' . $e->getMessage());
+                            }
                         }
 
                         // Envoyer un message système dans la conversation admin liée à la réservation

@@ -11,10 +11,6 @@
               <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
             </svg>
           </button>
-          @php
-          $selInitial = trim(data_get($selectedUser, 'name', '')) !== '' ? strtoupper(mb_substr(data_get($selectedUser, 'name'), 0, 1)) : '?';
-          @endphp
-          <span class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-blue-600 text-white text-sm font-semibold shrink-0">{{ $selInitial }}</span>
           <div class="min-w-0">
             <div class="text-base font-semibold text-gray-900 truncate">{{ data_get($selectedUser, 'name', 'Sélectionnez une conversation') }}</div>
             <div class="text-xs text-gray-500 truncate">{{ data_get($selectedUser, 'email', '') }}</div>

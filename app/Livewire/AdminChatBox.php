@@ -71,6 +71,8 @@ class AdminChatBox extends Component
 
     // Liste affichée selon l'onglet courant
     $this->users = $this->usersActive;
+    // Mémoriser onglet par défaut
+    session(['admin_chat.tab' => 'active']);
 
     // Ne pas pré-sélectionner: on attend le clic utilisateur
     $this->selectedUser = null;
@@ -139,6 +141,8 @@ class AdminChatBox extends Component
         ];
       }
     }
+    // Mémoriser la sélection (pour l'action Filament côté page)
+    session(['admin_chat.selected' => (string) $id]);
     // Conserver l'ancien lastSeen pour calculer la barre des non-lus
     $previousSeen = $this->lastSeen[(string)$id] ?? 0;
     $this->loadMessages();
@@ -155,6 +159,7 @@ class AdminChatBox extends Component
   public function backToList(): void
   {
     $this->showChat = false;
+    session()->forget('admin_chat.selected');
   }
 
   public function submit()
@@ -295,6 +300,48 @@ class AdminChatBox extends Component
     $this->selectedUser = null;
     $this->messages = collect();
     $this->showChat = false;
+    session()->forget('admin_chat.selected');
+  }
+
+  #[On('bulkDeleteConversations')]
+  public function bulkDeleteConversations(array $ids): void
+  {
+    foreach ($ids as $rawId) {
+      $id = (string) $rawId;
+      if (str_starts_with($id, 'admin_channel_')) {
+        $conversationId = (int) str_replace('admin_channel_', '', $id);
+        if ($conversationId > 0) {
+          \App\Models\Message::where('conversation_id', $conversationId)->delete();
+          if ($conv = \App\Models\Conversation::find($conversationId)) {
+            $conv->delete();
+          }
+        }
+      } else {
+        $peerId = (int) $id;
+        if ($peerId > 0) {
+          \App\Models\Message::query()
+            ->where(function ($q) use ($peerId) {
+              $q->where('sender_id', Auth::id())->where('receiver_id', $peerId);
+            })
+            ->orWhere(function ($q) use ($peerId) {
+              $q->where('sender_id', $peerId)->where('receiver_id', Auth::id());
+            })
+            ->delete();
+        }
+      }
+
+      // Nettoyer les listes et la sélection en cours si concernée
+      $this->usersActive = array_values(array_filter($this->usersActive, fn($u) => ($u['id'] ?? null) !== $id));
+      $this->usersArchived = array_values(array_filter($this->usersArchived, fn($u) => ($u['id'] ?? null) !== $id));
+      if ($this->selectedUser && ($this->selectedUser['id'] ?? null) === $id) {
+        $this->selectedUser = null;
+        $this->messages = collect();
+        $this->showChat = false;
+        session()->forget('admin_chat.selected');
+      }
+    }
+
+    $this->users = $this->activeTab === 'active' ? $this->usersActive : $this->usersArchived;
   }
 
   private function bumpConversationMeta(string $id, Message $message): void
@@ -461,6 +508,7 @@ class AdminChatBox extends Component
     $tab = in_array($tab, ['active', 'archived'], true) ? $tab : 'active';
     $this->activeTab = $tab;
     $this->users = $this->activeTab === 'active' ? $this->usersActive : $this->usersArchived;
+    session(['admin_chat.tab' => $this->activeTab]);
   }
 
   private function computeUnreadMetaForMessages($messages, int $seenThreshold, int $me): void

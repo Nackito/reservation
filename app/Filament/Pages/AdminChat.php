@@ -4,9 +4,11 @@ namespace App\Filament\Pages;
 
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Select;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Session;
 use App\Models\User;
 
 class AdminChat extends Page
@@ -57,11 +59,122 @@ class AdminChat extends Page
       Action::make('delete')
         ->label('Supprimer Chat')
         ->icon('heroicon-o-trash')
-        ->requiresConfirmation()
-        ->modalHeading('Supprimer la conversation courante ?')
-        ->modalDescription("Cette action supprimera définitivement les messages de la conversation sélectionnée.")
-        ->modalSubmitActionLabel('Supprimer')
-        ->action(fn() => $this->dispatch('deleteCurrentConversation')->to(\App\Livewire\AdminChatBox::class)),
+        ->action(function () {
+          // Si une conversation est sélectionnée (via session), suppression directe
+          $selected = Session::get('admin_chat.selected');
+          if ($selected) {
+            $this->dispatch('deleteCurrentConversation')->to(\App\Livewire\AdminChatBox::class);
+            return;
+          }
+          // Sinon, ouvre la modale de sélection multiple
+          $this->mountAction('deleteBulk');
+        }),
+
+      Action::make('deleteBulk')
+        ->label('Supprimer des conversations')
+        ->icon('heroicon-o-trash')
+        ->modalHeading('Supprimer des conversations')
+        ->form([
+          CheckboxList::make('conversation_ids')
+            ->label('Sélectionner les conversations à supprimer')
+            ->options(function () {
+              $tab = Session::get('admin_chat.tab', 'active');
+              $options = [];
+              if ($tab === 'archived') {
+                // Canaux admin archivés
+                foreach (\App\Models\Conversation::where('is_admin_channel', true)->get() as $conv) {
+                  $booking = $conv->booking_id ? \App\Models\Booking::find($conv->booking_id) : null;
+                  $archived = false;
+                  if ($booking && !empty($booking->end_date)) {
+                    $grace = (int) config('chat.archive.booking_grace_days', 2);
+                    $expiry = \Illuminate\Support\Carbon::parse($booking->end_date)->endOfDay()->addDays($grace);
+                    $archived = \Illuminate\Support\Carbon::now()->greaterThan($expiry);
+                  }
+                  if ($archived) {
+                    $label = $booking && $booking->property ? ($booking->property->name . ' (conv ' . $conv->id . ')') : 'Réservation #' . $conv->id;
+                    $options['admin_channel_' . $conv->id] = $label;
+                  }
+                }
+                // Directs archivés (inactifs)
+                $myId = Auth::id();
+                $peerIds = \App\Models\Message::query()
+                  ->selectRaw('CASE WHEN sender_id = ? THEN receiver_id ELSE sender_id END as peer', [$myId])
+                  ->where(function ($q) use ($myId) {
+                    $q->where('sender_id', $myId)->orWhere('receiver_id', $myId);
+                  })
+                  ->distinct()
+                  ->pluck('peer');
+                $inactiveDays = (int) config('chat.archive.direct_inactive_days', 14);
+                $threshold = \Illuminate\Support\Carbon::now()->subDays($inactiveDays)->getTimestamp();
+                foreach (User::whereIn('id', $peerIds)->get() as $u) {
+                  $last = \App\Models\Message::query()
+                    ->where(function ($q) use ($u, $myId) {
+                      $q->where('sender_id', $myId)->where('receiver_id', $u->id);
+                    })
+                    ->orWhere(function ($q) use ($u, $myId) {
+                      $q->where('sender_id', $u->id)->where('receiver_id', $myId);
+                    })
+                    ->latest('created_at')
+                    ->first();
+                  $lastTs = $last?->created_at?->getTimestamp() ?? 0;
+                  if ($lastTs === 0 || $lastTs < $threshold) {
+                    $options[(string) $u->id] = $u->name . ' (direct)';
+                  }
+                }
+              } else {
+                // Actives
+                foreach (\App\Models\Conversation::where('is_admin_channel', true)->get() as $conv) {
+                  $booking = $conv->booking_id ? \App\Models\Booking::find($conv->booking_id) : null;
+                  $archived = false;
+                  if ($booking && !empty($booking->end_date)) {
+                    $grace = (int) config('chat.archive.booking_grace_days', 2);
+                    $expiry = \Illuminate\Support\Carbon::parse($booking->end_date)->endOfDay()->addDays($grace);
+                    $archived = \Illuminate\Support\Carbon::now()->greaterThan($expiry);
+                  }
+                  if (!$archived) {
+                    $label = $booking && $booking->property ? ($booking->property->name . ' (conv ' . $conv->id . ')') : 'Réservation #' . $conv->id;
+                    $options['admin_channel_' . $conv->id] = $label;
+                  }
+                }
+                $myId = Auth::id();
+                $peerIds = \App\Models\Message::query()
+                  ->selectRaw('CASE WHEN sender_id = ? THEN receiver_id ELSE sender_id END as peer', [$myId])
+                  ->where(function ($q) use ($myId) {
+                    $q->where('sender_id', $myId)->orWhere('receiver_id', $myId);
+                  })
+                  ->distinct()
+                  ->pluck('peer');
+                $inactiveDays = (int) config('chat.archive.direct_inactive_days', 14);
+                $threshold = \Illuminate\Support\Carbon::now()->subDays($inactiveDays)->getTimestamp();
+                foreach (User::whereIn('id', $peerIds)->orderBy('name')->get() as $u) {
+                  $last = \App\Models\Message::query()
+                    ->where(function ($q) use ($u, $myId) {
+                      $q->where('sender_id', $myId)->where('receiver_id', $u->id);
+                    })
+                    ->orWhere(function ($q) use ($u, $myId) {
+                      $q->where('sender_id', $u->id)->where('receiver_id', $myId);
+                    })
+                    ->latest('created_at')
+                    ->first();
+                  $lastTs = $last?->created_at?->getTimestamp() ?? 0;
+                  if ($lastTs >= $threshold) {
+                    $options[(string) $u->id] = $u->name . ' (direct)';
+                  }
+                }
+              }
+              return $options;
+            })
+            ->bulkToggleable()
+            ->columns(1)
+            ->required(),
+        ])
+        ->modalSubmitActionLabel('Supprimer sélection')
+        ->action(function (array $data) {
+          $ids = (array) ($data['conversation_ids'] ?? []);
+          if (count($ids) > 0) {
+            $this->dispatch('bulkDeleteConversations', ids: $ids)->to(\App\Livewire\AdminChatBox::class);
+          }
+        }),
     ];
   }
 }

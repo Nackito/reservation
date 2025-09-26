@@ -84,12 +84,29 @@
 
     <!-- Conversations list (full width) -->
     <div class="text-sm border rounded-xl shadow overflow-hidden bg-white">
-      <div class="p-4 border-b flex items-center justify-between">
-        <div class="text-sm font-semibold text-gray-800">Conversations</div>
-        <div class="text-xs text-gray-500">{{ count($users) }} au total</div>
+      <div class="p-4 border-b">
+        <div class="flex items-center justify-between">
+          <div class="text-sm font-semibold text-gray-800">Conversations</div>
+          <div class="text-xs text-gray-500">{{ is_countable($users) ? count($users) : 0 }} au total</div>
+        </div>
+        <!-- Tabs: Actives / Archivées (uniquement côté admin) -->
+        <div class="mt-3">
+          <div class="inline-flex rounded-lg bg-gray-100 p-1">
+            <button type="button" wire:click="switchTab('active')"
+              class="px-3 py-1.5 rounded-md text-xs font-medium transition {{ $activeTab === 'active' ? 'bg-white shadow text-gray-900' : 'text-gray-600 hover:text-gray-900' }}">
+              Actives
+            </button>
+            <button type="button" wire:click="switchTab('archived')"
+              class="px-3 py-1.5 rounded-md text-xs font-medium transition {{ $activeTab === 'archived' ? 'bg-white shadow text-gray-900' : 'text-gray-600 hover:text-gray-900' }}">
+              Archivées
+            </button>
+          </div>
+        </div>
       </div>
       <div class="bg-gray-50">
-        <div class="p-4 text-xs uppercase tracking-wide text-gray-500">Demandes de réservation</div>
+        <div class="p-4 text-xs uppercase tracking-wide text-gray-500">
+          {{ $activeTab === 'archived' ? 'Demandes archivées' : 'Demandes de réservation' }}
+        </div>
         <div class="divide-y">
           @foreach ($users as $user)
           @if (str_starts_with($user['id'], 'admin_channel_'))
@@ -122,6 +139,7 @@
           @endif
           @endforeach
         </div>
+        @if ($activeTab === 'active')
         <div class="p-4 text-xs uppercase tracking-wide text-gray-500">Discussions directes</div>
         <div class="divide-y">
           @foreach ($users as $user)
@@ -155,6 +173,7 @@
           @endif
           @endforeach
         </div>
+        @endif
       </div>
     </div>
     @endif

@@ -9,12 +9,17 @@ use App\Models\User;
 use App\Events\MessageSent;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Illuminate\Support\Carbon;
 
 class AdminChatBox extends Component
 {
   private const DATE_BADGE_FORMAT = 'D MMM YY';
   // Listes d'utilisateurs et canaux sous forme d'array sérialisable
   public $users; // array<array{id:string,name:string,email:string,conversation_id?:int,last_preview?:string,last_at?:string,last_at_sort?:int}>
+  // Listes partitionnées pour l'onglet « Archivées » (seulement canaux de réservation)
+  public $usersActive = [];
+  public $usersArchived = [];
+  public $activeTab = 'active'; // 'active' | 'archived'
   public $selectedUser; // array{id:string,name:string,email:string,conversation_id?:int}|null
   public $newMessage;
   public $messages;
@@ -31,9 +36,28 @@ class AdminChatBox extends Component
     // Charger les items utilisateurs privés et canaux admin
     $userItems = $this->buildPrivateUserItems();
     $adminUsers = $this->buildAdminChannelItems();
-    // Fusionner et trier par date du dernier message décroissante
-    $this->users = array_values(array_merge($adminUsers, $userItems));
-    $this->sortUsersByLastAt();
+
+    // Partitionner canaux admin entre actifs et archivés (+2 jours après date de sortie)
+    $adminActive = [];
+    $adminArchived = [];
+    foreach ($adminUsers as $item) {
+      if (!empty($item['archived'])) {
+        $adminArchived[] = $item;
+      } else {
+        $adminActive[] = $item;
+      }
+    }
+
+    // Actifs = canaux admin actifs + discussions directes
+    $this->usersActive = array_values(array_merge($adminActive, $userItems));
+    $this->sortArrayByLastAt($this->usersActive);
+
+    // Archivés = uniquement canaux admin archivés
+    $this->usersArchived = array_values($adminArchived);
+    $this->sortArrayByLastAt($this->usersArchived);
+
+    // Liste affichée selon l'onglet courant
+    $this->users = $this->usersActive;
 
     // Ne pas pré-sélectionner: on attend le clic utilisateur
     $this->selectedUser = null;
@@ -84,7 +108,11 @@ class AdminChatBox extends Component
   public function selectUser($id)
   {
     // Retrouver l'entrée correspondante dans la liste existante pour rester sérialisable
+    // Chercher dans la liste visible puis dans l'autre (archivées/actives)
     $found = collect($this->users)->firstWhere('id', (string) $id);
+    if (!$found) {
+      $found = collect($this->usersActive)->firstWhere('id', (string) $id) ?? collect($this->usersArchived)->firstWhere('id', (string) $id);
+    }
     if ($found) {
       $this->selectedUser = $found;
     } elseif (!str_starts_with((string) $id, 'admin_channel_')) {
@@ -208,6 +236,8 @@ class AdminChatBox extends Component
 
   private function bumpConversationMeta(string $id, Message $message): void
   {
+    // Mettre à jour dans la liste visible si présent
+    $updated = false;
     foreach ($this->users as &$u) {
       if ($u['id'] === $id) {
         $u['last_preview'] = \Illuminate\Support\Str::limit($message->content, 55);
@@ -216,11 +246,39 @@ class AdminChatBox extends Component
         if ($this->selectedUser && $this->selectedUser['id'] === $id) {
           $this->selectedUser = $u;
         }
+        $updated = true;
         break;
       }
     }
     unset($u);
-    $this->sortUsersByLastAt();
+
+    // Et dans les listes sources actives/archivées
+    foreach ($this->usersActive as &$ua) {
+      if ($ua['id'] === $id) {
+        $ua['last_preview'] = \Illuminate\Support\Str::limit($message->content, 55);
+        $ua['last_at'] = $message->created_at ? $message->created_at->locale('fr')->isoFormat(self::DATE_BADGE_FORMAT) : '';
+        $ua['last_at_sort'] = $message->created_at ? $message->created_at->getTimestamp() : time();
+        $updated = true;
+        break;
+      }
+    }
+    unset($ua);
+    if (!$updated) {
+      foreach ($this->usersArchived as &$ur) {
+        if ($ur['id'] === $id) {
+          $ur['last_preview'] = \Illuminate\Support\Str::limit($message->content, 55);
+          $ur['last_at'] = $message->created_at ? $message->created_at->locale('fr')->isoFormat(self::DATE_BADGE_FORMAT) : '';
+          $ur['last_at_sort'] = $message->created_at ? $message->created_at->getTimestamp() : time();
+          break;
+        }
+      }
+      unset($ur);
+    }
+
+    // Trier listes et re-référencer la liste affichée
+    $this->sortArrayByLastAt($this->usersActive);
+    $this->sortArrayByLastAt($this->usersArchived);
+    $this->users = $this->activeTab === 'active' ? $this->usersActive : $this->usersArchived;
   }
 
   /**
@@ -296,6 +354,16 @@ class AdminChatBox extends Component
     foreach ($adminChannels as $adminChannel) {
       $booking = $adminChannel->booking_id ? \App\Models\Booking::find($adminChannel->booking_id) : null;
       $propertyName = $booking && $booking->property ? $booking->property->name : 'Canal Admin';
+      // Archiver 2 jours après la fin du séjour si on a une réservation liée
+      $archived = false;
+      if ($booking && !empty($booking->end_date)) {
+        try {
+          $expiry = Carbon::parse($booking->end_date)->endOfDay()->addDays(2);
+          $archived = Carbon::now()->greaterThan($expiry);
+        } catch (\Throwable $e) {
+          $archived = false;
+        }
+      }
       $last = Message::where('conversation_id', $adminChannel->id)->latest('created_at')->first();
       $preview = $last?->content ? \Illuminate\Support\Str::limit($last->content, 55) : '';
       $lastAt = $last?->created_at ? $last->created_at->locale('fr')->isoFormat(self::DATE_BADGE_FORMAT) : '';
@@ -309,16 +377,26 @@ class AdminChatBox extends Component
         'last_at' => $lastAt,
         'last_at_sort' => $lastAtSort,
         'last_sender_id' => $last?->sender_id,
+        'archived' => $archived,
       ];
     }
     return $items;
   }
 
-  private function sortUsersByLastAt(): void
+  // Méthode de tri globale supprimée (utiliser sortArrayByLastAt sur listes ciblées)
+
+  private function sortArrayByLastAt(array &$arr): void
   {
-    usort($this->users, function ($a, $b) {
+    usort($arr, function ($a, $b) {
       return ($b['last_at_sort'] ?? 0) <=> ($a['last_at_sort'] ?? 0);
     });
+  }
+
+  public function switchTab(string $tab): void
+  {
+    $tab = in_array($tab, ['active', 'archived'], true) ? $tab : 'active';
+    $this->activeTab = $tab;
+    $this->users = $this->activeTab === 'active' ? $this->usersActive : $this->usersArchived;
   }
 
   private function computeUnreadMetaForMessages($messages, int $seenThreshold, int $me): void

@@ -10,6 +10,7 @@ use App\Events\MessageSent;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\Support\Carbon;
+use Livewire\Attributes\On;
 
 class AdminChatBox extends Component
 {
@@ -244,6 +245,56 @@ class AdminChatBox extends Component
     if ($peerId !== '') {
       $this->bumpConversationMeta($peerId, Message::find($message['id']));
     }
+  }
+
+  #[On('openConversation')]
+  public function openConversation($id): void
+  {
+    if ($id === null || $id === '') {
+      return;
+    }
+    $this->selectUser((string) $id);
+  }
+
+  #[On('deleteCurrentConversation')]
+  public function deleteCurrentConversation(): void
+  {
+    if (!$this->selectedUser) {
+      return;
+    }
+
+    $entry = $this->selectedUser;
+    if (str_starts_with($entry['id'], 'admin_channel_')) {
+      $conversationId = (int) ($entry['conversation_id'] ?? 0);
+      if ($conversationId > 0) {
+        // Supprimer messages et la conversation liée
+        \App\Models\Message::where('conversation_id', $conversationId)->delete();
+        if ($conv = \App\Models\Conversation::find($conversationId)) {
+          $conv->delete();
+        }
+      }
+    } else {
+      $peerId = (int) $entry['id'];
+      if ($peerId > 0) {
+        \App\Models\Message::query()
+          ->where(function ($q) use ($peerId) {
+            $q->where('sender_id', Auth::id())->where('receiver_id', $peerId);
+          })
+          ->orWhere(function ($q) use ($peerId) {
+            $q->where('sender_id', $peerId)->where('receiver_id', Auth::id());
+          })
+          ->delete();
+      }
+    }
+
+    // Retirer des listes et ré-initialiser l'état
+    $this->usersActive = array_values(array_filter($this->usersActive, fn($u) => ($u['id'] ?? null) !== $entry['id']));
+    $this->usersArchived = array_values(array_filter($this->usersArchived, fn($u) => ($u['id'] ?? null) !== $entry['id']));
+    $this->users = $this->activeTab === 'active' ? $this->usersActive : $this->usersArchived;
+
+    $this->selectedUser = null;
+    $this->messages = collect();
+    $this->showChat = false;
   }
 
   private function bumpConversationMeta(string $id, Message $message): void

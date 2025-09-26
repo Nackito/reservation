@@ -14,7 +14,7 @@
           @php
           $selInitial = trim(data_get($selectedUser, 'name', '')) !== '' ? strtoupper(mb_substr(data_get($selectedUser, 'name'), 0, 1)) : '?';
           @endphp
-          <span class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-blue-600 text-white text-sm font-semibold">{{ $selInitial }}</span>
+          <span class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-blue-600 text-white text-sm font-semibold shrink-0">{{ $selInitial }}</span>
           <div class="min-w-0">
             <div class="text-base font-semibold text-gray-900 truncate">{{ data_get($selectedUser, 'name', 'Sélectionnez une conversation') }}</div>
             <div class="text-xs text-gray-500 truncate">{{ data_get($selectedUser, 'email', '') }}</div>
@@ -54,7 +54,7 @@
             <div class="px-4 py-2 rounded-2xl shadow {{ $isMine ? 'bg-blue-600 text-white rounded-br-sm' : 'bg-white text-gray-800 border rounded-bl-sm' }}">
               {{ $message->content }}
             </div>
-            <div class="text-[11px] text-gray-400 mt-1 {{ $isMine ? 'text-right' : 'text-left' }}">
+            <div class="text-[11px] text-gray-400 mt-1 whitespace-nowrap {{ $isMine ? 'text-right' : 'text-left' }}">
               {{ $message->created_at ? $message->created_at->format('H:i') : '' }}
             </div>
             @if ($isMine && $lastOutgoingSeenMessageId && $message->id === $lastOutgoingSeenMessageId)
@@ -103,13 +103,15 @@
           @endphp
           <button type="button" wire:key="user-{{ $user['id'] }}" wire:click.prevent="selectUser('{{ $user['id'] }}')"
             class="w-full text-left p-3 flex items-center gap-3 transition {{ $isActive ? 'bg-blue-50 ring-1 ring-inset ring-blue-200' : 'hover:bg-blue-50' }}">
-            <span class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-white text-sm font-semibold">{{ $initial }}</span>
-            <span class="flex-1 min-w-0">
-              <span class="block truncate text-gray-900 font-medium {{ $isActive ? 'font-semibold' : '' }}">{{ $user['name'] }}</span>
-              <span class="block truncate text-gray-500 text-xs">{{ $user['last_preview'] ?? $user['email'] }}</span>
-            </span>
+            <span class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-white text-sm font-semibold shrink-0">{{ $initial }}</span>
+            <div class="flex-1 min-w-0 overflow-hidden">
+              <div class="flex items-baseline gap-2">
+                <span class="truncate min-w-0 text-gray-900 font-medium {{ $isActive ? 'font-semibold' : '' }}">{{ $user['name'] }}</span>
+                <span class="ml-auto shrink-0 whitespace-nowrap text-[11px] text-gray-500">{{ $user['last_at'] ?? '' }}</span>
+              </div>
+              <div class="truncate text-gray-500 text-xs">{{ $user['last_preview'] ?? $user['email'] }}</div>
+            </div>
             <span class="ml-2 flex items-center gap-2 shrink-0">
-              <span class="text-[11px] text-gray-500">{{ $user['last_at'] ?? '' }}</span>
               @php
               $lastSeen = $lastSeen[$user['id']] ?? 0;
               $hasUnread = isset($user['last_at_sort'], $user['last_sender_id'])
@@ -134,13 +136,15 @@
           @endphp
           <button type="button" wire:key="user-{{ $user['id'] }}" wire:click.prevent="selectUser('{{ $user['id'] }}')"
             class="w-full text-left p-3 flex items-center gap-3 transition {{ $isActive ? 'bg-blue-50 ring-1 ring-inset ring-blue-200' : 'hover:bg-blue-50' }}">
-            <span class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-gray-900 text-white text-sm font-semibold">{{ $initial }}</span>
-            <span class="flex-1 min-w-0">
-              <span class="block truncate text-gray-900 font-medium {{ $isActive ? 'font-semibold' : '' }}">{{ $user['name'] }}</span>
-              <span class="block truncate text-gray-500 text-xs">{{ $user['last_preview'] ?? $user['email'] }}</span>
-            </span>
+            <span class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-gray-900 text-white text-sm font-semibold shrink-0">{{ $initial }}</span>
+            <div class="flex-1 min-w-0 overflow-hidden">
+              <div class="flex items-baseline gap-2">
+                <span class="truncate min-w-0 text-gray-900 font-medium {{ $isActive ? 'font-semibold' : '' }}">{{ $user['name'] }}</span>
+                <span class="ml-auto shrink-0 whitespace-nowrap text-[11px] text-gray-500">{{ $user['last_at'] ?? '' }}</span>
+              </div>
+              <div class="truncate text-gray-500 text-xs">{{ $user['last_preview'] ?? $user['email'] }}</div>
+            </div>
             <span class="ml-2 flex items-center gap-2 shrink-0">
-              <span class="text-[11px] text-gray-500">{{ $user['last_at'] ?? '' }}</span>
               @php
               $lastSeen = $lastSeen[$user['id']] ?? 0;
               $hasUnread = isset($user['last_at_sort'], $user['last_sender_id'])

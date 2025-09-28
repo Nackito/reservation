@@ -2,27 +2,27 @@
   <div class="space-y-4">
     <!-- Chat panel (full width) shown above the list when a conversation is selected) -->
     @if ($showChat)
-    <div class="text-sm border rounded-xl shadow overflow-hidden bg-white">
+    <div class="text-sm border rounded-xl shadow overflow-hidden bg-white dark:bg-gray-900 dark:border-gray-800">
       <!-- Chat Header -->
-      <div class="p-4 border-b bg-white sticky top-0 z-10">
+      <div class="p-4 border-b bg-white dark:bg-gray-900 dark:border-gray-800 sticky top-0 z-10">
         <div class="flex items-center gap-3">
-          <button type="button" wire:click="backToList" class="inline-flex items-center justify-center h-9 w-9 rounded-full hover:bg-gray-100 text-gray-700" aria-label="Retour">
+          <button type="button" wire:click="backToList" class="inline-flex items-center justify-center h-9 w-9 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300" aria-label="Retour">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5">
               <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
             </svg>
           </button>
           <div class="min-w-0">
-            <div class="text-base font-semibold text-gray-900 truncate">{{ data_get($selectedUser, 'name', 'Sélectionnez une conversation') }}</div>
-            <div class="text-xs text-gray-500 truncate">{{ data_get($selectedUser, 'email', '') }}</div>
+            <div class="text-base font-semibold text-gray-900 dark:text-gray-100 truncate">{{ data_get($selectedUser, 'name', 'Sélectionnez une conversation') }}</div>
+            <div class="text-xs text-gray-500 dark:text-gray-400 truncate">{{ data_get($selectedUser, 'email', '') }}</div>
           </div>
           <div class="ml-auto">
-            <div id="typing-indicator" class="text-xs text-gray-400 italic"></div>
+            <div id="typing-indicator" class="text-xs text-gray-400 dark:text-gray-500 italic"></div>
           </div>
         </div>
       </div>
 
       <!-- Chat Messages -->
-      <div id="messages" class="flex-1 max-h-[60vh] overflow-y-auto p-4 bg-gray-50 space-y-3">
+      <div id="messages" class="flex-1 max-h-[60vh] overflow-y-auto p-4 bg-gray-50 dark:bg-gray-950 space-y-3">
         @php $currentDate = null; @endphp
         @forelse ($messages as $message)
         @php
@@ -33,13 +33,13 @@
         @if ($dateStr !== $currentDate)
         @php $currentDate = $dateStr; @endphp
         <div class="flex items-center justify-center my-2">
-          <span class="px-3 py-1 text-[11px] rounded-full bg-gray-200 text-gray-600">{{ $currentDate }}</span>
+          <span class="px-3 py-1 text-[11px] rounded-full bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300">{{ $currentDate }}</span>
         </div>
         @endif
 
         @if ($firstUnreadMessageId && $unreadCount > 0 && $message->id === $firstUnreadMessageId)
         <div class="flex items-center justify-center my-2">
-          <span class="px-3 py-1 text-[11px] rounded-full bg-blue-100 text-blue-700 ring-1 ring-inset ring-blue-200">
+          <span class="px-3 py-1 text-[11px] rounded-full bg-blue-100 text-blue-700 ring-1 ring-inset ring-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:ring-blue-800/60">
             {{ $unreadCount }} {{ $unreadCount > 1 ? 'messages non lus' : 'message non lu' }}
           </span>
         </div>
@@ -47,31 +47,31 @@
 
         <div class="flex {{ $isMine ? 'justify-end' : 'justify-start' }}">
           <div class="max-w-[70%]">
-            <div class="px-4 py-2 rounded-2xl shadow {{ $isMine ? 'bg-blue-600 text-white rounded-br-sm' : 'bg-white text-gray-800 border rounded-bl-sm' }}">
+            <div class="px-4 py-2 rounded-2xl shadow {{ $isMine ? 'bg-blue-600 text-white rounded-br-sm' : 'bg-white text-gray-800 border rounded-bl-sm dark:bg-gray-800 dark:text-gray-100 dark:border-gray-700' }}">
               {{ $message->content }}
             </div>
-            <div class="text-[11px] text-gray-400 mt-1 whitespace-nowrap {{ $isMine ? 'text-right' : 'text-left' }}">
+            <div class="text-[11px] text-gray-400 dark:text-gray-500 mt-1 whitespace-nowrap {{ $isMine ? 'text-right' : 'text-left' }}">
               {{ $message->created_at ? $message->created_at->format('H:i') : '' }}
             </div>
             @if ($isMine && $lastOutgoingSeenMessageId && $message->id === $lastOutgoingSeenMessageId)
-            <div class="text-[11px] text-gray-400 mt-1 text-right">Vu • {{ $lastOutgoingSeenAt }}</div>
+            <div class="text-[11px] text-gray-400 dark:text-gray-500 mt-1 text-right">Vu • {{ $lastOutgoingSeenAt }}</div>
             @endif
           </div>
         </div>
         @empty
-        <div class="h-40 flex items-center justify-center text-gray-400">
+        <div class="h-40 flex items-center justify-center text-gray-400 dark:text-gray-500">
           Aucune conversation sélectionnée.
         </div>
         @endforelse
       </div>
 
       <!-- Chat Input -->
-      <form wire:submit.prevent="submit" class="p-3 border-t bg-white flex items-center gap-2">
+      <form wire:submit.prevent="submit" class="p-3 border-t bg-white dark:bg-gray-900 dark:border-gray-800 flex items-center gap-2">
         <input
           id="message-input"
           wire:model.debounce.300ms="newMessage"
           type="text"
-          class="flex-1 border border-gray-300 rounded-full px-4 py-2 text-sm bg-white text-gray-900 placeholder-gray-400 caret-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          class="flex-1 border border-gray-300 dark:border-gray-700 rounded-full px-4 py-2 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 caret-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600"
           placeholder="Écrire un message..."
           autocomplete="off" />
         <button type="submit"
@@ -83,28 +83,28 @@
     @else
 
     <!-- Conversations list (full width) -->
-    <div class="text-sm border rounded-xl shadow overflow-hidden bg-white">
+    <div class="text-sm border rounded-xl shadow overflow-hidden bg-white dark:bg-gray-900 dark:border-gray-800">
       <div class="p-4 border-b">
         <div class="flex items-center justify-between">
-          <div class="text-sm font-semibold text-gray-800">Conversations</div>
-          <div class="text-xs text-gray-500">{{ is_countable($users) ? count($users) : 0 }} au total</div>
+          <div class="text-sm font-semibold text-gray-800 dark:text-gray-100">Conversations</div>
+          <div class="text-xs text-gray-500 dark:text-gray-400">{{ is_countable($users) ? count($users) : 0 }} au total</div>
         </div>
         <!-- Tabs: Actives / Archivées (uniquement côté admin) -->
         <div class="mt-3">
-          <div class="inline-flex rounded-lg bg-gray-100 p-1">
+          <div class="inline-flex rounded-lg bg-gray-100 dark:bg-gray-800 p-1">
             <button type="button" wire:click="switchTab('active')"
-              class="px-3 py-1.5 rounded-md text-xs font-medium transition {{ $activeTab === 'active' ? 'bg-white shadow text-gray-900' : 'text-gray-600 hover:text-gray-900' }}">
+              class="px-3 py-1.5 rounded-md text-xs font-medium transition {{ $activeTab === 'active' ? 'bg-white dark:bg-gray-700 shadow text-gray-900 dark:text-gray-100' : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100' }}">
               Actives
             </button>
             <button type="button" wire:click="switchTab('archived')"
-              class="px-3 py-1.5 rounded-md text-xs font-medium transition {{ $activeTab === 'archived' ? 'bg-white shadow text-gray-900' : 'text-gray-600 hover:text-gray-900' }}">
+              class="px-3 py-1.5 rounded-md text-xs font-medium transition {{ $activeTab === 'archived' ? 'bg-white dark:bg-gray-700 shadow text-gray-900 dark:text-gray-100' : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100' }}">
               Archivées
             </button>
           </div>
         </div>
       </div>
-      <div class="bg-gray-50">
-        <div class="p-4 text-xs uppercase tracking-wide text-gray-500">
+      <div class="bg-gray-50 dark:bg-gray-950">
+        <div class="p-4 text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
           {{ $activeTab === 'archived' ? 'Demandes archivées' : 'Demandes de réservation' }}
         </div>
         <div class="divide-y">
@@ -115,14 +115,14 @@
           $initial = trim($user['name']) !== '' ? strtoupper(mb_substr($user['name'], 0, 1)) : '?';
           @endphp
           <button type="button" wire:key="user-{{ $user['id'] }}" wire:click.prevent="selectUser('{{ $user['id'] }}')"
-            class="w-full text-left p-3 flex items-center gap-3 transition {{ $isActive ? 'bg-blue-50 ring-1 ring-inset ring-blue-200' : 'hover:bg-blue-50' }}">
+            class="w-full text-left p-3 flex items-center gap-3 transition {{ $isActive ? 'bg-blue-50 dark:bg-gray-800 ring-1 ring-inset ring-blue-200 dark:ring-gray-700' : 'hover:bg-blue-50 dark:hover:bg-gray-800' }}">
             <span class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-white text-sm font-semibold shrink-0">{{ $initial }}</span>
             <div class="flex-1 min-w-0 overflow-hidden">
               <div class="flex items-baseline gap-2">
-                <span class="truncate min-w-0 text-gray-900 font-medium {{ $isActive ? 'font-semibold' : '' }}">{{ $user['name'] }}</span>
-                <span class="ml-auto shrink-0 whitespace-nowrap text-[11px] text-gray-500">{{ $user['last_at'] ?? '' }}</span>
+                <span class="truncate min-w-0 text-gray-900 dark:text-gray-100 font-medium {{ $isActive ? 'font-semibold' : '' }}">{{ $user['name'] }}</span>
+                <span class="ml-auto shrink-0 whitespace-nowrap text-[11px] text-gray-500 dark:text-gray-400">{{ $user['last_at'] ?? '' }}</span>
               </div>
-              <div class="truncate text-gray-500 text-xs">{{ $user['last_preview'] ?? $user['email'] }}</div>
+              <div class="truncate text-gray-500 dark:text-gray-400 text-xs">{{ $user['last_preview'] ?? $user['email'] }}</div>
             </div>
             <span class="ml-2 flex items-center gap-2 shrink-0">
               @php
@@ -140,7 +140,7 @@
           @endforeach
         </div>
         @if ($activeTab === 'active')
-        <div class="p-4 text-xs uppercase tracking-wide text-gray-500">Discussions directes</div>
+        <div class="p-4 text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Discussions directes</div>
         <div class="divide-y">
           @foreach ($users as $user)
           @if (!str_starts_with($user['id'], 'admin_channel_'))
@@ -149,14 +149,14 @@
           $initial = trim($user['name']) !== '' ? strtoupper(mb_substr($user['name'], 0, 1)) : '?';
           @endphp
           <button type="button" wire:key="user-{{ $user['id'] }}" wire:click.prevent="selectUser('{{ $user['id'] }}')"
-            class="w-full text-left p-3 flex items-center gap-3 transition {{ $isActive ? 'bg-blue-50 ring-1 ring-inset ring-blue-200' : 'hover:bg-blue-50' }}">
+            class="w-full text-left p-3 flex items-center gap-3 transition {{ $isActive ? 'bg-blue-50 dark:bg-gray-800 ring-1 ring-inset ring-blue-200 dark:ring-gray-700' : 'hover:bg-blue-50 dark:hover:bg-gray-800' }}">
             <span class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-gray-900 text-white text-sm font-semibold shrink-0">{{ $initial }}</span>
             <div class="flex-1 min-w-0 overflow-hidden">
               <div class="flex items-baseline gap-2">
-                <span class="truncate min-w-0 text-gray-900 font-medium {{ $isActive ? 'font-semibold' : '' }}">{{ $user['name'] }}</span>
-                <span class="ml-auto shrink-0 whitespace-nowrap text-[11px] text-gray-500">{{ $user['last_at'] ?? '' }}</span>
+                <span class="truncate min-w-0 text-gray-900 dark:text-gray-100 font-medium {{ $isActive ? 'font-semibold' : '' }}">{{ $user['name'] }}</span>
+                <span class="ml-auto shrink-0 whitespace-nowrap text-[11px] text-gray-500 dark:text-gray-400">{{ $user['last_at'] ?? '' }}</span>
               </div>
-              <div class="truncate text-gray-500 text-xs">{{ $user['last_preview'] ?? $user['email'] }}</div>
+              <div class="truncate text-gray-500 dark:text-gray-400 text-xs">{{ $user['last_preview'] ?? $user['email'] }}</div>
             </div>
             <span class="ml-2 flex items-center gap-2 shrink-0">
               @php

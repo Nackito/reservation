@@ -9,6 +9,8 @@ export default defineConfig({
                 "resources/js/app.js",
                 "resources/css/style.css",
                 "resources/css/filament/admin/theme.css",
+                "resources/js/echo.js",
+                "resources/js/bootstrap.js",
             ],
             refresh: true,
         }),

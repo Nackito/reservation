@@ -175,10 +175,17 @@ class AdminChatBox extends Component
 
     if ($this->selectedUser && str_starts_with($this->selectedUser['id'], 'admin_channel_')) {
       $conversationId = $this->selectedUser['conversation_id'] ?? null;
+      // Envoyer au véritable utilisateur lié à la conversation (et non à l'admin)
+      $conv = $conversationId ? \App\Models\Conversation::find($conversationId) : null;
+      $targetUserId = $conv && isset($conv->user_id) ? (int) $conv->user_id : 0; // utilisateur propriétaire de la conversation
+      if ($targetUserId <= 0) {
+        // Impossible de déterminer le destinataire, on annule l'envoi
+        return;
+      }
       $message = Message::create([
         'conversation_id' => $conversationId,
         'sender_id' => Auth::id(),
-        'receiver_id' => 5, // ou null, selon la logique
+        'receiver_id' => $targetUserId, // l'utilisateur reçoit les messages du canal admin
         'content' => $this->newMessage,
       ]);
     } else {
@@ -208,7 +215,16 @@ class AdminChatBox extends Component
   public function updatedNewMessage($value)
   {
     if ($this->selectedUser) {
-      $this->dispatch('userTyping', userID: $this->loginID, userName: Auth::user()->name, selectedUserID: $this->selectedUser['id']);
+      if (str_starts_with($this->selectedUser['id'], 'admin_channel_')) {
+        $conversationId = $this->selectedUser['conversation_id'] ?? null;
+        $conv = $conversationId ? \App\Models\Conversation::find($conversationId) : null;
+        $receiverId = $conv && isset($conv->user_id) ? (int) $conv->user_id : 0; // diffuser l'indicateur à l'utilisateur concerné
+      } else {
+        $receiverId = (int) $this->selectedUser['id'];
+      }
+      if ($receiverId > 0) {
+        event(new \App\Events\UserTyping(Auth::id(), $receiverId, Auth::user()->name));
+      }
     }
   }
 

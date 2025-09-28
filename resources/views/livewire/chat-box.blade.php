@@ -165,13 +165,10 @@
         setTimeout(scrollToBottom, 0);
       });
 
-      // N'envoie pas de whisper sur le canal de l'autre (évite auth 403). Les whispers doivent être envoyés
-      // sur un canal partagé (presence) ou être omis ici. On conserve uniquement l'écoute.
-      Livewire.on('userTyping', () => {});
-
+      // Indicateur de frappe via event broadcast UserTyping
       if (window.Echo && typeof window.Echo.private === 'function') {
         window.Echo.private(`chat.{{ $loginID }}`)
-          .listenForWhisper('typing', (event) => {
+          .listen('.UserTyping', (event) => {
             const t = document.getElementById('typing-indicator');
             if (!t) return;
             t.innerText = `${event.userName} est en train d'écrire...`;

@@ -22,26 +22,35 @@ function getCsrfToken() {
     return m ? decodeURIComponent(m[1]) : "";
 }
 const csrfToken = getCsrfToken();
+const appKey = import.meta.env.VITE_PUSHER_APP_KEY;
 
-window.Echo = new Echo({
-    broadcaster: "pusher",
-    key: import.meta.env.VITE_PUSHER_APP_KEY,
-    cluster,
-    wsHost,
-    wsPort,
-    wssPort: wsPort,
-    forceTLS: useTLS,
-    // Laisser les deux pour compatibilité; Pusher choisit wss en TLS
-    enabledTransports: ["ws", "wss"],
-    // Optionnel: réduit le bruit réseau de Pusher
-    disableStats: true,
-    // Authentification des canaux privés (ajoute le CSRF)
-    authEndpoint: "/broadcasting/auth",
-    auth: {
-        headers: {
-            "X-CSRF-TOKEN": csrfToken,
-            "X-Requested-With": "XMLHttpRequest",
+// Ne pas initialiser si aucune clé n'est fournie par Vite (évite l'erreur Pusher)
+if (!appKey) {
+    console.warn("[Echo] Skipped init: VITE_PUSHER_APP_KEY manquante.");
+} else if (window.Echo) {
+    // Evite une double initialisation si un autre script a déjà créé Echo
+    console.info("[Echo] Instance existante détectée, init ignorée.");
+} else {
+    window.Echo = new Echo({
+        broadcaster: "pusher",
+        key: appKey,
+        cluster,
+        wsHost,
+        wsPort,
+        wssPort: wsPort,
+        forceTLS: useTLS,
+        // Laisser les deux pour compatibilité; Pusher choisit wss en TLS
+        enabledTransports: ["ws", "wss"],
+        // Optionnel: réduit le bruit réseau de Pusher
+        disableStats: true,
+        // Authentification des canaux privés (ajoute le CSRF)
+        authEndpoint: "/broadcasting/auth",
+        auth: {
+            headers: {
+                "X-CSRF-TOKEN": csrfToken,
+                "X-Requested-With": "XMLHttpRequest",
+            },
+            withCredentials: true,
         },
-        withCredentials: true,
-    },
-});
+    });
+}

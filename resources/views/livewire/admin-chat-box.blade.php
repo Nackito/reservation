@@ -228,14 +228,13 @@
       // Évite les whispers sur le canal privé de l'autre (403 auth). Voir notes dans chat-box.
       Livewire.on('userTyping', () => {});
 
-      // Réception de l'indicateur "typing"
+      // Réception de l'indicateur "typing" via event broadcast UserTyping
       if (window.Echo && typeof window.Echo.private === 'function') {
         window.Echo.private(`chat.{{ $loginID }}`)
-          .listenForWhisper('typing', (event) => {
+          .listen('.UserTyping', (event) => {
             const t = document.getElementById('typing-indicator');
             if (!t) return;
             t.innerText = `${event.userName} est en train d'écrire...`;
-            // Effacer après 2 secondes
             setTimeout(() => {
               if (t.innerText.includes("est en train d'écrire")) t.innerText = '';
             }, 2000);

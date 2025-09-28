@@ -224,7 +224,11 @@ class ChatBox extends Component
   public function updatedNewMessage($value)
   {
     if ($this->selectedUser) {
-      $this->dispatch('userTyping', userID: $this->loginID, userName: Auth::user()->name, selectedUserID: $this->selectedUser['id']);
+      // Broadcast typing via event to the receiver's private channel (no whisper auth issues)
+      $receiverId = str_starts_with($this->selectedUser['id'], 'admin_channel_')
+        ? 5
+        : (int) $this->selectedUser['id'];
+      event(new \App\Events\UserTyping(Auth::id(), $receiverId, Auth::user()->name));
     }
   }
 

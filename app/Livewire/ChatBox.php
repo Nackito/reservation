@@ -23,6 +23,12 @@ class ChatBox extends Component
   public $showChat = false;
   public $lastSeen = [];
 
+  /**
+   * Initialise l'état du composant utilisateur:
+   * - Construit la liste (canaux admin + discussions directes)
+   * - Trie par récence
+   * - Réinitialise sélection/messages, et remet à zéro le compteur global de la navbar
+   */
   public function mount()
   {
     $this->users = $this->buildUserAndChannelItems();
@@ -40,6 +46,9 @@ class ChatBox extends Component
     $this->dispatch('resetNavChatUnseen');
   }
 
+  /**
+   * Construit la liste agrégée utilisateur: canaux admin + discussions directes.
+   */
   private function buildUserAndChannelItems(): array
   {
     $direct = $this->buildDirectItems();
@@ -47,6 +56,9 @@ class ChatBox extends Component
     return array_merge($admin, $direct);
   }
 
+  /**
+   * Construit la liste des discussions directes (pairs) avec leurs métadonnées de dernier message.
+   */
   private function buildDirectItems(): array
   {
     $userId = Auth::id();
@@ -89,6 +101,11 @@ class ChatBox extends Component
     })->values()->all();
   }
 
+  /**
+   * Construit la liste des canaux admin pour l'utilisateur courant:
+   * - Filtre les canaux expirés 2 jours après la fin de réservation
+   * - Nom d'affichage: résidence si réservation, sinon "Afridayz"
+   */
   private function buildAdminItems(): array
   {
     $userId = Auth::id();
@@ -154,6 +171,9 @@ class ChatBox extends Component
     return [$preview, $lastAt, $lastAtSort, $lastSenderId];
   }
 
+  /**
+   * Charge les messages pour l'entrée sélectionnée: canal admin (par conversation) ou direct (pair).
+   */
   public function loadMessages()
   {
     if (!$this->selectedUser) {
@@ -180,6 +200,9 @@ class ChatBox extends Component
     }
   }
 
+  /**
+   * Sélectionne une entrée, charge ses messages, met à jour lastSeen et prépare l'UI (focus + scroll + reset badge navbar).
+   */
   public function selectUser($id)
   {
     $found = collect($this->users)->firstWhere('id', (string)$id);
@@ -205,11 +228,18 @@ class ChatBox extends Component
     $this->dispatch('resetNavChatUnseen');
   }
 
+  /**
+   * Revenir à la liste (désélection et masquage du fil).
+   */
   public function backToList(): void
   {
     $this->showChat = false;
   }
 
+  /**
+   * Envoie un message (canal admin vers support ou direct vers pair), notifie par email (throttle),
+   * diffuse en temps réel, met à jour la liste et scroll au bas.
+   */
   public function submit()
   {
     if (!$this->newMessage || !$this->selectedUser) {
@@ -263,6 +293,9 @@ class ChatBox extends Component
     $this->dispatch('scrollToBottom');
   }
 
+  /**
+   * Diffuse un événement "UserTyping" vers le destinataire approprié à chaque frappe.
+   */
   public function updatedNewMessage($value)
   {
     if ($this->selectedUser) {
@@ -274,6 +307,9 @@ class ChatBox extends Component
     }
   }
 
+  /**
+   * Déclare les listeners Livewire pour la réception d'événements temps réel.
+   */
   public function getListeners()
   {
     return [
@@ -281,6 +317,11 @@ class ChatBox extends Component
     ];
   }
 
+  /**
+   * Traitement d'un message entrant:
+   * - Mise à jour des vignettes de liste (aperçu/date/ordre)
+   * - Ajout dans le fil ouvert si c'est la conversation courante (admin ou direct)
+   */
   public function newChatMessageNotification($message)
   {
     $messageObj = Message::find($message['id'] ?? 0);
@@ -301,6 +342,9 @@ class ChatBox extends Component
   }
 
   // --- Helpers d'extraction ---
+  /**
+   * Met à jour la vignette correspondante dans la liste suite à un message entrant.
+   */
   private function refreshListPreviewForIncoming(array $payload, Message $messageObj): void
   {
     if (!empty($payload['conversation_id'])) {
@@ -313,11 +357,17 @@ class ChatBox extends Component
     }
   }
 
+  /**
+   * Indique si la conversation ouverte est un canal admin.
+   */
   private function isAdminChannelOpen(): bool
   {
     return $this->selectedUser && str_starts_with($this->selectedUser['id'], 'admin_channel_');
   }
 
+  /**
+   * Si le message appartient au canal admin ouvert, l'ajoute au fil et met à jour lastSeen.
+   */
   private function maybeAppendIfSameAdminChannel(array $payload, ?Message $messageObj): void
   {
     if (!$messageObj) {
@@ -331,6 +381,9 @@ class ChatBox extends Component
     }
   }
 
+  /**
+   * Si le message provient du pair de la discussion directe ouverte, l'ajoute au fil et met à jour lastSeen.
+   */
   private function maybeAppendIfDirectPeer(array $payload, ?Message $messageObj): void
   {
     if (!$messageObj) {
@@ -343,6 +396,9 @@ class ChatBox extends Component
     }
   }
 
+  /**
+   * Met à jour l'aperçu, la date, l'ordre et le dernier expéditeur d'une entrée, puis retrie la liste.
+   */
   private function bumpConversationMeta(string $id, Message $message): void
   {
     foreach ($this->users as &$u) {
@@ -363,6 +419,9 @@ class ChatBox extends Component
     });
   }
 
+  /**
+   * Rendu Livewire de la vue `livewire.chat-box`.
+   */
   public function render()
   {
     return view('livewire.chat-box');

@@ -33,6 +33,12 @@ class AdminChatBox extends Component
   public $lastOutgoingSeenMessageId = null; // id du dernier message sortant considéré "vu"
   public $lastOutgoingSeenAt = null; // heure de "vu" (string HH:mm)
 
+  /**
+   * Initialise l'état du composant:
+   * - Construit les listes (actives/archivées) à partir des discussions directes et canaux admin
+   * - Trie par récence
+   * - Réinitialise la sélection et les métadonnées d'affichage (non-lus, vu)
+   */
   public function mount()
   {
     // Charger les items utilisateurs privés et canaux admin
@@ -92,6 +98,11 @@ class AdminChatBox extends Component
     //$first = $this->users->first();
     //$this->selectedUserId = $first?->id;
   }
+  /**
+   * Charge les messages correspondant à l'entrée sélectionnée:
+   * - Canal admin (par conversation_id)
+   * - Discussion directe (moi <-> pair)
+   */
   public function loadMessages()
   {
     if (!$this->selectedUser) {
@@ -121,6 +132,12 @@ class AdminChatBox extends Component
     }
   }
 
+  /**
+   * Sélectionne une entrée (utilisateur ou canal admin) et prépare l'affichage:
+   * - Recherche dans les listes existantes, sinon fallback (chargement DB)
+   * - Met à jour lastSeen et calcule les métadonnées (non-lus, vu)
+   * - Déclenche focus input et scroll en bas
+   */
   public function selectUser($id)
   {
     // Retrouver l'entrée correspondante dans la liste existante pour rester sérialisable
@@ -191,6 +208,9 @@ class AdminChatBox extends Component
 
   public $showChat = false;
 
+  /**
+   * Revenir à la liste (désélectionne la conversation et notifie la page Filament).
+   */
   public function backToList(): void
   {
     $this->showChat = false;
@@ -199,6 +219,12 @@ class AdminChatBox extends Component
     $this->dispatch('adminChatCleared');
   }
 
+  /**
+   * Envoie un message:
+   * - Vers le canal admin (redirigé vers l'utilisateur de la conversation)
+   * - Vers un pair en direct
+   * Diffuse l'événement temps-réel, met à jour l'UI et notifie par email (sans bloquer en cas d'erreur).
+   */
   public function submit()
   {
     if (!$this->newMessage) {
@@ -262,6 +288,10 @@ class AdminChatBox extends Component
     $this->dispatch('scrollToBottom');
   }
 
+  /**
+   * Déclenché à chaque changement de l'input message: diffuse un événement "UserTyping"
+   * vers la cible adéquate (utilisateur lié au canal admin ou pair en direct).
+   */
   public function updatedNewMessage($value)
   {
     if ($this->selectedUser) {
@@ -278,6 +308,9 @@ class AdminChatBox extends Component
     }
   }
 
+  /**
+   * Déclare les listeners Livewire (canaux privés Echo) utilisés par ce composant.
+   */
   public function getListeners()
   {
     return [
@@ -285,6 +318,11 @@ class AdminChatBox extends Component
     ];
   }
 
+  /**
+   * Handler de réception d'un message temps-réel:
+   * - Met à jour la vignette dans la liste (aperçu/date/ordre)
+   * - Ajoute le message dans le thread ouvert si concerné et met à jour lastSeen/metadata
+   */
   public function newChatMessageNotification($message)
   {
     $messageObj = Message::find($message['id'] ?? 0);
@@ -305,6 +343,10 @@ class AdminChatBox extends Component
   }
 
   // --- Helpers d'extraction ---
+  /**
+   * Met à jour la vignette d'une conversation (aperçu, date, ordre) suite à un message entrant.
+   * Utilise conversation_id pour canaux admin, sinon déduit le pair (direct).
+   */
   private function refreshListPreviewForIncoming(array $payload, Message $messageObj): void
   {
     if (!empty($payload['conversation_id'])) {
@@ -317,11 +359,17 @@ class AdminChatBox extends Component
     }
   }
 
+  /**
+   * Indique si la conversation actuellement ouverte est un canal admin.
+   */
   private function isAdminChannelOpen(): bool
   {
     return $this->selectedUser && str_starts_with($this->selectedUser['id'], 'admin_channel_');
   }
 
+  /**
+   * Si le message reçu appartient au canal admin ouvert, l'ajoute au fil et met à jour lastSeen + metadata.
+   */
   private function maybeAppendIfSameAdminChannel(array $payload, ?Message $messageObj): void
   {
     if (!$messageObj) {
@@ -336,6 +384,10 @@ class AdminChatBox extends Component
     }
   }
 
+  /**
+   * Si le message reçu vient du pair correspondant à la discussion directe ouverte,
+   * l'ajoute au fil et met à jour lastSeen + metadata.
+   */
   private function maybeAppendIfDirectPeer(array $payload, ?Message $messageObj): void
   {
     if (!$messageObj) {
@@ -350,6 +402,9 @@ class AdminChatBox extends Component
   }
 
   #[On('openConversation')]
+  /**
+   * Ouvre une conversation via événement Livewire (utilisé par la page Filament pour sélectionner un canal).
+   */
   public function openConversation($id): void
   {
     if ($id === null || $id === '') {
@@ -359,6 +414,9 @@ class AdminChatBox extends Component
   }
 
   #[On('deleteCurrentConversation')]
+  /**
+   * Supprime la conversation courante (canal admin ou direct), nettoie les listes et réinitialise l'état.
+   */
   public function deleteCurrentConversation(): void
   {
     if (!$this->selectedUser) {
@@ -372,6 +430,10 @@ class AdminChatBox extends Component
   }
 
   #[On('bulkDeleteConversations')]
+  /**
+   * Supprime en lot des conversations (canaux admin ou directs),
+   * nettoie les listes et conserve la liste affichée.
+   */
   public function bulkDeleteConversations(array $ids): void
   {
     foreach ($ids as $rawId) {
@@ -388,12 +450,20 @@ class AdminChatBox extends Component
   }
 
   // --- Helpers de suppression et nettoyage ---
+  /**
+   * Supprime une entrée donnée en s'appuyant sur son identifiant et conversation_id si présent.
+   */
   private function deleteEntry(array $entry): void
   {
     $id = (string) ($entry['id'] ?? '');
     $this->deleteById($id, $entry['conversation_id'] ?? null);
   }
 
+  /**
+   * Supprime une conversation par identifiant:
+   * - admin_channel_* => suppression des messages puis de la Conversation
+   * - identifiant numérique (direct) => suppression des messages bilatéraux
+   */
   private function deleteById(string $id, ?int $conversationId = null): void
   {
     if (str_starts_with($id, 'admin_channel_')) {
@@ -419,12 +489,19 @@ class AdminChatBox extends Component
     }
   }
 
+  /**
+   * Retire l'entrée supprimée des listes actives/archivées et réindexe.
+   */
   private function cleanListsAfterRemoval(string $id): void
   {
     $this->usersActive = array_values(array_filter($this->usersActive, fn($u) => ($u['id'] ?? null) !== $id));
     $this->usersArchived = array_values(array_filter($this->usersArchived, fn($u) => ($u['id'] ?? null) !== $id));
   }
 
+  /**
+   * Réinitialise la sélection et l'affichage après suppression,
+   * et émet l'événement 'adminChatCleared' si demandé.
+   */
   private function resetSelectionAfterDelete(bool $emitCleared = true): void
   {
     $this->users = $this->activeTab === 'active' ? $this->usersActive : $this->usersArchived;
@@ -437,6 +514,10 @@ class AdminChatBox extends Component
     }
   }
 
+  /**
+   * Met à jour les métadonnées (aperçu, date, ordre, dernier expéditeur) pour une conversation donnée,
+   * dans la liste visible puis dans les listes source (actives/archivées), puis retrie.
+   */
   private function bumpConversationMeta(string $id, Message $message): void
   {
     // Mettre à jour dans la liste visible si présent
@@ -493,6 +574,11 @@ class AdminChatBox extends Component
    * - dernier message sortant considéré comme "vu" (heuristique: réponse reçue après)
    * @param int|null $previousSeenTs timestamp lastSeen avant ouverture (si null, utilise l'état courant)
    */
+  /**
+   * Calcule les métadonnées d'affichage du fil ouvert:
+   * - premier message entrant non lu et le compteur
+   * - marquage heuristique de "vu" pour le dernier message sortant
+   */
   private function computeConversationMeta(?int $previousSeenTs = null): void
   {
     // Reset meta
@@ -516,6 +602,9 @@ class AdminChatBox extends Component
 
   // --- Helpers d'extraction pour réduire la complexité ---
 
+  /**
+   * Construit la liste des pairs pour discussions directes, avec leurs métadonnées de dernier message.
+   */
   private function buildPrivateUserItems(): array
   {
     return User::whereNot('id', Auth::id())
@@ -550,6 +639,10 @@ class AdminChatBox extends Component
       ->all();
   }
 
+  /**
+   * Construit la liste des canaux admin (avec archivage basé sur la fin de réservation),
+   * et le nom d'affichage "Résidence - Prénom Nom" si applicable.
+   */
   private function buildAdminChannelItems(): array
   {
     $adminChannels = \App\Models\Conversation::where('is_admin_channel', true)
@@ -597,6 +690,9 @@ class AdminChatBox extends Component
 
   // Méthode de tri globale supprimée (utiliser sortArrayByLastAt sur listes ciblées)
 
+  /**
+   * Trie un tableau d'entrées par récence (last_at_sort décroissant).
+   */
   private function sortArrayByLastAt(array &$arr): void
   {
     usort($arr, function ($a, $b) {
@@ -604,6 +700,9 @@ class AdminChatBox extends Component
     });
   }
 
+  /**
+   * Change l'onglet actif (actives/archivées) et bascule la liste affichée.
+   */
   public function switchTab(string $tab): void
   {
     $tab = in_array($tab, ['active', 'archived'], true) ? $tab : 'active';
@@ -612,6 +711,9 @@ class AdminChatBox extends Component
     session(['admin_chat.tab' => $this->activeTab]);
   }
 
+  /**
+   * Calcule l'ID du premier message entrant non lu et le compteur de non-lus à partir d'un seuil de seen.
+   */
   private function computeUnreadMetaForMessages($messages, int $seenThreshold, int $me): void
   {
     $this->firstUnreadMessageId = null;
@@ -628,6 +730,10 @@ class AdminChatBox extends Component
     }
   }
 
+  /**
+   * Déduit une heuristique de "vu" pour un message sortant: si une réponse suit, on considère le précédent comme vu.
+   * Désactivé pour les canaux admin.
+   */
   private function computeSeenMetaForMessages($messages, bool $isAdminChannel, int $me): void
   {
     $this->lastOutgoingSeenMessageId = null;
@@ -649,6 +755,9 @@ class AdminChatBox extends Component
     }
   }
 
+  /**
+   * Rendu Livewire (vue admin-chat-box).
+   */
   public function render()
   {
     return view('livewire.admin-chat-box');

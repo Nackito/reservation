@@ -20,17 +20,26 @@ class AdminChat extends Page
   protected string $view = 'filament.pages.admin-chat';
   public bool $hasSelected = false;
 
+  /**
+   * Initialise l'état de la page (récupère si une conversation est sélectionnée côté composant Livewire).
+   */
   public function mount(): void
   {
     $this->hasSelected = (bool) Session::get('admin_chat.selected');
   }
 
+  /**
+   * Restreint l'accès à la page Filament aux seuls administrateurs autorisés (exemple basé sur l'email).
+   */
   public static function canView(): bool
   {
     // Seulement admin
     return Auth::user()?->email === 'admin1@example.com';
   }
 
+  /**
+   * Déclare l'élément de navigation personnalisé pour accéder à cette page Filament.
+   */
   public static function getNavigationItems(): array
   {
     return [
@@ -42,6 +51,12 @@ class AdminChat extends Page
     ];
   }
 
+  /**
+   * Actions d'en-tête:
+   * - Nouveau Chat: crée un canal admin (partagé), envoie un 1er message, ouvre la conversation
+   * - Supprimer Chat: supprime la conversation sélectionnée
+   * - Supprimer des conversations: suppression multiple (actives/archivées) via case à cocher
+   */
   protected function getHeaderActions(): array
   {
     return [
@@ -209,12 +224,18 @@ class AdminChat extends Page
   }
 
   #[On('adminChatSelected')]
+  /**
+   * Notifiée par le composant Livewire quand une conversation est sélectionnée.
+   */
   public function onAdminChatSelected(): void
   {
     $this->hasSelected = true;
   }
 
   #[On('adminChatCleared')]
+  /**
+   * Notifiée par le composant Livewire quand aucune conversation n'est sélectionnée.
+   */
   public function onAdminChatCleared(): void
   {
     $this->hasSelected = false;

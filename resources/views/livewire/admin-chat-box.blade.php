@@ -219,16 +219,14 @@
         window.Livewire.hook('message.processed', () => scrollToBottom());
       }
 
-      // Whisper "typing"
-      Livewire.on('userTyping', (event) => {
-        if (window.Echo && typeof window.Echo.private === 'function') {
-          window.Echo.private(`chat.${event.selectedUserID}`)
-            .whisper('typing', {
-              userID: event.userID,
-              userName: event.userName
-            });
-        }
+      // Evènement explicite depuis le composant côté PHP
+      Livewire.on('scrollToBottom', () => {
+        setTimeout(scrollToBottom, 0);
       });
+
+      // Whisper "typing"
+      // Évite les whispers sur le canal privé de l'autre (403 auth). Voir notes dans chat-box.
+      Livewire.on('userTyping', () => {});
 
       // Réception de l'indicateur "typing"
       if (window.Echo && typeof window.Echo.private === 'function') {

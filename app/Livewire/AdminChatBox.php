@@ -152,6 +152,7 @@ class AdminChatBox extends Component
     $this->lastSeen[(string)$id] = time();
     // Demander le focus sur l'input message côté navigateur
     $this->dispatch('focusMessageInput');
+    $this->dispatch('scrollToBottom');
     // Notifier la page Filament qu'une conversation est sélectionnée
     $this->dispatch('adminChatSelected');
   }
@@ -201,6 +202,7 @@ class AdminChatBox extends Component
     broadcast(new MessageSent($message));
     // Re-focuser l'input après envoi
     $this->dispatch('focusMessageInput');
+    $this->dispatch('scrollToBottom');
   }
 
   public function updatedNewMessage($value)

@@ -35,6 +35,12 @@ class AdminPanelProvider extends PanelProvider
                     ? view('partials.filament-chat-css')
                     : null;
             })
+            // Charge Echo (via bootstrap.js) uniquement sur les pages Filament de chat
+            ->renderHook('panels::scripts.after', function () {
+                return request()->routeIs(\App\Filament\Pages\AdminChat::getRouteName())
+                    ? view('partials.filament-echo')
+                    : null;
+            })
             ->colors([
                 'primary' => Color::Amber,
                 'danger' => Color::Rose,

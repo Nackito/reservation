@@ -152,20 +152,22 @@
         const c = document.getElementById('messages');
         if (c) c.scrollTop = c.scrollHeight;
       };
+      // Scroll initial au montage
       scrollToBottom();
       if (window.Livewire && typeof window.Livewire.hook === 'function') {
+        // Scroll après chaque mise à jour Livewire
         window.Livewire.hook('message.processed', () => scrollToBottom());
       }
 
-      Livewire.on('userTyping', (event) => {
-        if (window.Echo && typeof window.Echo.private === 'function') {
-          window.Echo.private(`chat.${event.selectedUserID}`)
-            .whisper('typing', {
-              userID: event.userID,
-              userName: event.userName
-            });
-        }
+      // Evènement explicite en provenance du composant PHP
+      Livewire.on('scrollToBottom', () => {
+        // Laisser le temps au DOM de se peindre
+        setTimeout(scrollToBottom, 0);
       });
+
+      // N'envoie pas de whisper sur le canal de l'autre (évite auth 403). Les whispers doivent être envoyés
+      // sur un canal partagé (presence) ou être omis ici. On conserve uniquement l'écoute.
+      Livewire.on('userTyping', () => {});
 
       if (window.Echo && typeof window.Echo.private === 'function') {
         window.Echo.private(`chat.{{ $loginID }}`)

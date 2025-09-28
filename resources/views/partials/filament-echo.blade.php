@@ -1,0 +1,1 @@
+@vite('resources/js/bootstrap.js')

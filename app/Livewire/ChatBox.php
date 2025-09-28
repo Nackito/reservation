@@ -174,6 +174,8 @@ class ChatBox extends Component
     $this->showChat = true;
     $this->lastSeen[(string)$id] = time();
     $this->dispatch('focusMessageInput');
+    // Demander au client de scroller tout en bas après le rendu
+    $this->dispatch('scrollToBottom');
   }
 
   public function backToList(): void
@@ -215,6 +217,8 @@ class ChatBox extends Component
     $this->newMessage = '';
     broadcast(new MessageSent($message));
     $this->dispatch('focusMessageInput');
+    // Assurer le scroll en bas après l'ajout
+    $this->dispatch('scrollToBottom');
   }
 
   public function updatedNewMessage($value)

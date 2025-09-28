@@ -39,7 +39,6 @@ import "./bootstrap";
 import Alpine from "alpinejs";
 import "preline";
 import Swal from "sweetalert2";
-import "./echo";
 import "./leaflet"; // Importation de Leaflet
 // Swiper importé via Vite
 import "swiper/css/bundle";

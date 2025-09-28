@@ -17,9 +17,7 @@
                     </a>
                     @else
                     <div class="flex items-center md:hidden">
-                        <a href="/chat" class="flex items-center py-2 px-2 rounded-lg text-sm text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-600">
-                            <i class="fas fa-envelope text-lg mr-2"></i>
-                        </a>
+                        @livewire('nav-chat-indicator', ['variant' => 'mobile'])
                         <a href="{{ route('user.menu') }}" class="flex items-center py-2 px-4 rounded-lg text-sm font-semibold border border-gray-300 text-gray-800 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-600">
                             <span>{{ Auth::user()->name }}</span>
                         </a>
@@ -92,7 +90,7 @@
                                 x-transition:leave-start="transform opacity-100 scale-100"
                                 x-transition:leave-end="transform opacity-0 scale-95">
                                 <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-sm bg-white text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">Profil</a>
-                                <a href="/chat" class="block px-4 py-2 text-sm bg-white text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">Messagerie</a>
+                                @livewire('nav-chat-indicator', ['variant' => 'desktop'])
                                 <a href="{{ route('security.settings') }}" class="block px-4 py-2 text-sm bg-white text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">Paramètres de sécurité</a>
                                 <a href="{{ route('logout') }}" class="block px-4 py-2 text-sm bg-white text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Se déconnecter</a>
                                 <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">

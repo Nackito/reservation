@@ -35,6 +35,8 @@ class ChatBox extends Component
     $this->messages = collect();
     $this->newMessage = '';
     $this->loginID = Auth::id();
+    // Quand on arrive sur la page chat, on peut remettre le compteur global à zéro
+    $this->dispatch('resetNavChatUnseen');
   }
 
   private function buildUserAndChannelItems(): array
@@ -176,6 +178,8 @@ class ChatBox extends Component
     $this->dispatch('focusMessageInput');
     // Demander au client de scroller tout en bas après le rendu
     $this->dispatch('scrollToBottom');
+    // Ouvrir une conversation signifie qu'on consulte: remettre le badge global à zéro
+    $this->dispatch('resetNavChatUnseen');
   }
 
   public function backToList(): void

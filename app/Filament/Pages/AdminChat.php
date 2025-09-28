@@ -9,6 +9,7 @@ use Filament\Forms\Components\Select;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Log;
 use App\Models\User;
 use Livewire\Attributes\On;
 
@@ -58,8 +59,31 @@ class AdminChat extends Page
             ->required(),
         ])
         ->action(function (array $data) {
-          // Ouvrir la conversation avec l'utilisateur sélectionné
-          $this->dispatch('openConversation', id: (string) $data['user_id'])
+          // Créer un canal admin partagé entre employés (visible par tous les employés)
+          $conv = \App\Models\Conversation::create([
+            'user_id' => (int) $data['user_id'],
+            'owner_id' => (int) Auth::id(),
+            'booking_id' => null,
+            'is_admin_channel' => true,
+          ]);
+
+          // Envoyer un premier message pour matérialiser la conversation côté utilisateur
+          $message = \App\Models\Message::create([
+            'conversation_id' => $conv->id,
+            'sender_id' => (int) Auth::id(),
+            'receiver_id' => (int) $data['user_id'],
+            'content' => 'Bonjour, notre conversation vient de démarrer.',
+          ]);
+          try {
+            broadcast(new \App\Events\MessageSent($message));
+          } catch (\Throwable $e) {
+            Log::warning('Broadcast MessageSent failed for newly created admin channel', [
+              'error' => $e->getMessage(),
+            ]);
+          }
+
+          // Ouvrir le canal admin fraîchement créé
+          $this->dispatch('openConversation', id: 'admin_channel_' . $conv->id)
             ->to(\App\Livewire\AdminChatBox::class);
         }),
 

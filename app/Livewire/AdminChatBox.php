@@ -131,7 +131,38 @@ class AdminChatBox extends Component
     }
     if ($found) {
       $this->selectedUser = $found;
-    } elseif (!str_starts_with((string) $id, 'admin_channel_')) {
+    } elseif (str_starts_with((string) $id, 'admin_channel_')) {
+      // Fallback: id correspond à un canal admin fraîchement créé mais non présent en mémoire
+      $convId = (int) str_replace('admin_channel_', '', (string) $id);
+      $conv = $convId > 0 ? \App\Models\Conversation::find($convId) : null;
+      if ($conv) {
+        $booking = $conv->booking_id ? \App\Models\Booking::find($conv->booking_id) : null;
+        $baseUserName = $conv->user?->name ?? 'Utilisateur';
+        $propertyName = $baseUserName;
+        if ($booking && $booking->property && !empty($booking->property->name)) {
+          $propertyName = $booking->property->name . ' - ' . $baseUserName;
+        }
+        $last = Message::where('conversation_id', $conv->id)->latest('created_at')->first();
+        $preview = $last?->content ? \Illuminate\Support\Str::limit($last->content, 55) : '';
+        $lastAt = $last?->created_at ? $last->created_at->locale('fr')->isoFormat(self::DATE_BADGE_FORMAT) : '';
+        $lastAtSort = $last?->created_at ? $last->created_at->getTimestamp() : 0;
+        $entry = [
+          'id' => 'admin_channel_' . $conv->id,
+          'name' => $propertyName,
+          'email' => 'Canal de réservation',
+          'conversation_id' => $conv->id,
+          'last_preview' => $preview,
+          'last_at' => $lastAt,
+          'last_at_sort' => $lastAtSort,
+          'last_sender_id' => $last?->sender_id,
+        ];
+        // Insérer dans la liste active et recoller sur $this->users selon l'onglet courant
+        array_unshift($this->usersActive, $entry);
+        $this->sortArrayByLastAt($this->usersActive);
+        $this->users = $this->activeTab === 'active' ? $this->usersActive : $this->usersArchived;
+        $this->selectedUser = $entry;
+      }
+    } else {
       // Fallback: reconstruire à partir du modèle
       $user = User::find($id);
       if ($user) {
@@ -511,7 +542,12 @@ class AdminChatBox extends Component
     $items = [];
     foreach ($adminChannels as $adminChannel) {
       $booking = $adminChannel->booking_id ? \App\Models\Booking::find($adminChannel->booking_id) : null;
-      $propertyName = $booking && $booking->property ? $booking->property->name : 'Canal Admin';
+      // Nom côté admin: si réservation -> "Résidence - Prénom Nom", sinon nom de l'utilisateur
+      $baseUserName = $adminChannel->user?->name ?? 'Utilisateur';
+      $adminDisplayName = $baseUserName;
+      if ($booking && $booking->property && !empty($booking->property->name)) {
+        $adminDisplayName = $booking->property->name . ' - ' . $baseUserName;
+      }
       // Archiver N jours après la fin du séjour si on a une réservation liée
       $archived = false;
       if ($booking && !empty($booking->end_date)) {
@@ -529,7 +565,7 @@ class AdminChatBox extends Component
       $lastAtSort = $last?->created_at ? $last->created_at->getTimestamp() : 0;
       $items[] = [
         'id' => 'admin_channel_' . $adminChannel->id,
-        'name' => $propertyName,
+        'name' => $adminDisplayName,
         'email' => 'Canal de réservation',
         'conversation_id' => $adminChannel->id,
         'last_preview' => $preview,

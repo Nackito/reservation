@@ -113,7 +113,13 @@ class ChatBox extends Component
         continue;
       }
 
-      $propertyName = $booking && $booking->property ? $booking->property->name : 'Canal Admin';
+      // Nom côté utilisateur:
+      // - si conversation issue d'une réservation, afficher le nom de la résidence
+      // - sinon, garder "Afridayz"
+      $propertyName = 'Afridayz';
+      if ($booking && $booking->property && !empty($booking->property->name)) {
+        $propertyName = $booking->property->name;
+      }
       $last = Message::where('conversation_id', $channel->id)->latest('created_at')->first();
       $preview = $last?->content ? \Illuminate\Support\Str::limit($last->content, 55) : '';
       $lastAt = $last?->created_at ? $last->created_at->locale('fr')->isoFormat(self::DATE_BADGE_FORMAT) : '';

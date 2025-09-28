@@ -182,6 +182,18 @@
         const input = document.getElementById('message-input');
         if (input) input.focus();
       });
+
+      // Vider explicitement le champ après envoi (fallback si le diff DOM ne met pas à jour la valeur focalisée)
+      Livewire.on('clearMessageInput', () => {
+        const input = document.getElementById('message-input');
+        if (input) {
+          input.value = '';
+          // Émettre un event input pour notifier Livewire si nécessaire
+          input.dispatchEvent(new Event('input', {
+            bubbles: true
+          }));
+        }
+      });
     });
   </script>
 </div>

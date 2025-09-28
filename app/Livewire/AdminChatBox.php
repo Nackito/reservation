@@ -8,6 +8,7 @@ use App\Models\Message;
 use App\Models\User;
 use App\Events\MessageSent;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Illuminate\Support\Carbon;
 use Livewire\Attributes\On;

@@ -233,6 +233,8 @@ class ChatBox extends Component
     }
 
     $this->newMessage = '';
+    // Demander explicitement au client de vider le champ (sécurise le reset même si l'input est focalisé)
+    $this->dispatch('clearMessageInput');
     broadcast(new MessageSent($message));
     $this->dispatch('focusMessageInput');
     // Assurer le scroll en bas après l'ajout

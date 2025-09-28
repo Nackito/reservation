@@ -166,7 +166,8 @@ class AdminChatBox extends Component
         $entry = [
           'id' => 'admin_channel_' . $conv->id,
           'name' => $propertyName,
-          'email' => 'Canal de réservation',
+          // Si aucune réservation n'est liée, il s'agit d'un canal admin générique
+          'email' => $booking ? 'Canal de réservation' : 'Canal admin',
           'conversation_id' => $conv->id,
           'last_preview' => $preview,
           'last_at' => $lastAt,
@@ -676,7 +677,8 @@ class AdminChatBox extends Component
       $items[] = [
         'id' => 'admin_channel_' . $adminChannel->id,
         'name' => $adminDisplayName,
-        'email' => 'Canal de réservation',
+        // Afficher "Canal de réservation" si une réservation est rattachée, sinon "Canal admin"
+        'email' => $booking ? 'Canal de réservation' : 'Canal admin',
         'conversation_id' => $adminChannel->id,
         'last_preview' => $preview,
         'last_at' => $lastAt,

@@ -128,7 +128,8 @@ class ChatBox extends Component
       $items[] = [
         'id' => 'admin_channel_' . $channel->id,
         'name' => $displayName,
-        'email' => 'Canal de réservation',
+        // Sous-libellé côté utilisateur: "Afridayz" quand pas de réservation, sinon "Canal de réservation"
+        'email' => $booking ? 'Canal de réservation' : 'Afridayz',
         'conversation_id' => $channel->id,
         'last_preview' => $preview,
         'last_at' => $lastAt,
@@ -264,7 +265,7 @@ class ChatBox extends Component
 
     // Notifier le destinataire par email (si disponible) avec un anti-spam simple (3 min)
     try {
-      $recipient = \App\Models\User::find($message->receiver_id);
+      $recipient = User::find($message->receiver_id);
       if ($recipient && !empty($recipient->email)) {
         $throttleKey = 'mail_notify:' . $recipient->id . ':' . ($message->sender_id ?? '');
         if (Cache::add($throttleKey, time(), 180)) {

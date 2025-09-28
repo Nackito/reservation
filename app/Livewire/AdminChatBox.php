@@ -237,40 +237,41 @@ class AdminChatBox extends Component
 
   public function newChatMessageNotification($message)
   {
+    // Toujours: mettre à jour la vignette dans les listes (aperçu/date/ordre + non-lu)
+    $messageObj = Message::find($message['id'] ?? 0);
+    if ($messageObj) {
+      if (isset($message['conversation_id']) && $message['conversation_id']) {
+        $this->bumpConversationMeta('admin_channel_' . $message['conversation_id'], $messageObj);
+      } else {
+        $peerId = (string) ((($message['sender_id'] ?? null) == Auth::id()) ? ($message['receiver_id'] ?? '') : ($message['sender_id'] ?? ''));
+        if ($peerId !== '') {
+          $this->bumpConversationMeta($peerId, $messageObj);
+        }
+      }
+    }
+
+    // Si aucune conversation n'est ouverte, on s'arrête là (liste déjà rafraîchie)
     if (!$this->selectedUser) {
       return;
     }
 
-    // Pour un canal admin groupé, on se base sur conversation_id
+    // Si un canal admin est ouvert et correspond au message, insérer le message + maj "vu"
     if (str_starts_with($this->selectedUser['id'], 'admin_channel_')) {
-      if (($message['conversation_id'] ?? null) == ($this->selectedUser['conversation_id'] ?? null)) {
-        $messageObj = Message::find($message['id']);
+      if (($message['conversation_id'] ?? null) == ($this->selectedUser['conversation_id'] ?? null) && $messageObj) {
         $this->messages->push($messageObj);
-        // Conversation ouverte: mettre à jour le vu immédiat (pas de barre non-lus live)
         $this->lastSeen[$this->selectedUser['id']] = max($this->lastSeen[$this->selectedUser['id']] ?? 0, $messageObj->created_at?->getTimestamp() ?? time());
-        // Recalculer uniquement l'indicateur "Vu" (les non-lus restent à 0 quand on est dans la vue)
         $this->computeConversationMeta($this->lastSeen[$this->selectedUser['id']] ?? 0);
-      }
-      // Mettre à jour la vignette de la conversation correspondante
-      if (isset($message['conversation_id'])) {
-        $this->bumpConversationMeta('admin_channel_' . $message['conversation_id'], Message::find($message['id']));
       }
       return;
     }
 
-    // Discussion directe: on vérifie l'expéditeur
-    if ((string) ($message['sender_id'] ?? '') === (string) $this->selectedUser['id']) {
-      $messageObj = Message::find($message['id']);
-      $this->messages->push($messageObj);
-      // Conversation ouverte: marquer comme vu maintenant
-      $this->lastSeen[$this->selectedUser['id']] = max($this->lastSeen[$this->selectedUser['id']] ?? 0, $messageObj->created_at?->getTimestamp() ?? time());
-      // Recalculer uniquement l'indicateur "Vu"
-      $this->computeConversationMeta($this->lastSeen[$this->selectedUser['id']] ?? 0);
-    }
-    // Bump aussi la conversation (pair = sender ou receiver différent de moi)
-    $peerId = (string) (($message['sender_id'] ?? null) == Auth::id() ? ($message['receiver_id'] ?? '') : ($message['sender_id'] ?? ''));
-    if ($peerId !== '') {
-      $this->bumpConversationMeta($peerId, Message::find($message['id']));
+    // Discussion directe: si la conversation ouverte est l'expéditeur, insérer + maj "vu"
+    if ((string) ($message['sender_id'] ?? '') === (string) ($this->selectedUser['id'] ?? '')) {
+      if ($messageObj) {
+        $this->messages->push($messageObj);
+        $this->lastSeen[$this->selectedUser['id']] = max($this->lastSeen[$this->selectedUser['id']] ?? 0, $messageObj->created_at?->getTimestamp() ?? time());
+        $this->computeConversationMeta($this->lastSeen[$this->selectedUser['id']] ?? 0);
+      }
     }
   }
 
@@ -378,6 +379,7 @@ class AdminChatBox extends Component
         $u['last_preview'] = \Illuminate\Support\Str::limit($message->content, 55);
         $u['last_at'] = $message->created_at ? $message->created_at->locale('fr')->isoFormat(self::DATE_BADGE_FORMAT) : '';
         $u['last_at_sort'] = $message->created_at ? $message->created_at->getTimestamp() : time();
+        $u['last_sender_id'] = $message->sender_id;
         if ($this->selectedUser && $this->selectedUser['id'] === $id) {
           $this->selectedUser = $u;
         }
@@ -393,6 +395,7 @@ class AdminChatBox extends Component
         $ua['last_preview'] = \Illuminate\Support\Str::limit($message->content, 55);
         $ua['last_at'] = $message->created_at ? $message->created_at->locale('fr')->isoFormat(self::DATE_BADGE_FORMAT) : '';
         $ua['last_at_sort'] = $message->created_at ? $message->created_at->getTimestamp() : time();
+        $ua['last_sender_id'] = $message->sender_id;
         $updated = true;
         break;
       }
@@ -404,6 +407,7 @@ class AdminChatBox extends Component
           $ur['last_preview'] = \Illuminate\Support\Str::limit($message->content, 55);
           $ur['last_at'] = $message->created_at ? $message->created_at->locale('fr')->isoFormat(self::DATE_BADGE_FORMAT) : '';
           $ur['last_at_sort'] = $message->created_at ? $message->created_at->getTimestamp() : time();
+          $ur['last_sender_id'] = $message->sender_id;
           break;
         }
       }

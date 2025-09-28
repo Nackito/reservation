@@ -241,31 +241,39 @@ class ChatBox extends Component
 
   public function newChatMessageNotification($message)
   {
+    // Toujours: mettre à jour la vignette dans les listes (aperçu/date/ordre + non-lu)
+    $messageObj = Message::find($message['id'] ?? 0);
+    if ($messageObj) {
+      if (isset($message['conversation_id']) && $message['conversation_id']) {
+        $this->bumpConversationMeta('admin_channel_' . $message['conversation_id'], $messageObj);
+      } else {
+        $peerId = (string) ((($message['sender_id'] ?? null) == Auth::id()) ? ($message['receiver_id'] ?? '') : ($message['sender_id'] ?? ''));
+        if ($peerId !== '') {
+          $this->bumpConversationMeta($peerId, $messageObj);
+        }
+      }
+    }
+
+    // Si aucune conversation n'est ouverte, s'arrêter (liste déjà rafraîchie)
     if (!$this->selectedUser) {
       return;
     }
 
+    // Si un canal admin correspond à la conversation ouverte, insérer le message + maj du vu
     if (str_starts_with($this->selectedUser['id'], 'admin_channel_')) {
-      if (($message['conversation_id'] ?? null) == ($this->selectedUser['conversation_id'] ?? null)) {
-        $messageObj = Message::find($message['id']);
+      if (($message['conversation_id'] ?? null) == ($this->selectedUser['conversation_id'] ?? null) && $messageObj) {
         $this->messages->push($messageObj);
         $this->lastSeen[$this->selectedUser['id']] = max($this->lastSeen[$this->selectedUser['id']] ?? 0, $messageObj->created_at?->getTimestamp() ?? time());
-      }
-      if (isset($message['conversation_id'])) {
-        $this->bumpConversationMeta('admin_channel_' . $message['conversation_id'], Message::find($message['id']));
       }
       return;
     }
 
-    if ((string)($message['sender_id'] ?? '') === (string)$this->selectedUser['id']) {
-      $messageObj = Message::find($message['id']);
-      $this->messages->push($messageObj);
-      $this->lastSeen[$this->selectedUser['id']] = max($this->lastSeen[$this->selectedUser['id']] ?? 0, $messageObj->created_at?->getTimestamp() ?? time());
-    }
-
-    $peerId = (string)(($message['sender_id'] ?? null) == Auth::id() ? ($message['receiver_id'] ?? '') : ($message['sender_id'] ?? ''));
-    if ($peerId !== '') {
-      $this->bumpConversationMeta($peerId, Message::find($message['id']));
+    // Discussion directe: si la conv ouverte est celle de l'expéditeur, insérer + maj du vu
+    if ((string)($message['sender_id'] ?? '') === (string)($this->selectedUser['id'] ?? '')) {
+      if ($messageObj) {
+        $this->messages->push($messageObj);
+        $this->lastSeen[$this->selectedUser['id']] = max($this->lastSeen[$this->selectedUser['id']] ?? 0, $messageObj->created_at?->getTimestamp() ?? time());
+      }
     }
   }
 
@@ -276,6 +284,7 @@ class ChatBox extends Component
         $u['last_preview'] = \Illuminate\Support\Str::limit($message->content, 55);
         $u['last_at'] = $message->created_at ? $message->created_at->locale('fr')->isoFormat(self::DATE_BADGE_FORMAT) : '';
         $u['last_at_sort'] = $message->created_at ? $message->created_at->getTimestamp() : time();
+        $u['last_sender_id'] = $message->sender_id;
         if ($this->selectedUser && $this->selectedUser['id'] === $id) {
           $this->selectedUser = $u;
         }

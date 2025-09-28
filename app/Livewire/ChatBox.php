@@ -101,41 +101,57 @@ class ChatBox extends Component
     $items = [];
     foreach ($channels as $channel) {
       $booking = $channel->booking_id ? \App\Models\Booking::find($channel->booking_id) : null;
-
-      // Masquer côté utilisateur les conversations de réservation 2 jours après la date de sortie
-      $expired = false;
-      if ($booking && $booking->end_date) {
-        $end = $booking->end_date instanceof \Carbon\Carbon ? $booking->end_date->copy() : \Carbon\Carbon::parse($booking->end_date);
-        $cutoff = $end->endOfDay()->addDays(2);
-        $expired = \Carbon\Carbon::now()->greaterThan($cutoff);
-      }
-      if ($expired) {
+      if ($this->isChannelExpiredForUser($booking)) {
         continue;
       }
 
-      // Nom côté utilisateur:
-      // - si conversation issue d'une réservation, afficher le nom de la résidence
-      // - sinon, garder "Afridayz"
-      $propertyName = 'Afridayz';
-      if ($booking && $booking->property && !empty($booking->property->name)) {
-        $propertyName = $booking->property->name;
-      }
-      $last = Message::where('conversation_id', $channel->id)->latest('created_at')->first();
-      $preview = $last?->content ? \Illuminate\Support\Str::limit($last->content, 55) : '';
-      $lastAt = $last?->created_at ? $last->created_at->locale('fr')->isoFormat(self::DATE_BADGE_FORMAT) : '';
-      $lastAtSort = $last?->created_at ? $last->created_at->getTimestamp() : 0;
+      $displayName = $this->userDisplayNameForAdminChannel($booking);
+      [$preview, $lastAt, $lastAtSort, $lastSenderId] = $this->lastMessageMetaForChannel($channel->id);
+
       $items[] = [
         'id' => 'admin_channel_' . $channel->id,
-        'name' => $propertyName,
+        'name' => $displayName,
         'email' => 'Canal de réservation',
         'conversation_id' => $channel->id,
         'last_preview' => $preview,
         'last_at' => $lastAt,
         'last_at_sort' => $lastAtSort,
-        'last_sender_id' => $last?->sender_id,
+        'last_sender_id' => $lastSenderId,
       ];
     }
     return $items;
+  }
+
+  // --- Helpers buildAdminItems ---
+  private function isChannelExpiredForUser(?\App\Models\Booking $booking): bool
+  {
+    if (!$booking || !$booking->end_date) {
+      return false;
+    }
+    $end = $booking->end_date instanceof \Carbon\Carbon ? $booking->end_date->copy() : \Carbon\Carbon::parse($booking->end_date);
+    $cutoff = $end->endOfDay()->addDays(2);
+    return \Carbon\Carbon::now()->greaterThan($cutoff);
+  }
+
+  private function userDisplayNameForAdminChannel(?\App\Models\Booking $booking): string
+  {
+    if ($booking && $booking->property && !empty($booking->property->name)) {
+      return $booking->property->name;
+    }
+    return 'Afridayz';
+  }
+
+  /**
+   * @return array{0:string,1:string,2:int,3:int|null} [preview, lastAt, lastAtSort, lastSenderId]
+   */
+  private function lastMessageMetaForChannel(int $channelId): array
+  {
+    $last = Message::where('conversation_id', $channelId)->latest('created_at')->first();
+    $preview = $last?->content ? \Illuminate\Support\Str::limit($last->content, 55) : '';
+    $lastAt = $last?->created_at ? $last->created_at->locale('fr')->isoFormat(self::DATE_BADGE_FORMAT) : '';
+    $lastAtSort = $last?->created_at ? $last->created_at->getTimestamp() : 0;
+    $lastSenderId = $last?->sender_id;
+    return [$preview, $lastAt, $lastAtSort, $lastSenderId];
   }
 
   public function loadMessages()
@@ -267,39 +283,63 @@ class ChatBox extends Component
 
   public function newChatMessageNotification($message)
   {
-    // Toujours: mettre à jour la vignette dans les listes (aperçu/date/ordre + non-lu)
     $messageObj = Message::find($message['id'] ?? 0);
     if ($messageObj) {
-      if (isset($message['conversation_id']) && $message['conversation_id']) {
-        $this->bumpConversationMeta('admin_channel_' . $message['conversation_id'], $messageObj);
-      } else {
-        $peerId = (string) ((($message['sender_id'] ?? null) == Auth::id()) ? ($message['receiver_id'] ?? '') : ($message['sender_id'] ?? ''));
-        if ($peerId !== '') {
-          $this->bumpConversationMeta($peerId, $messageObj);
-        }
-      }
+      $this->refreshListPreviewForIncoming($message, $messageObj);
     }
 
-    // Si aucune conversation n'est ouverte, s'arrêter (liste déjà rafraîchie)
     if (!$this->selectedUser) {
+      return; // aucune conversation ouverte: la liste a déjà été mise à jour
+    }
+
+    if ($this->isAdminChannelOpen()) {
+      $this->maybeAppendIfSameAdminChannel($message, $messageObj);
       return;
     }
 
-    // Si un canal admin correspond à la conversation ouverte, insérer le message + maj du vu
-    if (str_starts_with($this->selectedUser['id'], 'admin_channel_')) {
-      if (($message['conversation_id'] ?? null) == ($this->selectedUser['conversation_id'] ?? null) && $messageObj) {
-        $this->messages->push($messageObj);
-        $this->lastSeen[$this->selectedUser['id']] = max($this->lastSeen[$this->selectedUser['id']] ?? 0, $messageObj->created_at?->getTimestamp() ?? time());
-      }
+    $this->maybeAppendIfDirectPeer($message, $messageObj);
+  }
+
+  // --- Helpers d'extraction ---
+  private function refreshListPreviewForIncoming(array $payload, Message $messageObj): void
+  {
+    if (!empty($payload['conversation_id'])) {
+      $this->bumpConversationMeta('admin_channel_' . $payload['conversation_id'], $messageObj);
       return;
     }
+    $peerId = (string) (((int) ($payload['sender_id'] ?? 0) === (int) Auth::id()) ? ($payload['receiver_id'] ?? '') : ($payload['sender_id'] ?? ''));
+    if ($peerId !== '') {
+      $this->bumpConversationMeta($peerId, $messageObj);
+    }
+  }
 
-    // Discussion directe: si la conv ouverte est celle de l'expéditeur, insérer + maj du vu
-    if ((string)($message['sender_id'] ?? '') === (string)($this->selectedUser['id'] ?? '')) {
-      if ($messageObj) {
-        $this->messages->push($messageObj);
-        $this->lastSeen[$this->selectedUser['id']] = max($this->lastSeen[$this->selectedUser['id']] ?? 0, $messageObj->created_at?->getTimestamp() ?? time());
-      }
+  private function isAdminChannelOpen(): bool
+  {
+    return $this->selectedUser && str_starts_with($this->selectedUser['id'], 'admin_channel_');
+  }
+
+  private function maybeAppendIfSameAdminChannel(array $payload, ?Message $messageObj): void
+  {
+    if (!$messageObj) {
+      return;
+    }
+    $openId = $this->selectedUser['conversation_id'] ?? null;
+    if (($payload['conversation_id'] ?? null) == $openId) {
+      $this->messages->push($messageObj);
+      $key = $this->selectedUser['id'];
+      $this->lastSeen[$key] = max($this->lastSeen[$key] ?? 0, $messageObj->created_at?->getTimestamp() ?? time());
+    }
+  }
+
+  private function maybeAppendIfDirectPeer(array $payload, ?Message $messageObj): void
+  {
+    if (!$messageObj) {
+      return;
+    }
+    $openPeerId = (string) ($this->selectedUser['id'] ?? '');
+    if ((string) ($payload['sender_id'] ?? '') === $openPeerId) {
+      $this->messages->push($messageObj);
+      $this->lastSeen[$openPeerId] = max($this->lastSeen[$openPeerId] ?? 0, $messageObj->created_at?->getTimestamp() ?? time());
     }
   }
 

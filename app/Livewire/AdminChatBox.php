@@ -143,7 +143,7 @@ class AdminChatBox extends Component
           $propertyName = $booking->property->name . ' - ' . $baseUserName;
         }
         $last = Message::where('conversation_id', $conv->id)->latest('created_at')->first();
-        $preview = $last?->content ? \Illuminate\Support\Str::limit($last->content, 55) : '';
+        $preview = $last?->content ? Str::limit($last->content, 55) : '';
         $lastAt = $last?->created_at ? $last->created_at->locale('fr')->isoFormat(self::DATE_BADGE_FORMAT) : '';
         $lastAtSort = $last?->created_at ? $last->created_at->getTimestamp() : 0;
         $entry = [
@@ -222,7 +222,7 @@ class AdminChatBox extends Component
       ]);
       // Notification email utilisateur
       try {
-        $recipient = \App\Models\User::find($targetUserId);
+        $recipient = User::find($targetUserId);
         if ($recipient && !empty($recipient->email)) {
           $recipient->notify(new \App\Notifications\MessageReceivedNotification($message));
         }
@@ -237,7 +237,7 @@ class AdminChatBox extends Component
       ]);
       // Notification email destinataire direct
       try {
-        $recipient = \App\Models\User::find($message->receiver_id);
+        $recipient = User::find($message->receiver_id);
         if ($recipient && !empty($recipient->email)) {
           $recipient->notify(new \App\Notifications\MessageReceivedNotification($message));
         }
@@ -287,41 +287,65 @@ class AdminChatBox extends Component
 
   public function newChatMessageNotification($message)
   {
-    // Toujours: mettre à jour la vignette dans les listes (aperçu/date/ordre + non-lu)
     $messageObj = Message::find($message['id'] ?? 0);
     if ($messageObj) {
-      if (isset($message['conversation_id']) && $message['conversation_id']) {
-        $this->bumpConversationMeta('admin_channel_' . $message['conversation_id'], $messageObj);
-      } else {
-        $peerId = (string) ((($message['sender_id'] ?? null) == Auth::id()) ? ($message['receiver_id'] ?? '') : ($message['sender_id'] ?? ''));
-        if ($peerId !== '') {
-          $this->bumpConversationMeta($peerId, $messageObj);
-        }
-      }
+      $this->refreshListPreviewForIncoming($message, $messageObj);
     }
 
-    // Si aucune conversation n'est ouverte, on s'arrête là (liste déjà rafraîchie)
     if (!$this->selectedUser) {
+      return; // aucune conversation ouverte: la liste a déjà été mise à jour
+    }
+
+    if ($this->isAdminChannelOpen()) {
+      $this->maybeAppendIfSameAdminChannel($message, $messageObj);
       return;
     }
 
-    // Si un canal admin est ouvert et correspond au message, insérer le message + maj "vu"
-    if (str_starts_with($this->selectedUser['id'], 'admin_channel_')) {
-      if (($message['conversation_id'] ?? null) == ($this->selectedUser['conversation_id'] ?? null) && $messageObj) {
-        $this->messages->push($messageObj);
-        $this->lastSeen[$this->selectedUser['id']] = max($this->lastSeen[$this->selectedUser['id']] ?? 0, $messageObj->created_at?->getTimestamp() ?? time());
-        $this->computeConversationMeta($this->lastSeen[$this->selectedUser['id']] ?? 0);
-      }
+    $this->maybeAppendIfDirectPeer($message, $messageObj);
+  }
+
+  // --- Helpers d'extraction ---
+  private function refreshListPreviewForIncoming(array $payload, Message $messageObj): void
+  {
+    if (!empty($payload['conversation_id'])) {
+      $this->bumpConversationMeta('admin_channel_' . $payload['conversation_id'], $messageObj);
       return;
     }
+    $peerId = (string) (((int) ($payload['sender_id'] ?? 0) === (int) Auth::id()) ? ($payload['receiver_id'] ?? '') : ($payload['sender_id'] ?? ''));
+    if ($peerId !== '') {
+      $this->bumpConversationMeta($peerId, $messageObj);
+    }
+  }
 
-    // Discussion directe: si la conversation ouverte est l'expéditeur, insérer + maj "vu"
-    if ((string) ($message['sender_id'] ?? '') === (string) ($this->selectedUser['id'] ?? '')) {
-      if ($messageObj) {
-        $this->messages->push($messageObj);
-        $this->lastSeen[$this->selectedUser['id']] = max($this->lastSeen[$this->selectedUser['id']] ?? 0, $messageObj->created_at?->getTimestamp() ?? time());
-        $this->computeConversationMeta($this->lastSeen[$this->selectedUser['id']] ?? 0);
-      }
+  private function isAdminChannelOpen(): bool
+  {
+    return $this->selectedUser && str_starts_with($this->selectedUser['id'], 'admin_channel_');
+  }
+
+  private function maybeAppendIfSameAdminChannel(array $payload, ?Message $messageObj): void
+  {
+    if (!$messageObj) {
+      return;
+    }
+    $openId = $this->selectedUser['conversation_id'] ?? null;
+    if (($payload['conversation_id'] ?? null) == $openId) {
+      $this->messages->push($messageObj);
+      $key = $this->selectedUser['id'];
+      $this->lastSeen[$key] = max($this->lastSeen[$key] ?? 0, $messageObj->created_at?->getTimestamp() ?? time());
+      $this->computeConversationMeta($this->lastSeen[$key] ?? 0);
+    }
+  }
+
+  private function maybeAppendIfDirectPeer(array $payload, ?Message $messageObj): void
+  {
+    if (!$messageObj) {
+      return;
+    }
+    $openPeerId = (string) ($this->selectedUser['id'] ?? '');
+    if ((string) ($payload['sender_id'] ?? '') === $openPeerId) {
+      $this->messages->push($messageObj);
+      $this->lastSeen[$openPeerId] = max($this->lastSeen[$openPeerId] ?? 0, $messageObj->created_at?->getTimestamp() ?? time());
+      $this->computeConversationMeta($this->lastSeen[$openPeerId] ?? 0);
     }
   }
 
@@ -342,39 +366,9 @@ class AdminChatBox extends Component
     }
 
     $entry = $this->selectedUser;
-    if (str_starts_with($entry['id'], 'admin_channel_')) {
-      $conversationId = (int) ($entry['conversation_id'] ?? 0);
-      if ($conversationId > 0) {
-        // Supprimer messages et la conversation liée
-        \App\Models\Message::where('conversation_id', $conversationId)->delete();
-        if ($conv = \App\Models\Conversation::find($conversationId)) {
-          $conv->delete();
-        }
-      }
-    } else {
-      $peerId = (int) $entry['id'];
-      if ($peerId > 0) {
-        \App\Models\Message::query()
-          ->where(function ($q) use ($peerId) {
-            $q->where('sender_id', Auth::id())->where('receiver_id', $peerId);
-          })
-          ->orWhere(function ($q) use ($peerId) {
-            $q->where('sender_id', $peerId)->where('receiver_id', Auth::id());
-          })
-          ->delete();
-      }
-    }
-
-    // Retirer des listes et ré-initialiser l'état
-    $this->usersActive = array_values(array_filter($this->usersActive, fn($u) => ($u['id'] ?? null) !== $entry['id']));
-    $this->usersArchived = array_values(array_filter($this->usersArchived, fn($u) => ($u['id'] ?? null) !== $entry['id']));
-    $this->users = $this->activeTab === 'active' ? $this->usersActive : $this->usersArchived;
-
-    $this->selectedUser = null;
-    $this->messages = collect();
-    $this->showChat = false;
-    session()->forget('admin_chat.selected');
-    $this->dispatch('adminChatCleared');
+    $this->deleteEntry($entry);
+    $this->cleanListsAfterRemoval($entry['id']);
+    $this->resetSelectionAfterDelete();
   }
 
   #[On('bulkDeleteConversations')]
@@ -382,42 +376,65 @@ class AdminChatBox extends Component
   {
     foreach ($ids as $rawId) {
       $id = (string) $rawId;
-      if (str_starts_with($id, 'admin_channel_')) {
-        $conversationId = (int) str_replace('admin_channel_', '', $id);
-        if ($conversationId > 0) {
-          \App\Models\Message::where('conversation_id', $conversationId)->delete();
-          if ($conv = \App\Models\Conversation::find($conversationId)) {
-            $conv->delete();
-          }
-        }
-      } else {
-        $peerId = (int) $id;
-        if ($peerId > 0) {
-          \App\Models\Message::query()
-            ->where(function ($q) use ($peerId) {
-              $q->where('sender_id', Auth::id())->where('receiver_id', $peerId);
-            })
-            ->orWhere(function ($q) use ($peerId) {
-              $q->where('sender_id', $peerId)->where('receiver_id', Auth::id());
-            })
-            ->delete();
-        }
-      }
-
-      // Nettoyer les listes et la sélection en cours si concernée
-      $this->usersActive = array_values(array_filter($this->usersActive, fn($u) => ($u['id'] ?? null) !== $id));
-      $this->usersArchived = array_values(array_filter($this->usersArchived, fn($u) => ($u['id'] ?? null) !== $id));
+      $this->deleteById($id);
+      $this->cleanListsAfterRemoval($id);
       if ($this->selectedUser && ($this->selectedUser['id'] ?? null) === $id) {
-        $this->selectedUser = null;
-        $this->messages = collect();
-        $this->showChat = false;
-        session()->forget('admin_chat.selected');
+        $this->resetSelectionAfterDelete(false);
       }
     }
 
     $this->users = $this->activeTab === 'active' ? $this->usersActive : $this->usersArchived;
-    // Après suppression multiple, on reste sur la liste
     $this->dispatch('adminChatCleared');
+  }
+
+  // --- Helpers de suppression et nettoyage ---
+  private function deleteEntry(array $entry): void
+  {
+    $id = (string) ($entry['id'] ?? '');
+    $this->deleteById($id, $entry['conversation_id'] ?? null);
+  }
+
+  private function deleteById(string $id, ?int $conversationId = null): void
+  {
+    if (str_starts_with($id, 'admin_channel_')) {
+      $convId = $conversationId ?? (int) str_replace('admin_channel_', '', $id);
+      if ($convId > 0) {
+        \App\Models\Message::where('conversation_id', $convId)->delete();
+        if ($conv = \App\Models\Conversation::find($convId)) {
+          $conv->delete();
+        }
+      }
+      return;
+    }
+    $peerId = (int) $id;
+    if ($peerId > 0) {
+      \App\Models\Message::query()
+        ->where(function ($q) use ($peerId) {
+          $q->where('sender_id', Auth::id())->where('receiver_id', $peerId);
+        })
+        ->orWhere(function ($q) use ($peerId) {
+          $q->where('sender_id', $peerId)->where('receiver_id', Auth::id());
+        })
+        ->delete();
+    }
+  }
+
+  private function cleanListsAfterRemoval(string $id): void
+  {
+    $this->usersActive = array_values(array_filter($this->usersActive, fn($u) => ($u['id'] ?? null) !== $id));
+    $this->usersArchived = array_values(array_filter($this->usersArchived, fn($u) => ($u['id'] ?? null) !== $id));
+  }
+
+  private function resetSelectionAfterDelete(bool $emitCleared = true): void
+  {
+    $this->users = $this->activeTab === 'active' ? $this->usersActive : $this->usersArchived;
+    $this->selectedUser = null;
+    $this->messages = collect();
+    $this->showChat = false;
+    session()->forget('admin_chat.selected');
+    if ($emitCleared) {
+      $this->dispatch('adminChatCleared');
+    }
   }
 
   private function bumpConversationMeta(string $id, Message $message): void

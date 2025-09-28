@@ -188,12 +188,30 @@ class AdminChatBox extends Component
         'receiver_id' => $targetUserId, // l'utilisateur reçoit les messages du canal admin
         'content' => $this->newMessage,
       ]);
+      // Notification email utilisateur
+      try {
+        $recipient = \App\Models\User::find($targetUserId);
+        if ($recipient && !empty($recipient->email)) {
+          $recipient->notify(new \App\Notifications\MessageReceivedNotification($message));
+        }
+      } catch (\Throwable $e) {
+        // ne bloque pas l'envoi du message si l'email échoue
+      }
     } else {
       $message = Message::create([
         'sender_id' => Auth::id(),
         'receiver_id' => (int) ($this->selectedUser['id'] ?? 0),
         'content' => $this->newMessage,
       ]);
+      // Notification email destinataire direct
+      try {
+        $recipient = \App\Models\User::find($message->receiver_id);
+        if ($recipient && !empty($recipient->email)) {
+          $recipient->notify(new \App\Notifications\MessageReceivedNotification($message));
+        }
+      } catch (\Throwable $e) {
+        // ignorer les erreurs d'email
+      }
     }
 
     $this->messages = $this->messages instanceof \Illuminate\Support\Collection ? $this->messages : collect($this->messages);

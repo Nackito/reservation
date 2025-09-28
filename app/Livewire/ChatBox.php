@@ -8,6 +8,7 @@ use App\Models\Conversation;
 use App\Models\User;
 use App\Events\MessageSent;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
 
 class ChatBox extends Component
@@ -207,6 +208,19 @@ class ChatBox extends Component
         'receiver_id' => (int)$this->selectedUser['id'],
         'content' => $this->newMessage,
       ]);
+    }
+
+    // Notifier le destinataire par email (si disponible) avec un anti-spam simple (3 min)
+    try {
+      $recipient = \App\Models\User::find($message->receiver_id);
+      if ($recipient && !empty($recipient->email)) {
+        $throttleKey = 'mail_notify:' . $recipient->id . ':' . ($message->sender_id ?? '');
+        if (Cache::add($throttleKey, time(), 180)) {
+          $recipient->notify(new \App\Notifications\MessageReceivedNotification($message));
+        }
+      }
+    } catch (\Throwable $e) {
+      // On ignore silencieusement toute erreur d'envoi d'email pour ne pas bloquer le chat
     }
 
     $this->messages = $this->messages instanceof \Illuminate\Support\Collection ? $this->messages : collect($this->messages);

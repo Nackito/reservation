@@ -13,10 +13,14 @@ class BookingAcceptedNotification extends Notification implements ShouldQueue
   use Queueable;
 
   public Booking $booking;
+  public ?string $paymentUrl;
+  public $amount;
 
-  public function __construct(Booking $booking)
+  public function __construct(Booking $booking, ?string $paymentUrl = null, $amount = null)
   {
     $this->booking = $booking;
+    $this->paymentUrl = $paymentUrl;
+    $this->amount = $amount;
   }
 
   public function via($notifiable)
@@ -26,17 +30,28 @@ class BookingAcceptedNotification extends Notification implements ShouldQueue
 
   public function toMail($notifiable)
   {
-    return (new MailMessage)
+    $mail = (new MailMessage)
       ->subject('Votre réservation a été acceptée')
-      ->line("Votre réservation à été accepté, vous pouvez procedé au paiement.")
-      ->line("Sans paiement, nous ne pourront vous garantir la disponibilité le jour-j");
+      ->line("Votre réservation a été acceptée.");
+
+    if ($this->amount !== null) {
+      $mail->line('Montant à payer : ' . $this->amount . ' FrCFA');
+    }
+    if (!empty($this->paymentUrl)) {
+      $mail->line('Lien de paiement : ' . $this->paymentUrl);
+    }
+    $mail->line("Sans paiement, nous ne pourrons vous garantir la disponibilité le jour-j.");
+
+    return $mail;
   }
 
   public function toArray($notifiable)
   {
     return [
       'booking_id' => $this->booking->id,
-      'message' => "Votre réservation à été accepté, vous pouvez procedé au paiement.\nSans paiement, nous ne pourront vous garantir la disponibilité le jour-j",
+      'message' => "Votre réservation a été acceptée. Sans paiement, nous ne pourrons vous garantir la disponibilité le jour-j.",
+      'payment_url' => $this->paymentUrl,
+      'amount' => $this->amount,
     ];
   }
 }

@@ -142,3 +142,7 @@ Route::middleware(['auth'])->delete('/two-factor/disable', function () {
 })->name('two-factor.disable');
 
 require_once __DIR__ . '/auth.php';
+
+// CinetPay callbacks
+Route::post('/cinetpay/notify', [\App\Http\Controllers\CinetPayController::class, 'notify'])->name('cinetpay.notify');
+Route::get('/cinetpay/return', [\App\Http\Controllers\CinetPayController::class, 'return'])->name('cinetpay.return');

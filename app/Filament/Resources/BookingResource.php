@@ -3,6 +3,8 @@
 namespace App\Filament\Resources;
 
 use Illuminate\Support\Facades\Mail;
+use App\Services\CinetPayService;
+use Illuminate\Support\Facades\Log;
 
 use App\Notifications\BookingCanceledNotification;
 use Illuminate\Support\Facades\Notification;
@@ -18,7 +20,7 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
+// use Illuminate\Support\Facades\Log; // duplicate removed
 use Filament\Support\Enums\IconName;
 use Filament\Actions\EditAction;
 use Filament\Actions\Action;
@@ -110,13 +112,38 @@ class BookingResource extends Resource
                         $record->update(['status' => 'accepted']);
                         $user = $record->user;
                         $admin = Auth::user();
-                        // Générer le lien de paiement (placeholder, à remplacer par la vraie route plus tard)
-                        $paymentUrl = url('/payment/cinetpay/' . $record->id);
+                        // Générer l'URL de paiement CinetPay
                         $amount = method_exists($record, 'calculateTotalPrice') ? $record->calculateTotalPrice() : $record->total_price;
+                        $paymentUrl = null;
+                        try {
+                            /** @var CinetPayService $cinetpay */
+                            $cinetpay = app(CinetPayService::class);
+                            $txId = 'BK-' . $record->id . '-' . time();
+                            $desc = 'Paiement réservation #' . $record->id;
+                            $resp = $cinetpay->initPayment(
+                                $txId,
+                                $amount,
+                                $desc,
+                                $user?->name,
+                                $user?->email,
+                                $user?->phone ?? null
+                            );
+                            if (!empty($resp['success'])) {
+                                $paymentUrl = $resp['url'] ?? null;
+                            } else {
+                                Log::warning('CinetPay init échouée', ['resp' => $resp]);
+                            }
+                        } catch (\Throwable $e) {
+                            Log::warning('Erreur CinetPay: ' . $e->getMessage());
+                        }
+                        if (!$paymentUrl) {
+                            // Fallback: page des réservations utilisateur
+                            $paymentUrl = route('user-reservations');
+                        }
                         if ($user) {
                             // Notification Laravel (mail + database)
                             try {
-                                $user->notify(new \App\Notifications\BookingAcceptedNotification($record));
+                                $user->notify(new \App\Notifications\BookingAcceptedNotification($record, $paymentUrl, $amount));
                             } catch (\Throwable $e) {
                                 Log::warning('Notification acceptation non envoyée: ' . $e->getMessage());
                             }

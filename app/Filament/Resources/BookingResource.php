@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\Log;
 use App\Services\Admin\BookingActionHelper;
 
 use App\Notifications\BookingCanceledNotification;
-use Illuminate\Support\Facades\Notification;
 use App\Filament\Resources\BookingResource\Pages;
 use App\Models\Booking;
 use Filament\Forms;
@@ -25,6 +24,7 @@ use Illuminate\Support\Facades\Auth;
 use Filament\Support\Enums\IconName;
 use Filament\Actions\EditAction;
 use Filament\Actions\Action;
+use Filament\Notifications\Notification;
 //use App\Filament\Resources\BookingResource;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\DatePicker;
@@ -132,6 +132,13 @@ class BookingResource extends Resource
                     'heroicon-o-x-circle' => 'failed',
                 ])
                 ->sortable(),
+            Tables\Columns\TextColumn::make('payment_pending_since')
+                ->label('')
+                ->getStateUsing(fn($record) => $record ? \Carbon\Carbon::parse($record->updated_at ?? $record->created_at)->diffForHumans() : null)
+                ->formatStateUsing(fn($state) => $state ? 'En attente de paiement depuis ' . $state : null)
+                ->visible(fn($record) => $record && ($record->payment_status ?? null) === 'pending')
+                ->badge()
+                ->color('warning'),
             Tables\Columns\TextColumn::make('paid_at')
                 ->label('')
                 ->visible(fn($record) => $record && ($record->payment_status ?? null) === 'paid' && !empty($record->paid_at))
@@ -171,6 +178,10 @@ class BookingResource extends Resource
             ->requiresConfirmation()
             ->action(function (Booking $record) {
                 BookingActionHelper::handleSimulatePaymentSuccess($record);
+                Notification::make()
+                    ->title('Paiement simulé: confirmé')
+                    ->success()
+                    ->send();
             });
     }
 
@@ -183,8 +194,11 @@ class BookingResource extends Resource
             ->visible(fn($record) => app()->environment('local') && $record && $record->status === 'accepted' && ($record->payment_status ?? 'pending') !== 'paid')
             ->requiresConfirmation()
             ->action(function (Booking $record) {
-                $record->payment_status = 'failed';
-                $record->save();
+                \App\Services\Admin\BookingActionHelper::handleSimulatePaymentFail($record);
+                Notification::make()
+                    ->title('Paiement simulé: échoué')
+                    ->danger()
+                    ->send();
             });
     }
 

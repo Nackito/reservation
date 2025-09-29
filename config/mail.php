@@ -113,4 +113,15 @@ return [
         'name' => env('MAIL_FROM_NAME', 'Example'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Admin Email (Notifications)
+    |--------------------------------------------------------------------------
+    |
+    | Adresse email utilisée pour recevoir les notifications administrateur
+    | (ex: confirmation de paiement). Définissez MAIL_ADMIN_EMAIL dans .env.
+    |
+    */
+    'admin_email' => env('MAIL_ADMIN_EMAIL'),
+
 ];

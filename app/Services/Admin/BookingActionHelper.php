@@ -24,19 +24,44 @@ class BookingActionHelper
         ->where('booking_id', $record->id)
         ->first();
       if (!$conversation) {
-        return;
+        // même si pas de conversation, on continue pour l'email
       }
       $user = $record->user;
       $amount = self::computeAmount($record);
       $amountFmt = self::formatAmountFrCfa($amount);
-      $msg = "Paiement confirmé (FAKE). Nous avons bien reçu {$amountFmt} FrCFA pour votre réservation. Merci !";
-      $message = \App\Models\Message::create([
-        'conversation_id' => $conversation->id,
-        'sender_id' => Auth::id() ?: 1,
-        'receiver_id' => $user ? $user->id : null,
-        'content' => $msg,
-      ]);
-      self::safeBroadcast($message);
+      if ($conversation) {
+        $msg = "Paiement confirmé (FAKE). Nous avons bien reçu {$amountFmt} FrCFA pour votre réservation. Merci !";
+        $message = \App\Models\Message::create([
+          'conversation_id' => $conversation->id,
+          'sender_id' => Auth::id() ?: 1,
+          'receiver_id' => $user ? $user->id : null,
+          'content' => $msg,
+        ]);
+        self::safeBroadcast($message);
+      }
+
+      // Emails de confirmation (simulation)
+      try {
+        if ($user && $user->email) {
+          Mail::raw(
+            "(FAKE) Votre paiement pour la réservation #{$record->id} a été confirmé. Merci pour votre confiance.",
+            function ($m) use ($user, $record) {
+              $m->to($user->email)->subject('(FAKE) Paiement confirmé - Réservation #' . $record->id);
+            }
+          );
+        }
+        $adminMail = config('mail.admin_email') ?? env('MAIL_ADMIN_EMAIL');
+        if ($adminMail) {
+          Mail::raw(
+            '(FAKE) Paiement confirmé pour la réservation #' . $record->id,
+            function ($m) use ($adminMail) {
+              $m->to($adminMail)->subject('(FAKE) Paiement confirmé - Réservation');
+            }
+          );
+        }
+      } catch (\Throwable $e) {
+        Log::warning('Email (FAKE) confirmation paiement non envoyé', ['err' => $e->getMessage()]);
+      }
     } catch (\Throwable $e) {
       Log::debug('simulatePaymentSuccess error: ' . $e->getMessage());
     }
@@ -66,6 +91,43 @@ class BookingActionHelper
     }
     self::emailAdminCanceled($record, $admin);
     self::sendSystemMessageCanceled($record, $user);
+  }
+
+  public static function handleSimulatePaymentFail(Booking $record): void
+  {
+    // Met le paiement en échec
+    $record->payment_status = 'failed';
+    $record->save();
+
+    // Message système dans la conversation liée
+    $conversation = \App\Models\Conversation::where('is_admin_channel', true)
+      ->where('booking_id', $record->id)
+      ->first();
+    $user = $record->user;
+    if ($conversation) {
+      $msg = "Paiement échoué (FAKE). Votre tentative de paiement n'a pas abouti. Vous pouvez réessayer via le lien reçu, ou nous contacter si besoin.";
+      $message = \App\Models\Message::create([
+        'conversation_id' => $conversation->id,
+        'sender_id' => 1,
+        'receiver_id' => $user ? $user->id : null,
+        'content' => $msg,
+      ]);
+      self::safeBroadcast($message);
+    }
+
+    // Email utilisateur
+    if ($user && $user->email) {
+      try {
+        \Illuminate\Support\Facades\Mail::raw(
+          "(FAKE) Votre paiement pour la réservation #{$record->id} a échoué. Vous pouvez réessayer via le lien reçu, ou nous contacter si besoin.",
+          function ($m) use ($user, $record) {
+            $m->to($user->email)->subject('(FAKE) Paiement échoué - Réservation #' . $record->id);
+          }
+        );
+      } catch (\Throwable $e) {
+        \Illuminate\Support\Facades\Log::warning('Email echec paiement (fake) non envoyé', ['err' => $e->getMessage()]);
+      }
+    }
   }
 
   private static function computeAmount(Booking $record)

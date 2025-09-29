@@ -1,6 +1,13 @@
 <div class="container mx-auto p-4 bg-white dark:bg-gray-900 min-h-screen">
     <h2 class="mb-4 text-4xl font-extrabold leading-none tracking-tight text-gray-900 dark:text-gray-100 md:text-5xl lg:text-6xl">Mes réservations</h2>
 
+    @if (session('status'))
+    <div class="mb-4 p-3 rounded-md border text-sm
+            bg-blue-50 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-200 dark:border-blue-800">
+        {{ session('status') }}
+    </div>
+    @endif
+
     <!-- Reservations en cours -->
 
 
@@ -29,6 +36,20 @@
             <div class="flex flex-col justify-between p-3 flex-1">
                 <h5 class="text-base font-bold text-gray-800 dark:text-gray-100">{{ $booking->property->name ?? 'Nom non disponible' }}</h5>
                 <p class="text-gray-700 dark:text-gray-300 text-sm">{{ $booking->start_date }} - {{ $booking->end_date }}</p>
+                @if (!empty($booking->payment_status))
+                @php
+                $paid = $booking->payment_status === 'paid';
+                $badgeClasses = $paid
+                ? 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-200 dark:border-green-800'
+                : 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-200 dark:border-yellow-800';
+                @endphp
+                <span class="inline-block w-fit text-[11px] px-2 py-0.5 rounded border {{ $badgeClasses }}">
+                    {{ $paid ? 'Payée' : 'En attente de paiement' }}
+                    @if($paid && $booking->paid_at)
+                    • {{ $booking->paid_at->format('d/m/Y H:i') }}
+                    @endif
+                </span>
+                @endif
                 @php
                 $user = auth()->user();
                 $userCurrency = $user && $user->currency ? $user->currency : 'XOF';

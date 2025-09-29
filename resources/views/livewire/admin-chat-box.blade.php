@@ -111,9 +111,8 @@
         <div class="divide-y">
           @foreach ($users as $user)
           @if (str_starts_with($user['id'], 'admin_channel_'))
-          <!-- EOF -->
+          @php
           $isActive = isset($selectedUser['id']) && $selectedUser['id'] === $user['id'];
-
           $initial = trim($user['name']) !== '' ? strtoupper(mb_substr($user['name'], 0, 1)) : '?';
           @endphp
           <button type="button" wire:key="user-{{ $user['id'] }}" wire:click.prevent="selectUser('{{ $user['id'] }}')"

@@ -8,7 +8,31 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Booking extends Model
 {
     use HasFactory;
-    protected $fillable = ['property_id', 'user_id', 'start_date', 'end_date', 'total_price', 'status'];
+    protected $fillable = [
+        'property_id',
+        'user_id',
+        'start_date',
+        'end_date',
+        'total_price',
+        'status',
+        'payment_transaction_id',
+        'payment_status',
+        'paid_at',
+    ];
+
+    protected $casts = [
+        'paid_at' => 'datetime',
+    ];
+
+    public function markAsPaid(?string $txId = null): void
+    {
+        $this->payment_status = 'paid';
+        if ($txId) {
+            $this->payment_transaction_id = $txId;
+        }
+        $this->paid_at = now();
+        $this->save();
+    }
 
     /**
      * Calcule le prix total de la réservation selon les dates et le prix de la propriété

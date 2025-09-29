@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use Illuminate\Support\Facades\Mail;
 use App\Services\CinetPayService;
 use Illuminate\Support\Facades\Log;
+use App\Services\Admin\BookingActionHelper;
 
 use App\Notifications\BookingCanceledNotification;
 use Illuminate\Support\Facades\Notification;
@@ -34,6 +35,7 @@ use Filament\Resources\Pages\CreateRecord;
 
 class BookingResource extends Resource
 {
+    private const DATE_FMT = 'd/m/Y';
     protected static ?string $model = Booking::class;
     //protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
     protected static ?string $recordTitleAttribute = 'name';
@@ -74,233 +76,143 @@ class BookingResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->columns([
-                Tables\Columns\TextColumn::make('property.name')
-                    ->label('Propriétés')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('user.name')
-                    ->label('Demande emise par')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('start_date')
-                    ->date()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('end_date')
-                    ->date()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('total_price')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('status')
-                    ->searchable(),
-            ])
+            ->columns(self::tableColumns())
             ->filters([
                 //
             ])
-            ->actions([
-                EditAction::make(),
-                Action::make('accept')
-                    ->label('Accepter')
-                    ->action(function (Booking $record) {
-                        $record->update(['status' => 'accepted']);
-                        $user = $record->user;
-                        $admin = Auth::user();
-                        // Générer l'URL de paiement CinetPay
-                        $amount = method_exists($record, 'calculateTotalPrice') ? $record->calculateTotalPrice() : $record->total_price;
-                        $paymentUrl = null;
-                        try {
-                            /** @var CinetPayService $cinetpay */
-                            $cinetpay = app(CinetPayService::class);
-                            $txId = 'BK-' . $record->id . '-' . time();
-                            $desc = 'Paiement réservation #' . $record->id;
-                            $resp = $cinetpay->initPayment(
-                                $txId,
-                                $amount,
-                                $desc,
-                                $user?->name,
-                                $user?->email,
-                                $user?->phone ?? null
-                            );
-                            if (!empty($resp['success'])) {
-                                $paymentUrl = $resp['url'] ?? null;
-                            } else {
-                                Log::warning('CinetPay init échouée', ['resp' => $resp]);
-                            }
-                        } catch (\Throwable $e) {
-                            Log::warning('Erreur CinetPay: ' . $e->getMessage());
-                        }
-                        if (!$paymentUrl) {
-                            // Fallback: page des réservations utilisateur
-                            $paymentUrl = route('user-reservations');
-                        }
-                        if ($user) {
-                            // Notification Laravel (mail + database)
-                            try {
-                                $user->notify(new \App\Notifications\BookingAcceptedNotification($record, $paymentUrl, $amount));
-                            } catch (\Throwable $e) {
-                                Log::warning('Notification acceptation non envoyée: ' . $e->getMessage());
-                            }
-
-                            // Envoi d'un mail personnalisé avec lien de paiement (protégé contre les erreurs SMTP)
-                            try {
-                                $mailContent = "Votre réservation a été acceptée, vous pouvez procéder au paiement en cliquant sur le lien ci-dessous.\n\n" .
-                                    "Montant à payer : $amount FrCFA\n" .
-                                    "Lien de paiement : $paymentUrl\n\n" .
-                                    "Sans paiement, nous ne pourrons vous garantir la disponibilité le jour-j.";
-                                Mail::raw(
-                                    $mailContent,
-                                    function ($message) use ($user) {
-                                        $message->to($user->email)
-                                            ->subject('Votre réservation a été acceptée');
-                                    }
-                                );
-                            } catch (\Throwable $e) {
-                                Log::warning('Email acceptation réservation non envoyé (rate-limit ou SMTP): ' . $e->getMessage());
-                            }
-                        }
-
-                        // Envoi d'un mail à l'admin avec les infos de la réservation
-                        $adminMail = $admin ? $admin->email : null;
-                        if ($adminMail) {
-                            $propertyName = $record->property->name ?? '';
-                            $userName = $user ? $user->name : '';
-                            $startDate = $record->start_date;
-                            $endDate = $record->end_date;
-                            $createdAt = $record->created_at;
-                            $adminName = $admin->name ?? '';
-                            $content = "Réservation acceptée :\n" .
-                                "- Propriété : $propertyName\n" .
-                                "- Utilisateur : $userName\n" .
-                                "- Date d'entrée : $startDate\n" .
-                                "- Date de sortie : $endDate\n" .
-                                "- Date de soumission : $createdAt\n" .
-                                "- Action réalisée par : $adminName";
-                            try {
-                                Mail::raw($content, function ($message) use ($adminMail) {
-                                    $message->to($adminMail)
-                                        ->subject('Réservation acceptée - Notification admin');
-                                });
-                            } catch (\Throwable $e) {
-                                Log::warning('Email admin acceptation non envoyé: ' . $e->getMessage());
-                            }
-                        }
-
-                        // Message système dans la conversation admin liée à la réservation avec lien de paiement
-                        $conversation = \App\Models\Conversation::where('is_admin_channel', true)
-                            ->where('booking_id', $record->id)
-                            ->first();
-                        if ($conversation) {
-                            // Version "Standard, clair et professionnel"
-                            $propertyName = $record->property->name ?? 'votre hébergement';
-                            $start = $record->start_date ? \Carbon\Carbon::parse($record->start_date)->format('d/m/Y') : '';
-                            $end = $record->end_date ? \Carbon\Carbon::parse($record->end_date)->format('d/m/Y') : '';
-                            $amountFmt = is_numeric($amount) ? number_format($amount, 0, ',', ' ') : (string)$amount;
-                            $msgContent = "Votre réservation pour {$propertyName} du {$start} au {$end} a été acceptée.\n" .
-                                "Montant à régler : {$amountFmt} FrCFA.\n" .
-                                "Veuillez procéder au paiement via ce lien sécurisé :\n{$paymentUrl}\n" .
-                                "Sans règlement sous 24h, la disponibilité ne peut être garantie.";
-                            $message = \App\Models\Message::create([
-                                'conversation_id' => $conversation->id,
-                                'sender_id' => $admin ? $admin->id : 1,
-                                'receiver_id' => $user ? $user->id : null,
-                                'content' => $msgContent,
-                            ]);
-                            // Diffuser en temps réel pour l'utilisateur (canal chat.{receiver_id})
-                            if ($user) {
-                                try {
-                                    broadcast(new \App\Events\MessageSent($message));
-                                } catch (\Throwable $e) {
-                                    // Ignorer si broadcasting non configuré
-                                }
-                            }
-                        }
-                    })
-                    ->requiresConfirmation()
-                    ->color('success')
-                    ->visible(fn(Booking $record) => $record->status === 'pending'),
-                Action::make('cancel')
-                    ->label('Annuler')
-                    ->action(function (Booking $record) {
-                        $record->update(['status' => 'canceled']);
-                        $user = $record->user;
-                        $admin = Auth::user();
-                        if ($user) {
-                            try {
-                                $user->notify(new \App\Notifications\BookingCanceledNotification($record));
-                            } catch (\Throwable $e) {
-                                Log::warning('Notification annulation non envoyée: ' . $e->getMessage());
-                            }
-
-                            // Envoi d'un mail personnalisé avec le même texte que le message système (protégé)
-                            try {
-                                Mail::raw(
-                                    "Votre demande de réservation a été annulée par l'administrateur.",
-                                    function ($message) use ($user) {
-                                        $message->to($user->email)
-                                            ->subject('Votre réservation a été annulée');
-                                    }
-                                );
-                            } catch (\Throwable $e) {
-                                Log::warning('Email annulation utilisateur non envoyé: ' . $e->getMessage());
-                            }
-                        }
-
-                        // Envoi d'un mail à l'admin avec les infos de la réservation
-                        $adminMail = $admin ? $admin->email : null;
-                        if ($adminMail) {
-                            $propertyName = $record->property->name ?? '';
-                            $userName = $user ? $user->name : '';
-                            $startDate = $record->start_date;
-                            $endDate = $record->end_date;
-                            $createdAt = $record->created_at;
-                            $adminName = $admin->name ?? '';
-                            $content = "Réservation annulée :\n" .
-                                "- Propriété : $propertyName\n" .
-                                "- Utilisateur : $userName\n" .
-                                "- Date d'entrée : $startDate\n" .
-                                "- Date de sortie : $endDate\n" .
-                                "- Date de soumission : $createdAt\n" .
-                                "- Action réalisée par : $adminName";
-                            try {
-                                Mail::raw($content, function ($message) use ($adminMail) {
-                                    $message->to($adminMail)
-                                        ->subject('Réservation annulée - Notification admin');
-                                });
-                            } catch (\Throwable $e) {
-                                Log::warning('Email annulation admin non envoyé: ' . $e->getMessage());
-                            }
-                        }
-
-                        // Envoyer un message système dans la conversation admin liée à la réservation
-                        $conversation = \App\Models\Conversation::where('is_admin_channel', true)
-                            ->where('booking_id', $record->id)
-                            ->first();
-                        if ($conversation) {
-                            \App\Models\Message::create([
-                                'conversation_id' => $conversation->id,
-                                'sender_id' => 1,
-                                'receiver_id' => $user ? $user->id : null,
-                                'content' => "Votre demande de réservation a été annulée par l'administrateur.",
-                            ]);
-                        }
-                    })
-                    ->requiresConfirmation()
-                    ->color('danger')
-                    ->visible(fn(Booking $record) => $record->status === 'pending'),
-            ])
+            ->actions(self::tableActions())
             ->bulkActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),
             ]);
     }
+
+    /**
+     * Colonnes de la table Filament
+     */
+    private static function tableColumns(): array
+    {
+        return [
+            Tables\Columns\TextColumn::make('property.name')
+                ->label('Propriétés')
+                ->sortable(),
+            Tables\Columns\TextColumn::make('user.name')
+                ->label('Demande emise par')
+                ->sortable(),
+            Tables\Columns\TextColumn::make('start_date')
+                ->date()
+                ->sortable(),
+            Tables\Columns\TextColumn::make('end_date')
+                ->date()
+                ->sortable(),
+            Tables\Columns\TextColumn::make('created_at')
+                ->dateTime()
+                ->sortable()
+                ->toggleable(isToggledHiddenByDefault: true),
+            Tables\Columns\TextColumn::make('updated_at')
+                ->dateTime()
+                ->sortable()
+                ->toggleable(isToggledHiddenByDefault: true),
+            Tables\Columns\TextColumn::make('total_price')
+                ->numeric()
+                ->sortable(),
+            Tables\Columns\TextColumn::make('status')
+                ->searchable(),
+            Tables\Columns\BadgeColumn::make('payment_status')
+                ->label('Paiement')
+                ->colors([
+                    'warning' => 'pending',
+                    'success' => 'paid',
+                    'danger' => 'failed',
+                ])
+                ->icons([
+                    'heroicon-o-clock' => 'pending',
+                    'heroicon-o-check-circle' => 'paid',
+                    'heroicon-o-x-circle' => 'failed',
+                ])
+                ->sortable(),
+            Tables\Columns\TextColumn::make('paid_at')
+                ->label('')
+                ->visible(fn($record) => $record && ($record->payment_status ?? null) === 'paid' && !empty($record->paid_at))
+                ->formatStateUsing(function ($state) {
+                    if (!$state) {
+                        return null;
+                    }
+                    $date = $state instanceof \Carbon\Carbon ? $state : \Carbon\Carbon::parse($state);
+                    return 'Payée le ' . $date->format(self::DATE_FMT);
+                })
+                ->badge()
+                ->color('success'),
+        ];
+    }
+
+    /**
+     * Actions de ligne (Filament)
+     */
+    private static function tableActions(): array
+    {
+        return [
+            EditAction::make(),
+            self::actionSimulatePaymentSuccess(),
+            self::actionSimulatePaymentFail(),
+            self::actionAccept(),
+            self::actionCancel(),
+        ];
+    }
+
+    private static function actionSimulatePaymentSuccess(): Action
+    {
+        return Action::make('simulatePaymentSuccess')
+            ->label('Simuler paiement (OK)')
+            ->icon('heroicon-o-check-circle')
+            ->color('success')
+            ->visible(fn($record) => app()->environment('local') && $record && $record->status === 'accepted' && ($record->payment_status ?? 'pending') !== 'paid')
+            ->requiresConfirmation()
+            ->action(function (Booking $record) {
+                BookingActionHelper::handleSimulatePaymentSuccess($record);
+            });
+    }
+
+    private static function actionSimulatePaymentFail(): Action
+    {
+        return Action::make('simulatePaymentFail')
+            ->label('Simuler paiement (KO)')
+            ->icon('heroicon-o-x-circle')
+            ->color('danger')
+            ->visible(fn($record) => app()->environment('local') && $record && $record->status === 'accepted' && ($record->payment_status ?? 'pending') !== 'paid')
+            ->requiresConfirmation()
+            ->action(function (Booking $record) {
+                $record->payment_status = 'failed';
+                $record->save();
+            });
+    }
+
+    private static function actionAccept(): Action
+    {
+        return Action::make('accept')
+            ->label('Accepter')
+            ->action(function (Booking $record) {
+                BookingActionHelper::handleAcceptAction($record);
+            })
+            ->requiresConfirmation()
+            ->color('success')
+            ->visible(fn($record) => $record && $record->status === 'pending');
+    }
+
+    private static function actionCancel(): Action
+    {
+        return Action::make('cancel')
+            ->label('Annuler')
+            ->action(function (Booking $record) {
+                BookingActionHelper::handleCancelAction($record);
+            })
+            ->requiresConfirmation()
+            ->color('danger')
+            ->visible(fn($record) => $record && $record->status === 'pending');
+    }
+
+    // Helpers déplacés dans App\Services\Admin\BookingActionHelper
 
     public static function getEloquentQuery(): Builder
     {

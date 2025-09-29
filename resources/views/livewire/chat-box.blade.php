@@ -40,7 +40,7 @@
         <div class="flex {{ $isMine ? 'justify-end' : 'justify-start' }}">
           <div class="max-w-[70%]">
             <div class="px-4 py-2 rounded-2xl shadow {{ $isMine ? 'bg-blue-600 text-white rounded-br-sm' : 'bg-white text-gray-800 border rounded-bl-sm dark:bg-gray-800 dark:text-gray-100 dark:border-gray-700' }}">
-              {{ $message->content }}
+              {!! $message->content_html !!}
             </div>
             <div class="text-[11px] text-gray-400 dark:text-gray-500 mt-1 whitespace-nowrap {{ $isMine ? 'text-right' : 'text-left' }}">
               {{ $message->created_at ? $message->created_at->format('H:i') : '' }}

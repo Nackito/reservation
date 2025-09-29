@@ -32,13 +32,16 @@ class BookingAcceptedNotification extends Notification implements ShouldQueue
   {
     $mail = (new MailMessage)
       ->subject('Votre réservation a été acceptée')
+      ->greeting('Bonjour')
       ->line("Votre réservation a été acceptée.");
 
     if ($this->amount !== null) {
       $mail->line('Montant à payer : ' . $this->amount . ' FrCFA');
     }
     if (!empty($this->paymentUrl)) {
-      $mail->line('Lien de paiement : ' . $this->paymentUrl);
+      $mail->action('Payer maintenant', $this->paymentUrl);
+      // Ajoute le lien en texte brut en complément (utile selon clients mail)
+      $mail->line('Ou copiez ce lien dans votre navigateur : ' . $this->paymentUrl);
     }
     $mail->line("Sans paiement, nous ne pourrons vous garantir la disponibilité le jour-j.");
 

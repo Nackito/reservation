@@ -204,7 +204,7 @@ class BookingResource extends Resource
                             $amountFmt = is_numeric($amount) ? number_format($amount, 0, ',', ' ') : (string)$amount;
                             $msgContent = "Votre réservation pour {$propertyName} du {$start} au {$end} a été acceptée.\n" .
                                 "Montant à régler : {$amountFmt} FrCFA.\n" .
-                                "Veuillez procéder au paiement via ce lien sécurisé : {$paymentUrl}.\n" .
+                                "Veuillez procéder au paiement via ce lien sécurisé :\n{$paymentUrl}\n" .
                                 "Sans règlement sous 24h, la disponibilité ne peut être garantie.";
                             $message = \App\Models\Message::create([
                                 'conversation_id' => $conversation->id,

@@ -15,6 +15,7 @@
             <div class="text-base font-semibold text-gray-900 dark:text-gray-100 truncate">{{ data_get($selectedUser, 'name', 'Sélectionnez une conversation') }}</div>
             <div class="text-xs text-gray-500 dark:text-gray-400 truncate">{{ data_get($selectedUser, 'email', '') }}</div>
           </div>
+
           <div class="ml-auto">
             <div id="typing-indicator" class="text-xs text-gray-400 dark:text-gray-500 italic"></div>
           </div>
@@ -48,7 +49,7 @@
         <div class="flex {{ $isMine ? 'justify-end' : 'justify-start' }}">
           <div class="max-w-[70%]">
             <div class="px-4 py-2 rounded-2xl shadow {{ $isMine ? 'bg-blue-600 text-white rounded-br-sm' : 'bg-white text-gray-800 border rounded-bl-sm dark:bg-gray-800 dark:text-gray-100 dark:border-gray-700' }}">
-              {{ $message->content }}
+              {!! $message->content_html !!}
             </div>
             <div class="text-[11px] text-gray-400 dark:text-gray-500 mt-1 whitespace-nowrap {{ $isMine ? 'text-right' : 'text-left' }}">
               {{ $message->created_at ? $message->created_at->format('H:i') : '' }}
@@ -110,8 +111,9 @@
         <div class="divide-y">
           @foreach ($users as $user)
           @if (str_starts_with($user['id'], 'admin_channel_'))
-          @php
+          <!-- EOF -->
           $isActive = isset($selectedUser['id']) && $selectedUser['id'] === $user['id'];
+
           $initial = trim($user['name']) !== '' ? strtoupper(mb_substr($user['name'], 0, 1)) : '?';
           @endphp
           <button type="button" wire:key="user-{{ $user['id'] }}" wire:click.prevent="selectUser('{{ $user['id'] }}')"

@@ -32,12 +32,13 @@ use Filament\Forms\Components\DatePicker;
 //use Illuminate\Support\Facades\Mail;
 //use App\Models\Booking;
 use Filament\Resources\Pages\CreateRecord;
+use BackedEnum;
 
 class BookingResource extends Resource
 {
     private const DATE_FMT = 'd/m/Y';
     protected static ?string $model = Booking::class;
-    //protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-rectangle-stack';
     protected static ?string $recordTitleAttribute = 'name';
     protected static ?int $navigationSort = 3;
     public static function getRecordTitle($record): ?string

@@ -19,12 +19,12 @@ use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Actions\BulkActionGroup;
 use Filament\Tables\Actions\DeleteBulkAction;
 use Illuminate\Support\Str;
+use BackedEnum;
 
 class CategoryResource extends Resource
 {
     protected static ?string $model = Category::class;
-
-    // protected static ?string $navigationIcon = 'heroicon-o-tag';
+    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-tag';
 
     public static function form(\Filament\Schemas\Schema $schema): \Filament\Schemas\Schema
     {

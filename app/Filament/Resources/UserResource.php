@@ -21,13 +21,14 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\User\Schemas\UserForm;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Section;
+use BackedEnum;
 
 use Filament\Support\Enums\IconName;
 
 class UserResource extends Resource
 {
     protected static ?string $model = User::class;
-    //protected static string|\BackedEnum|null $navigationIcon = IconName::HeroiconOUserGroup;
+    protected static string | BackedEnum | null $navigationIcon = "heroicon-o-user-group";
     protected static ?string $recordTitleAttribute = 'name';
     protected static ?int $navigationSort = 1;
 

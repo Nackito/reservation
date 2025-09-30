@@ -56,6 +56,7 @@ class AdminPanelProvider extends PanelProvider
                 Pages\Dashboard::class,
                 \App\Filament\Pages\AdminChat::class,
                 \App\Filament\Pages\Chat::class,
+                \App\Filament\Pages\Profile::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([

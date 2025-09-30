@@ -15,7 +15,7 @@ use Livewire\Attributes\On;
 
 class AdminChat extends Page
 {
-  //protected static ?string $navigationIcon = 'heroicon-o-chat-alt-2';
+
   protected static ?string $navigationLabel = 'Conversations';
   protected string $view = 'filament.pages.admin-chat';
   public bool $hasSelected = false;

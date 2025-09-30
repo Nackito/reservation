@@ -272,43 +272,5 @@ class CinetPayController extends Controller
     return redirect()->route('user-reservations')->with('status', $statusLabel);
   }
 
-  /**
-   * Endpoints de test (LOCAL uniquement) pour simuler un paiement.
-   * Ils permettent de vérifier rapidement l'UX côté Filament et Chat sans appeler l'API CinetPay.
-   */
-  public function fakeSuccess(Request $request, Booking $booking)
-  {
-    if (!app()->environment('local')) {
-      abort(403);
-    }
-    // Réutilise le helper pour simuler un succès (message + emails)
-    BookingActionHelper::handleSimulatePaymentSuccess($booking);
-
-    // Redirige vers la liste des réservations Filament si possible, sinon page précédente
-    return back()->with('status', 'Paiement simulé: confirmé.');
-  }
-
-  public function fakeFail(Request $request, Booking $booking)
-  {
-    if (!app()->environment('local')) {
-      abort(403);
-    }
-    $booking->payment_status = 'failed';
-    $booking->save();
-    // Prévenir l'utilisateur (local-only)
-    try {
-      $user = $booking->user;
-      if ($user && $user->email) {
-        Mail::raw(
-          "(FAKE) Votre paiement pour la réservation #{$booking->id} a échoué.",
-          function ($m) use ($user, $booking) {
-            $m->to($user->email)->subject('(FAKE) Paiement échoué - Réservation #' . $booking->id);
-          }
-        );
-      }
-    } catch (\Throwable $e) {
-      Log::warning('Email echec paiement (fake) non envoyé', ['err' => $e->getMessage()]);
-    }
-    return back()->with('status', 'Paiement simulé: échoué.');
-  }
+  // Méthodes de simulation retirées
 }

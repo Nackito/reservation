@@ -24,7 +24,7 @@ use Illuminate\Support\Facades\Auth;
 use Filament\Support\Enums\IconName;
 use Filament\Actions\EditAction;
 use Filament\Actions\Action;
-use Filament\Notifications\Notification;
+// use Filament\Notifications\Notification;
 //use App\Filament\Resources\BookingResource;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\DatePicker;
@@ -161,46 +161,12 @@ class BookingResource extends Resource
     {
         return [
             EditAction::make(),
-            self::actionSimulatePaymentSuccess(),
-            self::actionSimulatePaymentFail(),
             self::actionAccept(),
             self::actionCancel(),
         ];
     }
 
-    private static function actionSimulatePaymentSuccess(): Action
-    {
-        return Action::make('simulatePaymentSuccess')
-            ->label('Simuler paiement (OK)')
-            ->icon('heroicon-o-check-circle')
-            ->color('success')
-            ->visible(fn($record) => app()->environment('local') && $record && $record->status === 'accepted' && ($record->payment_status ?? 'pending') !== 'paid')
-            ->requiresConfirmation()
-            ->action(function (Booking $record) {
-                BookingActionHelper::handleSimulatePaymentSuccess($record);
-                Notification::make()
-                    ->title('Paiement simulé: confirmé')
-                    ->success()
-                    ->send();
-            });
-    }
-
-    private static function actionSimulatePaymentFail(): Action
-    {
-        return Action::make('simulatePaymentFail')
-            ->label('Simuler paiement (KO)')
-            ->icon('heroicon-o-x-circle')
-            ->color('danger')
-            ->visible(fn($record) => app()->environment('local') && $record && $record->status === 'accepted' && ($record->payment_status ?? 'pending') !== 'paid')
-            ->requiresConfirmation()
-            ->action(function (Booking $record) {
-                \App\Services\Admin\BookingActionHelper::handleSimulatePaymentFail($record);
-                Notification::make()
-                    ->title('Paiement simulé: échoué')
-                    ->danger()
-                    ->send();
-            });
-    }
+    // Actions de simulation retirées
 
     private static function actionAccept(): Action
     {

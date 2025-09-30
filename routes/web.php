@@ -147,12 +147,4 @@ require_once __DIR__ . '/auth.php';
 Route::post('/cinetpay/notify', [\App\Http\Controllers\CinetPayController::class, 'notify'])->name('cinetpay.notify');
 Route::get('/cinetpay/return', [\App\Http\Controllers\CinetPayController::class, 'return'])->name('cinetpay.return');
 
-// Endpoints de test (LOCAL) pour simuler le paiement CinetPay
-if (app()->environment('local')) {
-    Route::get('/cinetpay/fake/success/{booking}', [\App\Http\Controllers\CinetPayController::class, 'fakeSuccess'])
-        ->middleware('auth')
-        ->name('cinetpay.fake.success');
-    Route::get('/cinetpay/fake/fail/{booking}', [\App\Http\Controllers\CinetPayController::class, 'fakeFail'])
-        ->middleware('auth')
-        ->name('cinetpay.fake.fail');
-}
+// Routes de simulation CinetPay retirées

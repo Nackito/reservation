@@ -145,6 +145,12 @@ class CinetPayController extends Controller
             if (in_array($status, $acceptedStatuses, true)) {
               if ($booking->payment_status !== 'paid') {
                 $booking->markAsPaid($txId);
+                // Après paiement confirmé, annuler et notifier les autres réservations en conflit
+                try {
+                  \App\Services\Admin\BookingActionHelper::handlePaymentConflictsForOthers($booking);
+                } catch (\Throwable $e) {
+                  Log::warning('Conflit de paiements (notify) non traité', ['err' => $e->getMessage()]);
+                }
                 $amountFmt = is_numeric($booking->total_price) ? number_format($booking->total_price, 0, ',', ' ') : (string)$booking->total_price;
                 $msg = "Paiement confirmé. Nous avons bien reçu {$amountFmt} FrCFA pour votre réservation. Merci !";
                 $this->sendPaymentMessageToConversation($booking, $msg);
@@ -219,6 +225,12 @@ class CinetPayController extends Controller
         if ($booking->payment_status !== 'paid') {
           // Passage à paid ici: envoyer aussi le message et les emails
           $booking->markAsPaid($txId);
+          // Après paiement confirmé, annuler et notifier les autres réservations en conflit
+          try {
+            \App\Services\Admin\BookingActionHelper::handlePaymentConflictsForOthers($booking);
+          } catch (\Throwable $e) {
+            Log::warning('Conflit de paiements (return) non traité', ['err' => $e->getMessage()]);
+          }
           $amountFmt = is_numeric($booking->total_price) ? number_format($booking->total_price, 0, ',', ' ') : (string)$booking->total_price;
           $msg = "Paiement confirmé. Nous avons bien reçu {$amountFmt} FrCFA pour votre réservation. Merci !";
           $this->sendPaymentMessageToConversation($booking, $msg);

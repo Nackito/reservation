@@ -20,6 +20,8 @@ class BookingActionHelper
       }
       $txId = $record->payment_transaction_id ?: ('BK-' . $record->id . '-FAKE');
       $record->markAsPaid($txId);
+      // Après paiement, traiter les conflits éventuels
+      self::handlePaymentConflictsForOthers($record);
       $conversation = \App\Models\Conversation::where('is_admin_channel', true)
         ->where('booking_id', $record->id)
         ->first();
@@ -322,6 +324,88 @@ class BookingActionHelper
       broadcast(new \App\Events\MessageSent($message));
     } catch (\Throwable $e) {
       // Ignorer si broadcasting non configuré
+    }
+  }
+
+  /**
+   * Lorsqu'une réservation est payée, prévenir les autres utilisateurs ayant
+   * une demande acceptée mais en attente de paiement sur des dates qui se chevauchent
+   * pour la même propriété. On annule ces réservations et on envoie message + email.
+   */
+  public static function handlePaymentConflictsForOthers(Booking $paidBooking): void
+  {
+    try {
+      $conflicts = self::getPendingConflicts($paidBooking);
+      if ($conflicts->isEmpty()) {
+        return;
+      }
+      $start = \Carbon\Carbon::parse($paidBooking->start_date);
+      $end = \Carbon\Carbon::parse($paidBooking->end_date);
+      $paidStartStr = $start->format(self::DATE_FMT);
+      $paidEndStr = $end->format(self::DATE_FMT);
+      $propertyName = $paidBooking->property->name ?? 'la résidence';
+
+      foreach ($conflicts as $conflict) {
+        self::notifyAndCancelConflict($conflict, $propertyName, $paidStartStr, $paidEndStr);
+      }
+    } catch (\Throwable $e) {
+      Log::warning('handlePaymentConflictsForOthers error', ['err' => $e->getMessage()]);
+    }
+  }
+
+  private static function getPendingConflicts(Booking $paidBooking)
+  {
+    $propertyId = $paidBooking->property_id;
+    if (!$propertyId || !$paidBooking->start_date || !$paidBooking->end_date) {
+      return collect();
+    }
+    $start = \Carbon\Carbon::parse($paidBooking->start_date);
+    $end = \Carbon\Carbon::parse($paidBooking->end_date);
+    return Booking::query()
+      ->where('property_id', $propertyId)
+      ->where('id', '!=', $paidBooking->id)
+      ->where('status', 'accepted')
+      ->where(function ($q) use ($start, $end) {
+        $q->where('start_date', '<', $end)->where('end_date', '>', $start);
+      })
+      ->where(function ($q) {
+        $q->whereNull('payment_status')->orWhere('payment_status', 'pending');
+      })
+      ->get();
+  }
+
+  private static function notifyAndCancelConflict(Booking $conflict, string $propertyName, string $paidStartStr, string $paidEndStr): void
+  {
+    // Idempotence
+    if ($conflict->status === 'canceled') {
+      return;
+    }
+    $conflict->status = 'canceled';
+    $conflict->payment_status = 'failed';
+    $conflict->save();
+
+    $conversation = \App\Models\Conversation::where('is_admin_channel', true)
+      ->where('booking_id', $conflict->id)
+      ->first();
+    $conflictUser = $conflict->user;
+    $msg = "Désolé, c'est trop tard : {$propertyName} a été réservée par un autre utilisateur pour les dates du {$paidStartStr} au {$paidEndStr}. Votre demande est annulée.";
+    if ($conversation) {
+      $message = \App\Models\Message::create([
+        'conversation_id' => $conversation->id,
+        'sender_id' => 1,
+        'receiver_id' => $conflictUser ? $conflictUser->id : null,
+        'content' => $msg,
+      ]);
+      self::safeBroadcast($message);
+    }
+    try {
+      if ($conflictUser && $conflictUser->email) {
+        Mail::raw($msg, function ($m) use ($conflictUser) {
+          $m->to($conflictUser->email)->subject('Réservation indisponible - Annulation');
+        });
+      }
+    } catch (\Throwable $e) {
+      Log::warning('Email annulation pour conflit non envoyé', ['booking_id' => $conflict->id, 'err' => $e->getMessage()]);
     }
   }
 }

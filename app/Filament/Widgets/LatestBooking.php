@@ -41,12 +41,14 @@ class LatestBooking extends BaseWidget
                     ->color(fn(string $state) => match ($state) {
                         'pending' => 'info',
                         'accepted' => 'success',
-                        'cancelled' => 'danger',
+                        'cancelled', 'canceled' => 'danger',
+                        default => 'gray',
                     })
                     ->icon(fn(string $state) => match ($state) {
                         'pending' => 'heroicon-m-sparkles',
                         'accepted' => 'heroicon-o-check-badge',
-                        'cancelled' => 'heroicon-m-x-circle',
+                        'cancelled', 'canceled' => 'heroicon-m-x-circle',
+                        default => 'heroicon-o-question-mark-circle',
                     })
                     ->sortable(),
                 TextColumn::make('created_at')

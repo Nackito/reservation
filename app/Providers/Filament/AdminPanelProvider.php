@@ -53,7 +53,7 @@ class AdminPanelProvider extends PanelProvider
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
-                //Pages\Dashboard::class,
+                Pages\Dashboard::class,
                 \App\Filament\Pages\AdminChat::class,
                 \App\Filament\Pages\Chat::class,
             ])
@@ -61,6 +61,7 @@ class AdminPanelProvider extends PanelProvider
             ->widgets([
                 Widgets\AccountWidget::class,
                 //Widgets\FilamentInfoWidget::class,
+                \App\Filament\Widgets\BookingsStatsOverview::class,
             ])
             ->middleware([
                 EncryptCookies::class,

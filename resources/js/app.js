@@ -39,10 +39,14 @@ import "./bootstrap";
 import Alpine from "alpinejs";
 import "preline";
 import Swal from "sweetalert2";
+<<<<<<< HEAD
 import "./leaflet"; // Importation de Leaflet
 // Swiper importé via Vite
 import "swiper/css/bundle";
 import "./carousels";
+=======
+import "./echo";
+>>>>>>> 708e516fb0bc02fda1e58fde942d409383cf015a
 window.Alpine = Alpine;
 window.Swal = Swal;
 Alpine.start();

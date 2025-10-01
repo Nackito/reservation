@@ -261,7 +261,10 @@
                         @forelse($property->features as $feature)
                         <li class="flex items-center mb-2">
                             @php
-                            $iconClass = $featureIcons[$feature] ?? 'fa-circle'; // Icône par défaut si aucune correspondance
+                            // Utilise le mapping normalisé défini dans le composant Livewire
+                            $iconClass = method_exists($this, 'iconClassForFeature')
+                            ? $this->iconClassForFeature($feature)
+                            : ($featureIcons[$feature] ?? 'fa-circle');
                             @endphp
                             <i class="fas {{ $iconClass }} text-blue-500 mr-2"></i>
                             <span>{{ $feature }}</span>

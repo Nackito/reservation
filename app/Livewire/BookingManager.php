@@ -39,30 +39,71 @@ class BookingManager extends Component
     public $reviews;
     public $rating;
     public $canLeaveReview = false;
+    // Icônes normalisées par clé (minuscules, sans accents, sans espaces/ponctuation)
     public $featureIcons = [
-        'WiFi' => 'fa-wifi',
-        'Piscine' => 'fa-swimming-pool',
-        'Parking gratuit' => 'fa-parking',
-        'Climatisation' => 'fa-snowflake',
-        'TV' => 'fa-tv',
-        'Animaux acceptés' => 'fa-paw',
-        'Cuisine' => 'fa-utensils',
-        'Salle de sport' => 'fa-dumbbell',
-        'Jacuzzi' => 'fa-hot-tub',
-        'Balcon' => 'fa-balcony',
-        'Terrasse' => 'fa-umbrella-beach',
-        'Jardin' => 'fa-tree',
-        'Barbecue' => 'fa-fire',
-        'Lave-linge' => 'fa-washing-machine',
-        'Sèche-linge' => 'fa-tshirt',
-        'Fer à repasser' => 'fa-iron',
-        'Sèche-cheveux' => 'fa-blowdryer',
-        'Chauffage' => 'fa-thermometer-half',
-        'Coffre-fort' => 'fa-lock',
-        'Réveil' => 'fa-clock',
-        'Canal+' => 'fa-tv',
-        'Netflix' => 'fa-tv',
+        // Nouvelles clés (Filament)
+        'wifi' => 'fa-wifi',
+        'parking' => 'fa-parking',
+        'clim' => 'fa-snowflake',
+        'piscine' => 'fa-swimming-pool',
+        'jardin' => 'fa-tree',
+        'balcon' => 'fa-building',
+        'ascenseur' => 'fa-elevator',
+        'meuble' => 'fa-couch',
+        'terrasse' => 'fa-umbrella-beach',
+
+        // Anciennes valeurs textuelles (compat)
+        'wifiold' => 'fa-wifi', // alias placeholder si besoin
+        'wifigratuit' => 'fa-wifi',
+        'parkinggratuit' => 'fa-parking',
+        'climatisation' => 'fa-snowflake',
+        'tv' => 'fa-tv',
+        'animauxacceptes' => 'fa-paw',
+        'cuisine' => 'fa-utensils',
+        'salledesport' => 'fa-dumbbell',
+        'jacuzzi' => 'fa-hot-tub',
+        'barbecue' => 'fa-fire',
+        'lavelinge' => 'fa-tshirt', // substitution +/-
+        'sechelange' => 'fa-tshirt',
+        'sechel30' => 'fa-tshirt',
+        'sechelinge' => 'fa-tshirt',
+        'sechecheveux' => 'fa-bath', // fallback plus standard
+        'ferarepasser' => 'fa-shirt', // fallback
+        'chauffage' => 'fa-thermometer-half',
+        'coffrefort' => 'fa-lock',
+        'reveil' => 'fa-clock',
+        'canal' => 'fa-tv',
+        'netflix' => 'fa-tv',
     ];
+
+    private function normalizeFeatureKey($value): string
+    {
+        $v = \Illuminate\Support\Str::of((string) $value)
+            ->lower()
+            ->ascii()
+            ->replace([" ", "-", "_", "'", "+", "."], '')
+            ->value();
+        return $v;
+    }
+
+    public function iconClassForFeature($feature): string
+    {
+        $norm = $this->normalizeFeatureKey($feature);
+        // clés exactes (nouvelles) ou compat anciennes
+        if (isset($this->featureIcons[$norm])) {
+            return $this->featureIcons[$norm];
+        }
+        // Tentative fallback: retirer mots courts
+        $simpler = preg_replace('/(gratuit|free)$/', '', $norm);
+        if ($simpler && isset($this->featureIcons[$simpler])) {
+            return $this->featureIcons[$simpler];
+        }
+        // Encore un fallback: si l'ancienne clé exacte existe
+        if (isset($this->featureIcons[$feature])) {
+            return $this->featureIcons[$feature];
+        }
+        return 'fa-circle';
+    }
     public function getExchangeRate($from, $to)
     {
         if ($from === $to) return 1.0;

@@ -353,39 +353,64 @@ class HomePage extends Component
             $properties = Property::all();
         }
 
-        // Préparer les données pour la carte (centrée sur les résultats)
-        $markers = [];
-        $sumLat = 0.0;
-        $sumLng = 0.0;
-        $countPos = 0;
-        foreach ($properties as $p) {
-            if (!is_null($p->latitude) && !is_null($p->longitude)) {
-                $markers[] = [
-                    'lat' => (float) $p->latitude,
-                    'lng' => (float) $p->longitude,
-                    'title' => $p->name ?? 'Hébergement',
-                    'city' => $p->city,
-                    'municipality' => $p->municipality,
-                    'url' => route('booking-manager', ['propertyId' => $p->id]),
-                ];
-                $sumLat += (float) $p->latitude;
-                $sumLng += (float) $p->longitude;
-                $countPos++;
+        // Préparer les données pour la carte
+        // 1) Marqueurs: toutes les résidences avec coordonnées
+        $allWithCoords = Property::select('id', 'name', 'city', 'municipality', 'latitude', 'longitude', 'price_per_night')
+            ->whereNotNull('latitude')
+            ->whereNotNull('longitude')
+            ->get();
+
+        // Préparer la devise utilisateur et un seul taux de change pour toute la série
+        $user = Auth::user();
+        $userCurrency = $user && $user->currency ? $user->currency : 'XOF';
+        $rate = 1.0;
+        if ($userCurrency !== 'XOF') {
+            try {
+                $rateSrv = app(\App\Livewire\BookingManager::class)->getExchangeRate('XOF', $userCurrency);
+                if ($rateSrv) {
+                    $rate = (float) $rateSrv;
+                }
+            } catch (\Exception $e) {
+                $rate = 1.0; // fallback
             }
         }
 
-        // Centre par défaut: Abidjan
-        $center = ['lat' => 5.3599517, 'lng' => -4.0082563];
-        $zoom = 12;
-        if ($countPos > 0) {
-            $center = ['lat' => $sumLat / $countPos, 'lng' => $sumLng / $countPos];
-            // Ajuster zoom si peu de points
-            $zoom = $countPos === 1 ? 14 : 12;
+        $markers = [];
+        foreach ($allWithCoords as $p) {
+            $base = (float) ($p->price_per_night ?? 0);
+            $converted = $rate ? round($base * $rate, 2) : $base;
+            $priceText = $base > 0 ? number_format($converted, 2) . ' ' . $userCurrency : null;
+            $markers[] = [
+                'lat' => (float) $p->latitude,
+                'lng' => (float) $p->longitude,
+                'title' => $p->name ?? 'Hébergement',
+                'city' => $p->city,
+                'municipality' => $p->municipality,
+                'price' => $converted,
+                'priceText' => $priceText,
+                'url' => route('booking-manager', ['propertyId' => $p->id]),
+            ];
         }
+
+        // 2) Centre: première propriété des résultats de recherche (ayant coords)
+        $center = ['lat' => 5.3599517, 'lng' => -4.0082563]; // défaut Abidjan
+        $zoom = 13;
+        if ($properties && $properties->count() > 0) {
+            $firstWithCoords = $properties->first(function ($p) {
+                return !is_null($p->latitude) && !is_null($p->longitude);
+            });
+            if ($firstWithCoords) {
+                $center = ['lat' => (float) $firstWithCoords->latitude, 'lng' => (float) $firstWithCoords->longitude];
+                $zoom = 14;
+            }
+        }
+
         $mapData = [
             'center' => $center,
             'zoom' => $zoom,
             'markers' => $markers,
+            // Ne pas fitBounds automatiquement: on veut rester centré sur le 1er résultat
+            'fitBounds' => false,
         ];
 
         // Récupérer les villes populaires avec comptage des propriétés

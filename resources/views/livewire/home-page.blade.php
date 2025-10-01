@@ -356,8 +356,8 @@
                     </div>
                 </div>
 
-                {{-- Carte des résultats --}}
-                @if(isset($mapData) && !empty($mapData['markers']))
+                {{-- Carte des résultats : affichée seulement s'il y a au moins une propriété trouvée --}}
+                @if(isset($mapData) && count($properties) > 0)
                 <div class="mb-6">
                     <div id="results-map" wire:ignore data-map='@json($mapData)' class="w-full h-80 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-800"></div>
                 </div>

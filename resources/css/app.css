@@ -4,3 +4,28 @@
 
 /* Optionnel: variantes Preline si nécessaires (laisser commenté si inutile) */
 /* @import "../../node_modules/preline/variants.css"; */
+
+/* Styles pour les marqueurs de carte avec prix */
+.price-marker {
+    position: relative;
+}
+.price-marker .price-badge {
+    position: absolute;
+    top: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #2563eb; /* blue-600 */
+    color: white;
+    font-weight: 700;
+    font-size: 12px;
+    line-height: 18px;
+    padding: 0 6px;
+    border-radius: 9999px;
+    white-space: nowrap;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+.price-marker .pin {
+    width: 25px;
+    height: 41px;
+    display: block;
+}

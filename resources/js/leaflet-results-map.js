@@ -54,8 +54,19 @@ function initResultsMap(el) {
 
         const markers = [];
         (data.markers || []).forEach((m) => {
+            // Icône avec prix: badge au-dessus du pin
+            const priceBadge = m.priceText
+                ? `<div class=\"price-badge\">${m.priceText}</div>`
+                : "";
+            const composedIcon = L.divIcon({
+                className: "price-marker",
+                html: `${priceBadge}<img class=\"pin\" src=\"${markerIcon}\" alt=\"pin\"/>`,
+                iconSize: [30, 46],
+                iconAnchor: [15, 46],
+                popupAnchor: [0, -46],
+            });
             const marker = L.marker([m.lat, m.lng], {
-                icon: resultsMarkerIcon,
+                icon: composedIcon,
             }).addTo(map);
             const city = m.city || "";
             const muni = m.municipality ? ", " + m.municipality : "";
@@ -72,10 +83,12 @@ function initResultsMap(el) {
             markers.push(marker);
         });
 
-        // Cadrage auto
-        if (markers.length > 1) {
+        // Cadrage auto si demandé (par défaut oui, mais le serveur peut l'ignorer)
+        if ((data.fitBounds ?? true) && markers.length > 1) {
             const group = L.featureGroup(markers);
             map.fitBounds(group.getBounds().pad(0.1));
+        } else if (data.center) {
+            map.setView([data.center.lat, data.center.lng], data.zoom || 12);
         }
 
         setTimeout(() => {
@@ -108,8 +121,18 @@ function updateOrInitResultsMap(el) {
             layerToRemove.forEach((l) => el._leaflet_map.removeLayer(l));
             const markers = [];
             (data.markers || []).forEach((m) => {
+                const priceBadge = m.priceText
+                    ? `<div class=\"price-badge\">${m.priceText}</div>`
+                    : "";
+                const composedIcon = L.divIcon({
+                    className: "price-marker",
+                    html: `${priceBadge}<img class=\"pin\" src=\"${markerIcon}\" alt=\"pin\"/>`,
+                    iconSize: [30, 46],
+                    iconAnchor: [15, 46],
+                    popupAnchor: [0, -46],
+                });
                 const marker = L.marker([m.lat, m.lng], {
-                    icon: resultsMarkerIcon,
+                    icon: composedIcon,
                 }).addTo(el._leaflet_map);
                 const city = m.city || "";
                 const muni = m.municipality ? ", " + m.municipality : "";
@@ -125,9 +148,14 @@ function updateOrInitResultsMap(el) {
                 });
                 markers.push(marker);
             });
-            if (markers.length > 1) {
+            if ((data.fitBounds ?? true) && markers.length > 1) {
                 const group = L.featureGroup(markers);
                 el._leaflet_map.fitBounds(group.getBounds().pad(0.1));
+            } else if (data.center) {
+                el._leaflet_map.setView(
+                    [data.center.lat, data.center.lng],
+                    data.zoom || 12
+                );
             }
             setTimeout(() => {
                 try {

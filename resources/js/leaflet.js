@@ -55,7 +55,42 @@ function init(lat, lng, label = "Résidence") {
             title: label,
             alt: "Emplacement",
         }).addTo(map);
-        marker.bindPopup(label);
+
+        const glat = Number(lat).toFixed(6);
+        const glng = Number(lng).toFixed(6);
+        const esc = (s) =>
+            String(s || "").replace(
+                /[&<>"']/g,
+                (c) =>
+                    ({
+                        "&": "&amp;",
+                        "<": "&lt;",
+                        ">": "&gt;",
+                        '"': "&quot;",
+                        "'": "&#39;",
+                    }[c])
+            );
+        const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${glat},${glng}`;
+        const wazeUrl = `https://waze.com/ul?ll=${glat},${glng}&navigate=yes`;
+        const appleMapsUrl = `https://maps.apple.com/?daddr=${glat},${glng}&dirflg=d`;
+        const geoUrl = `geo:${glat},${glng}?q=${glat},${glng}(${encodeURIComponent(
+            label || "Destination"
+        )})`;
+
+        const popupHtml = `
+            <div class="text-sm">
+                <div class="font-semibold mb-2 text-gray-800 dark:text-gray-100">${esc(
+                    label
+                )}</div>
+                <div class="flex flex-col gap-1">
+                    <a class="inline-flex items-center px-2 py-1 rounded border border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100 dark:border-blue-800 dark:text-blue-200 dark:bg-blue-900/30 dark:hover:bg-blue-900/40" href="${googleMapsUrl}" target="_blank" rel="noopener">Ouvrir dans Google Maps</a>
+                    <a class="inline-flex items-center px-2 py-1 rounded border border-purple-200 text-purple-700 bg-purple-50 hover:bg-purple-100 dark:border-purple-800 dark:text-purple-200 dark:bg-purple-900/30 dark:hover:bg-purple-900/40" href="${wazeUrl}" target="_blank" rel="noopener">Ouvrir dans Waze</a>
+                    <a class="inline-flex items-center px-2 py-1 rounded border border-gray-200 text-gray-700 bg-gray-50 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:bg-gray-800/60 dark:hover:bg-gray-800" href="${appleMapsUrl}" target="_blank" rel="noopener">Ouvrir dans Apple Maps</a>
+                </div>
+            </div>
+        `;
+
+        marker.bindPopup(popupHtml, { maxWidth: 260 });
         marker.bindTooltip(label, { direction: "top", offset: [0, -12] });
     }
 

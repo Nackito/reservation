@@ -10,11 +10,11 @@
   </div>
   @endif
 
-  <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+  <div class="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 items-end">
     <div>
-  <label for="periodSelect" class="block text-sm font-medium text-gray-700 mb-1">Période</label>
+      <label for="periodSelect" class="block text-sm font-medium text-gray-700 mb-1">Période</label>
       <div class="flex flex-wrap items-center gap-2">
-  <select id="periodSelect" wire:model.live="period" class="rounded-md border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+        <select id="periodSelect" wire:model.live="period" class="rounded-md border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
           <option value="7d">7 derniers jours</option>
           <option value="30d">30 derniers jours</option>
           <option value="this_month">Ce mois</option>
@@ -23,12 +23,25 @@
           <option value="custom">Personnalisée…</option>
         </select>
         @if($period === 'custom')
-          <input type="date" wire:model.live="startDate" class="rounded-md border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500" />
-          <span class="text-gray-400">→</span>
-          <input type="date" wire:model.live="endDate" class="rounded-md border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500" />
+        <input type="date" wire:model.live="startDate" class="rounded-md border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500" />
+        <span class="text-gray-400">→</span>
+        <input type="date" wire:model.live="endDate" class="rounded-md border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500" />
         @endif
       </div>
       <p class="mt-1 text-xs text-gray-500">Affichage: {{ $periodLabel }}</p>
+    </div>
+
+    <div>
+      <label for="propertySelect" class="block text-sm font-medium text-gray-700 mb-1">Hébergement</label>
+      <select id="propertySelect" wire:model.live="propertyId" class="w-full rounded-md border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+        <option value="">Tous mes hébergements</option>
+        @foreach($ownerProperties as $p)
+        <option value="{{ $p->id }}">{{ $p->name ?? ('#'.$p->id) }}</option>
+        @endforeach
+      </select>
+      @if($propertyId)
+      <p class="mt-1 text-xs text-gray-500">Filtré sur l’hébergement sélectionné.</p>
+      @endif
     </div>
   </div>
 

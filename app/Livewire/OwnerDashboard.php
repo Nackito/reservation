@@ -18,6 +18,7 @@ class OwnerDashboard extends Component
   public string $period = 'this_month'; // 7d, 30d, this_month, last_month, all, custom
   public ?string $startDate = null; // format Y-m-d (pour custom)
   public ?string $endDate = null;   // format Y-m-d (pour custom)
+  public ?int $propertyId = null;   // filtre hébergement
 
   #[Layout('layouts.app')]
   public function render()
@@ -27,28 +28,39 @@ class OwnerDashboard extends Component
       abort(403);
     }
 
-    $ownerPropertyIds = Property::query()
+    $ownerProperties = Property::query()
       ->where('user_id', $user->id)
-      ->pluck('id');
+      ->select('id', 'name')
+      ->orderBy('name')
+      ->get();
+
+    $ownerPropertyIds = $ownerProperties->pluck('id');
+
+    // Si un hébergement est sélectionné, vérifier qu'il appartient au user
+    if ($this->propertyId && !$ownerPropertyIds->contains($this->propertyId)) {
+      $this->propertyId = null;
+    }
+
+    $filteredPropertyIds = $this->propertyId ? collect([$this->propertyId]) : $ownerPropertyIds;
 
     $this->propertiesCount = $ownerPropertyIds->count();
 
     $today = Carbon::today();
 
     $this->upcomingBookings = Booking::query()
-      ->whereIn('property_id', $ownerPropertyIds)
+      ->whereIn('property_id', $filteredPropertyIds)
       ->whereDate('start_date', '>=', $today)
       ->count();
 
     $this->pendingBookings = Booking::query()
-      ->whereIn('property_id', $ownerPropertyIds)
+      ->whereIn('property_id', $filteredPropertyIds)
       ->where('status', 'pending')
       ->count();
 
     [$rangeStart, $rangeEnd] = $this->dateRange();
 
     $this->monthlyRevenue = (float) Booking::query()
-      ->whereIn('property_id', $ownerPropertyIds)
+      ->whereIn('property_id', $filteredPropertyIds)
       ->where('payment_status', 'paid')
       ->when($rangeStart && $rangeEnd, function ($q) use ($rangeStart, $rangeEnd) {
         $q->whereBetween('paid_at', [$rangeStart, $rangeEnd]);
@@ -56,7 +68,7 @@ class OwnerDashboard extends Component
       ->sum('total_price');
 
     $latest = Booking::with(['user', 'property'])
-      ->whereIn('property_id', $ownerPropertyIds)
+      ->whereIn('property_id', $filteredPropertyIds)
       ->when($rangeStart && $rangeEnd, function ($q) use ($rangeStart, $rangeEnd) {
         $q->whereBetween('created_at', [$rangeStart, $rangeEnd]);
       })
@@ -69,6 +81,7 @@ class OwnerDashboard extends Component
       'periodLabel' => $this->periodLabel(),
       'rangeStart' => $rangeStart,
       'rangeEnd' => $rangeEnd,
+      'ownerProperties' => $ownerProperties,
     ]);
   }
 

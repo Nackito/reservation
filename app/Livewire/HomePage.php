@@ -132,9 +132,16 @@ class HomePage extends Component
                 ->distinct()
                 ->pluck('municipality');
 
+            $dbDistricts = Property::select('district')
+                ->where('district', 'like', '%' . $this->searchQuery . '%')
+                ->whereNotNull('district')
+                ->distinct()
+                ->pluck('district');
+
             $this->suggestions = $predefined
                 ->merge($dbCities)
                 ->merge($dbMunicipalities)
+                ->merge($dbDistricts)
                 ->unique()
                 ->take(5)
                 ->values()
@@ -282,10 +289,35 @@ class HomePage extends Component
             $query = Property::query();
 
             if ($this->searchQuery) {
-                $query->where(function ($q) {
-                    $q->whereRaw('LOWER(REPLACE(city, " ", "")) LIKE ?', ['%' . strtolower(str_replace(' ', '', $this->searchQuery)) . '%'])
-                        ->orWhereRaw('LOWER(REPLACE(municipality, " ", "")) LIKE ?', ['%' . strtolower(str_replace(' ', '', $this->searchQuery)) . '%']);
-                });
+                $raw = trim($this->searchQuery);
+                // Tokeniser par espaces/virgules/points-virgules
+                $tokens = preg_split('/[\s,;]+/u', $raw, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+                $tokens = array_values(array_filter(array_map(fn($t) => mb_strtolower(trim($t)), $tokens)));
+
+                if (!empty($tokens)) {
+                    // Chaque mot doit correspondre à l'une des colonnes (AND sur mots, OR sur colonnes)
+                    $query->where(function ($outer) use ($tokens) {
+                        foreach ($tokens as $tok) {
+                            $outer->where(function ($q) use ($tok) {
+                                $noSpace = str_replace(' ', '', $tok);
+                                // LIKE insensible à la casse (selon collation) + variantes sans espaces
+                                $q->whereRaw('LOWER(COALESCE(city, "")) LIKE ?', ['%' . $tok . '%'])
+                                    ->orWhereRaw('LOWER(COALESCE(municipality, "")) LIKE ?', ['%' . $tok . '%'])
+                                    ->orWhereRaw('LOWER(COALESCE(district, "")) LIKE ?', ['%' . $tok . '%'])
+                                    ->orWhereRaw('REPLACE(LOWER(COALESCE(city, "")), " ", "") LIKE ?', ['%' . $noSpace . '%'])
+                                    ->orWhereRaw('REPLACE(LOWER(COALESCE(municipality, "")), " ", "") LIKE ?', ['%' . $noSpace . '%'])
+                                    ->orWhereRaw('REPLACE(LOWER(COALESCE(district, "")), " ", "") LIKE ?', ['%' . $noSpace . '%']);
+
+                                // Correspondance approchée: SOUNDEX (MySQL)
+                                if (mb_strlen($tok) >= 4) {
+                                    $q->orWhereRaw('SOUNDEX(COALESCE(city, "")) = SOUNDEX(?)', [$tok])
+                                        ->orWhereRaw('SOUNDEX(COALESCE(municipality, "")) = SOUNDEX(?)', [$tok])
+                                        ->orWhereRaw('SOUNDEX(COALESCE(district, "")) = SOUNDEX(?)', [$tok]);
+                                }
+                            });
+                        }
+                    });
+                }
             }
 
             // Filtres avancés
@@ -330,6 +362,32 @@ class HomePage extends Component
             ->orderBy('properties_count', 'desc')
             ->limit(8)
             ->get();
+
+        // Pour chaque ville populaire, récupérer une image aléatoire
+        foreach ($popularCities as $cityRow) {
+            $imageUrl = asset('images/default-image.jpg');
+
+            $topProperty = Property::where('city', $cityRow->city)
+                ->withCount('bookings')
+                ->orderByDesc('bookings_count')
+                ->orderByDesc('created_at')
+                ->first();
+
+            if ($topProperty) {
+                $randomImage = $topProperty->images()->inRandomOrder()->first();
+                if ($randomImage && !empty($randomImage->image_path)) {
+                    $imageUrl = asset('storage/' . $randomImage->image_path);
+                } else {
+                    $first = $topProperty->firstImage();
+                    if ($first && !empty($first->image_path)) {
+                        $imageUrl = asset('storage/' . $first->image_path);
+                    }
+                }
+            }
+
+            // Attribut dynamique accessible dans la vue
+            $cityRow->city_image_url = $imageUrl;
+        }
 
         // Récupérer les types de propriétés disponibles pour le filtre
         $propertyTypes = Property::select('property_type')

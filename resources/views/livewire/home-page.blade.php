@@ -796,14 +796,26 @@
                         <div class="city-card bg-white dark:bg-gray-900 shadow-md dark:shadow-lg rounded-lg overflow-hidden w-full h-full hover:shadow-lg dark:hover:shadow-2xl transition-shadow duration-300 cursor-pointer"
                             wire:click="searchByCity('{{ $cityData->city }}')">
 
-                            {{-- Image de ville (placeholder pour le moment) --}}
+                            {{-- Image de ville (issue d’un logement populaire si dispo) --}}
                             <div class="city-image-container relative overflow-hidden">
+                                @php $cityImage = $cityData->city_image_url ?? null; @endphp
+                                @if($cityImage)
+                                <div class="relative w-full h-48">
+                                    <img src="{{ $cityImage }}" alt="{{ $cityData->city }}" class="w-full h-48 object-cover">
+                                    <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
+                                    <div class="absolute bottom-3 left-3 text-white drop-shadow">
+                                        <i class="fas fa-city text-2xl mb-1"></i>
+                                        <h3 class="text-lg font-bold">{{ $cityData->city }}</h3>
+                                    </div>
+                                </div>
+                                @else
                                 <div class="city-image w-full h-48 bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
                                     <div class="text-center text-white">
                                         <i class="fas fa-city text-4xl mb-2"></i>
                                         <h3 class="text-xl font-bold">{{ $cityData->city }}</h3>
                                     </div>
                                 </div>
+                                @endif
 
                                 {{-- Badge nombre de propriétés --}}
                                 <div class="absolute top-3 right-3 bg-white text-blue-600 px-3 py-1 rounded-full text-sm font-semibold shadow-lg">

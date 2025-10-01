@@ -60,6 +60,9 @@
         <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3 flex items-center"><i class="fas fa-building mr-2"></i>Gérer mon établissement</h3>
         <div class="space-y-2">
           <a href="{{ route('contact.hebergement') }}" class="block w-full px-4 py-3 rounded-lg bg-blue-50 text-blue-700 font-semibold hover:bg-blue-100 transition"><i class="fas fa-plus-circle mr-2"></i>Inscrire mon établissement</a>
+          @if(Auth::user()?->properties()->exists())
+          <a href="{{ route('owner.dashboard') }}" class="block w-full px-4 py-3 rounded-lg bg-green-50 text-green-700 font-semibold hover:bg-green-100 transition"><i class="fas fa-chart-line mr-2"></i>Tableau de bord propriétaire</a>
+          @endif
         </div>
       </div>
 

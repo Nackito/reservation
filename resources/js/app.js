@@ -40,6 +40,7 @@ import Alpine from "alpinejs";
 import "preline";
 import Swal from "sweetalert2";
 import "./leaflet"; // Importation de Leaflet
+import "./leaflet-results-map"; // Gestion de la carte des résultats
 // Swiper importé via Vite
 import "swiper/css/bundle";
 import "./carousels";

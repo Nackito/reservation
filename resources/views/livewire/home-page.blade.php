@@ -356,6 +356,13 @@
                     </div>
                 </div>
 
+                {{-- Carte des résultats --}}
+                @if(isset($mapData) && !empty($mapData['markers']))
+                <div class="mb-6">
+                    <div id="results-map" wire:ignore data-map='@json($mapData)' class="w-full h-80 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-800"></div>
+                </div>
+                @endif
+
                 {{-- Filtres mobiles (masqués par défaut) --}}
                 @if($showFilters)
                 <div class="lg:hidden mb-6">

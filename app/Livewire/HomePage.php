@@ -353,6 +353,41 @@ class HomePage extends Component
             $properties = Property::all();
         }
 
+        // Préparer les données pour la carte (centrée sur les résultats)
+        $markers = [];
+        $sumLat = 0.0;
+        $sumLng = 0.0;
+        $countPos = 0;
+        foreach ($properties as $p) {
+            if (!is_null($p->latitude) && !is_null($p->longitude)) {
+                $markers[] = [
+                    'lat' => (float) $p->latitude,
+                    'lng' => (float) $p->longitude,
+                    'title' => $p->name ?? 'Hébergement',
+                    'city' => $p->city,
+                    'municipality' => $p->municipality,
+                    'url' => route('booking-manager', ['propertyId' => $p->id]),
+                ];
+                $sumLat += (float) $p->latitude;
+                $sumLng += (float) $p->longitude;
+                $countPos++;
+            }
+        }
+
+        // Centre par défaut: Abidjan
+        $center = ['lat' => 5.3599517, 'lng' => -4.0082563];
+        $zoom = 12;
+        if ($countPos > 0) {
+            $center = ['lat' => $sumLat / $countPos, 'lng' => $sumLng / $countPos];
+            // Ajuster zoom si peu de points
+            $zoom = $countPos === 1 ? 14 : 12;
+        }
+        $mapData = [
+            'center' => $center,
+            'zoom' => $zoom,
+            'markers' => $markers,
+        ];
+
         // Récupérer les villes populaires avec comptage des propriétés
         $popularCities = Property::select('city')
             ->selectRaw('COUNT(*) as properties_count')
@@ -436,6 +471,7 @@ class HomePage extends Component
             'propertyTypes' => $propertyTypes,
             'availableAmenities' => $allFeatures,
             'topPropertiesByCity' => $topPropertiesByCity,
+            'mapData' => $mapData,
         ]);
     }
 }

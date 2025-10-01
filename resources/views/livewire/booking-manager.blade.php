@@ -324,6 +324,7 @@
                 Vous pouvez disposez de ce logement à <span class="text-xl font-bold">{{ number_format($converted, 2) }} {{ $userCurrency }} par nuit</span>
             </p>
         </div>
+        @if(!is_null($property->latitude) && !is_null($property->longitude))
         <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mt-8 mb-4 pl-4">Emplacement de l'établissement</h2>
         <div id="map"
             data-lat="{{ $property->latitude }}"
@@ -332,13 +333,18 @@
         </div>
         <script>
             document.addEventListener('DOMContentLoaded', function() {
-                var mapDiv = document.getElementById('map');
-                var lat = parseFloat(mapDiv.dataset.lat);
-                var lng = parseFloat(mapDiv.dataset.lng);
-                var label = mapDiv.dataset.label;
-                init(lat, lng, label);
+                var el = document.getElementById('map');
+                if (!el) return;
+                var lat = parseFloat(el.dataset.lat);
+                var lng = parseFloat(el.dataset.lng);
+                if (!isFinite(lat) || !isFinite(lng)) return;
+                var label = el.dataset.label || 'Résidence';
+                if (typeof window.init === 'function') {
+                    window.init(lat, lng, label);
+                }
             });
         </script>
+        @endif
 </div>
 
 <!-- Info section -->

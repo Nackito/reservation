@@ -14,6 +14,7 @@ use App\Livewire\BookingManager;
 use App\Livewire\HomePage;
 use App\Livewire\ReservationDetails;
 use App\Livewire\ContactForm;
+use App\Livewire\OwnerDashboard;
 use App\Http\Requests\Auth\RegisterRequest;
 // Nettoyage des imports inutiles
 use Illuminate\Support\Facades\Route;
@@ -67,6 +68,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/mes-reservations/ville/{city}', App\Livewire\UserReservationsCity::class)->name('user-reservations.city');
     Route::get('/reservation-details/{propertyId}', ReservationDetails::class)->name('reservations.details');
     Route::get('/user-reservations', UserReservations::class)->name('user-reservations');
+    Route::get('/owner/dashboard', OwnerDashboard::class)->name('owner.dashboard');
     Route::get('/wishlist', App\Livewire\WishlistPage::class)->name('wishlist.index');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

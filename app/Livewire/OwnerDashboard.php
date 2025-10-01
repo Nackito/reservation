@@ -15,6 +15,9 @@ class OwnerDashboard extends Component
   public int $upcomingBookings = 0;
   public int $pendingBookings = 0;
   public float $monthlyRevenue = 0.0;
+  public string $period = 'this_month'; // 7d, 30d, this_month, last_month, all, custom
+  public ?string $startDate = null; // format Y-m-d (pour custom)
+  public ?string $endDate = null;   // format Y-m-d (pour custom)
 
   #[Layout('layouts.app')]
   public function render()
@@ -42,23 +45,88 @@ class OwnerDashboard extends Component
       ->where('status', 'pending')
       ->count();
 
-    $monthStart = $today->copy()->startOfMonth();
-    $monthEnd = $today->copy()->endOfMonth();
+    [$rangeStart, $rangeEnd] = $this->dateRange();
 
     $this->monthlyRevenue = (float) Booking::query()
       ->whereIn('property_id', $ownerPropertyIds)
       ->where('payment_status', 'paid')
-      ->whereBetween('paid_at', [$monthStart, $monthEnd])
+      ->when($rangeStart && $rangeEnd, function ($q) use ($rangeStart, $rangeEnd) {
+        $q->whereBetween('paid_at', [$rangeStart, $rangeEnd]);
+      })
       ->sum('total_price');
 
     $latest = Booking::with(['user', 'property'])
       ->whereIn('property_id', $ownerPropertyIds)
+      ->when($rangeStart && $rangeEnd, function ($q) use ($rangeStart, $rangeEnd) {
+        $q->whereBetween('created_at', [$rangeStart, $rangeEnd]);
+      })
       ->latest()
       ->take(5)
       ->get();
 
     return view('livewire.owner-dashboard', [
       'latestBookings' => $latest,
+      'periodLabel' => $this->periodLabel(),
+      'rangeStart' => $rangeStart,
+      'rangeEnd' => $rangeEnd,
     ]);
+  }
+
+  protected function dateRange(): array
+  {
+    $today = Carbon::today();
+    return match ($this->period) {
+      '7d' => [$today->copy()->subDays(6)->startOfDay(), $today->copy()->endOfDay()],
+      '30d' => [$today->copy()->subDays(29)->startOfDay(), $today->copy()->endOfDay()],
+      'this_month' => [$today->copy()->startOfMonth(), $today->copy()->endOfMonth()],
+      'last_month' => [
+        $today->copy()->subMonth()->startOfMonth(),
+        $today->copy()->subMonth()->endOfMonth(),
+      ],
+      'all' => [null, null],
+      'custom' => $this->customRange(),
+      default => [$today->copy()->startOfMonth(), $today->copy()->endOfMonth()],
+    };
+  }
+
+  protected function customRange(): array
+  {
+    if (!$this->startDate || !$this->endDate) {
+      // fallback 30 derniers jours
+      $today = Carbon::today();
+      return [$today->copy()->subDays(29)->startOfDay(), $today->copy()->endOfDay()];
+    }
+    try {
+      $start = Carbon::parse($this->startDate)->startOfDay();
+      $end = Carbon::parse($this->endDate)->endOfDay();
+      if ($end->lt($start)) {
+        [$start, $end] = [$end->copy()->startOfDay(), $start->copy()->endOfDay()];
+      }
+      return [$start, $end];
+    } catch (\Throwable $e) {
+      $today = Carbon::today();
+      return [$today->copy()->subDays(29)->startOfDay(), $today->copy()->endOfDay()];
+    }
+  }
+
+  public function updatedPeriod(string $value): void
+  {
+    if ($value !== 'custom') {
+      $this->startDate = null;
+      $this->endDate = null;
+    }
+  }
+
+  protected function periodLabel(): string
+  {
+    return match ($this->period) {
+      '7d' => '7 derniers jours',
+      '30d' => '30 derniers jours',
+      'this_month' => 'ce mois',
+      'last_month' => 'mois dernier',
+      'all' => 'toutes périodes',
+      'custom' => 'période personnalisée',
+      default => 'ce mois',
+    };
   }
 }

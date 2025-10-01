@@ -10,6 +10,28 @@
   </div>
   @endif
 
+  <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <div>
+  <label for="periodSelect" class="block text-sm font-medium text-gray-700 mb-1">Période</label>
+      <div class="flex flex-wrap items-center gap-2">
+  <select id="periodSelect" wire:model.live="period" class="rounded-md border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+          <option value="7d">7 derniers jours</option>
+          <option value="30d">30 derniers jours</option>
+          <option value="this_month">Ce mois</option>
+          <option value="last_month">Mois dernier</option>
+          <option value="all">Toutes périodes</option>
+          <option value="custom">Personnalisée…</option>
+        </select>
+        @if($period === 'custom')
+          <input type="date" wire:model.live="startDate" class="rounded-md border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500" />
+          <span class="text-gray-400">→</span>
+          <input type="date" wire:model.live="endDate" class="rounded-md border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500" />
+        @endif
+      </div>
+      <p class="mt-1 text-xs text-gray-500">Affichage: {{ $periodLabel }}</p>
+    </div>
+  </div>
+
   <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
     <div class="rounded-lg border bg-white p-4 shadow-sm">
       <div class="text-sm text-gray-500">Hébergements</div>

@@ -211,28 +211,71 @@
                                         @switch(strtolower($amenity))
                                         @case('wifi')
                                         @case('wi-fi')
+                                        @case('internet')
+                                        @case('internet haut débit')
+                                        @case('haut débit')
+                                        @case('fibre')
+                                        @case('fiber')
+                                        @case('high-speed internet')
                                         <i class="fas fa-wifi text-blue-500 mr-2"></i>
                                         @break
                                         @case('piscine')
                                         @case('pool')
+                                        @case('piscine privée')
+                                        @case('private pool')
+                                        @case('piscine chauffée')
+                                        @case('heated pool')
                                         <i class="fas fa-swimming-pool text-blue-500 mr-2"></i>
                                         @break
                                         @case('parking')
+                                        @case('garage')
+                                        @case('stationnement')
                                         <i class="fas fa-parking text-blue-500 mr-2"></i>
                                         @break
                                         @case('climatisation')
                                         @case('air conditioning')
                                         @case('ac')
+                                        @case('climatiseur')
                                         <i class="fas fa-snowflake text-blue-500 mr-2"></i>
+                                        @break
+                                        @case('chauffage')
+                                        @case('heating')
+                                        <i class="fas fa-thermometer-half text-orange-500 mr-2"></i>
                                         @break
                                         @case('cuisine')
                                         @case('kitchen')
                                         @case('kitchenette')
+                                        @case('cuisine équipée')
                                         <i class="fas fa-utensils text-blue-500 mr-2"></i>
+                                        @break
+                                        @case('lave-vaisselle')
+                                        @case('dishwasher')
+                                        <i class="fas fa-blender text-blue-500 mr-2"></i>
+                                        @break
+                                        @case('machine à laver')
+                                        @case('machine a laver')
+                                        @case('washing machine')
+                                        @case('laundry')
+                                        @case('laverie')
+                                        <i class="fas fa-tshirt text-blue-500 mr-2"></i>
+                                        @break
+                                        @case('sèche-linge')
+                                        @case('seche-linge')
+                                        @case('dryer')
+                                        <i class="fas fa-wind text-blue-500 mr-2"></i>
+                                        @break
+                                        @case('sèche-cheveux')
+                                        @case('seche-cheveux')
+                                        @case('hair dryer')
+                                        <i class="fas fa-fan text-blue-500 mr-2"></i>
                                         @break
                                         @case('télévision')
                                         @case('tv')
                                         @case('television')
+                                        @case('smart tv')
+                                        @case('netflix')
+                                        @case('cable tv')
+                                        @case('satellite tv')
                                         <i class="fas fa-tv text-blue-500 mr-2"></i>
                                         @break
                                         @case('jardin')
@@ -259,6 +302,182 @@
                                         @case('security')
                                         @case('gardien')
                                         <i class="fas fa-shield-alt text-blue-500 mr-2"></i>
+                                        @break
+                                        @case('caméra de sécurité')
+                                        @case('camera de securite')
+                                        @case('security camera')
+                                        <i class="fas fa-video text-blue-500 mr-2"></i>
+                                        @break
+                                        @case('coffre-fort')
+                                        @case('coffre fort')
+                                        @case('safe')
+                                        <i class="fas fa-lock text-blue-500 mr-2"></i>
+                                        @break
+                                        @case('détecteur de fumée')
+                                        @case('detecteur de fumee')
+                                        @case('smoke detector')
+                                        <i class="fas fa-bell text-blue-500 mr-2"></i>
+                                        @break
+                                        @case('détecteur de monoxyde de carbone')
+                                        @case('detecteur de monoxyde de carbone')
+                                        @case('carbon monoxide detector')
+                                        <i class="fas fa-exclamation-triangle text-yellow-500 mr-2"></i>
+                                        @break
+                                        @case('extincteur')
+                                        @case('fire extinguisher')
+                                        <i class="fas fa-fire-extinguisher text-red-500 mr-2"></i>
+                                        @break
+                                        @case('trousse de secours')
+                                        @case('first aid kit')
+                                        <i class="fas fa-first-aid text-red-500 mr-2"></i>
+                                        @break
+                                        @case('animaux acceptés')
+                                        @case('animaux autorisés')
+                                        @case('pets allowed')
+                                        @case('pet friendly')
+                                        <i class="fas fa-paw text-pink-500 mr-2"></i>
+                                        @break
+                                        @case('fumeurs')
+                                        @case('smoking')
+                                        <i class="fas fa-smoking text-gray-600 mr-2"></i>
+                                        @break
+                                        @case('non fumeurs')
+                                        @case('non-fumeurs')
+                                        @case('no smoking')
+                                        @case('non smoking')
+                                        <i class="fas fa-smoking-ban text-gray-600 mr-2"></i>
+                                        @break
+                                        @case('bureau')
+                                        @case('workspace')
+                                        @case('desk')
+                                        @case('espace de travail')
+                                        <i class="fas fa-briefcase text-blue-500 mr-2"></i>
+                                        @break
+                                        @case('barbecue')
+                                        @case('bbq')
+                                        @case('grill')
+                                        <i class="fas fa-fire text-orange-600 mr-2"></i>
+                                        @break
+                                        @case('cheminée')
+                                        @case('fireplace')
+                                        <i class="fas fa-fire text-red-500 mr-2"></i>
+                                        @break
+                                        @case('spa')
+                                        @case('jacuzzi')
+                                        @case('hot tub')
+                                        <i class="fas fa-bath text-purple-500 mr-2"></i>
+                                        @break
+                                        @case('sauna')
+                                        @case('hammam')
+                                        @case('steam room')
+                                        <i class="fas fa-temperature-high text-orange-500 mr-2"></i>
+                                        @break
+                                        @case('vue sur mer')
+                                        @case('sea view')
+                                        @case('ocean view')
+                                        @case('lake view')
+                                        <i class="fas fa-water text-blue-500 mr-2"></i>
+                                        @break
+                                        @case('proche plage')
+                                        @case('plage')
+                                        @case('beach')
+                                        @case('beachfront')
+                                        <i class="fas fa-water text-blue-500 mr-2"></i>
+                                        @break
+                                        @case('aire de jeux')
+                                        @case('playground')
+                                        <i class="fas fa-child text-yellow-600 mr-2"></i>
+                                        @break
+                                        @case('lit bébé')
+                                        @case('berceau')
+                                        @case('crib')
+                                        @case('high chair')
+                                        <i class="fas fa-baby text-pink-500 mr-2"></i>
+                                        @break
+                                        @case('accessible')
+                                        @case('accessible pmr')
+                                        @case('pmr')
+                                        @case('wheelchair accessible')
+                                        <i class="fas fa-wheelchair text-blue-500 mr-2"></i>
+                                        @break
+                                        @case('ménage')
+                                        @case('menage')
+                                        @case('housekeeping')
+                                        @case('cleaning')
+                                        <i class="fas fa-broom text-green-600 mr-2"></i>
+                                        @break
+                                        @case('room service')
+                                        <i class="fas fa-concierge-bell text-blue-500 mr-2"></i>
+                                        @break
+                                        @case('petit-déjeuner')
+                                        @case('petit dejeuner')
+                                        @case('breakfast included')
+                                        @case('breakfast')
+                                        <i class="fas fa-coffee text-amber-700 mr-2"></i>
+                                        @break
+                                        @case('restaurant')
+                                        <i class="fas fa-utensils text-blue-500 mr-2"></i>
+                                        @break
+                                        @case('bar')
+                                        <i class="fas fa-glass-martini text-pink-600 mr-2"></i>
+                                        @break
+                                        @case('café')
+                                        @case('cafe')
+                                        @case('coffee shop')
+                                        <i class="fas fa-coffee text-amber-700 mr-2"></i>
+                                        @break
+                                        @case('réception 24h/24')
+                                        @case('reception 24h/24')
+                                        @case('24-hour check-in')
+                                        @case('24/7 check-in')
+                                        <i class="fas fa-clock text-blue-500 mr-2"></i>
+                                        @break
+                                        @case('navette aéroport')
+                                        @case('navette aeroport')
+                                        @case('transport aéroport')
+                                        @case('airport shuttle')
+                                        @case('shuttle')
+                                        <i class="fas fa-bus text-blue-500 mr-2"></i>
+                                        @break
+                                        @case('tennis')
+                                        @case('court de tennis')
+                                        <i class="fas fa-table-tennis text-green-600 mr-2"></i>
+                                        @break
+                                        @case('salle de jeux')
+                                        @case('game room')
+                                        <i class="fas fa-gamepad text-purple-600 mr-2"></i>
+                                        @break
+                                        @case('billard')
+                                        @case('pool table')
+                                        <i class="fas fa-bowling-ball text-purple-600 mr-2"></i>
+                                        @break
+                                        @case('bibliothèque')
+                                        @case('bibliotheque')
+                                        @case('library')
+                                        <i class="fas fa-book text-green-700 mr-2"></i>
+                                        @break
+                                        @case('vélos')
+                                        @case('velos')
+                                        @case('bicyclettes')
+                                        @case('bikes')
+                                        @case('bicycle')
+                                        <i class="fas fa-bicycle text-green-600 mr-2"></i>
+                                        @break
+                                        @case('location de voiture')
+                                        @case('car rental')
+                                        @case('voiture')
+                                        <i class="fas fa-car text-blue-500 mr-2"></i>
+                                        @break
+                                        @case('générateur')
+                                        @case('generateur')
+                                        @case('groupe électrogène')
+                                        @case('groupe electrogene')
+                                        @case('generator')
+                                        <i class="fas fa-bolt text-yellow-500 mr-2"></i>
+                                        @break
+                                        @case('eau chaude')
+                                        @case('hot water')
+                                        <i class="fas fa-tint text-blue-400 mr-2"></i>
                                         @break
                                         @default
                                         <i class="fas fa-check text-green-500 mr-2"></i>
@@ -454,7 +673,287 @@
                                         wire:model.live="selectedAmenities"
                                         value="{{ $amenity }}"
                                         class="text-blue-600 border-gray-300 rounded focus:ring-blue-500 focus:ring-2">
-                                    <span class="text-xs text-gray-700">{{ ucfirst($amenity) }}</span>
+                                    <span class="text-xs text-gray-700 dark:text-gray-200 flex items-center">
+                                        @switch(strtolower($amenity))
+                                        @case('wifi')
+                                        @case('wi-fi')
+                                        @case('internet')
+                                        @case('internet haut débit')
+                                        @case('haut débit')
+                                        @case('fibre')
+                                        @case('fiber')
+                                        @case('high-speed internet')
+                                        <i class="fas fa-wifi text-blue-500 mr-1"></i>
+                                        @break
+                                        @case('piscine')
+                                        @case('pool')
+                                        @case('piscine privée')
+                                        @case('private pool')
+                                        @case('piscine chauffée')
+                                        @case('heated pool')
+                                        <i class="fas fa-swimming-pool text-blue-500 mr-1"></i>
+                                        @break
+                                        @case('parking')
+                                        @case('garage')
+                                        @case('stationnement')
+                                        <i class="fas fa-parking text-blue-500 mr-1"></i>
+                                        @break
+                                        @case('climatisation')
+                                        @case('air conditioning')
+                                        @case('ac')
+                                        @case('climatiseur')
+                                        <i class="fas fa-snowflake text-blue-500 mr-1"></i>
+                                        @break
+                                        @case('chauffage')
+                                        @case('heating')
+                                        <i class="fas fa-thermometer-half text-orange-500 mr-1"></i>
+                                        @break
+                                        @case('cuisine')
+                                        @case('kitchen')
+                                        @case('kitchenette')
+                                        @case('cuisine équipée')
+                                        <i class="fas fa-utensils text-blue-500 mr-1"></i>
+                                        @break
+                                        @case('lave-vaisselle')
+                                        @case('dishwasher')
+                                        <i class="fas fa-blender text-blue-500 mr-1"></i>
+                                        @break
+                                        @case('machine à laver')
+                                        @case('machine a laver')
+                                        @case('washing machine')
+                                        @case('laundry')
+                                        @case('laverie')
+                                        <i class="fas fa-tshirt text-blue-500 mr-1"></i>
+                                        @break
+                                        @case('sèche-linge')
+                                        @case('seche-linge')
+                                        @case('dryer')
+                                        <i class="fas fa-wind text-blue-500 mr-1"></i>
+                                        @break
+                                        @case('sèche-cheveux')
+                                        @case('seche-cheveux')
+                                        @case('hair dryer')
+                                        <i class="fas fa-fan text-blue-500 mr-1"></i>
+                                        @break
+                                        @case('télévision')
+                                        @case('tv')
+                                        @case('television')
+                                        @case('smart tv')
+                                        @case('netflix')
+                                        @case('cable tv')
+                                        @case('satellite tv')
+                                        @case('youtube')
+                                        @case('prime video')
+                                        @case('disney+')
+                                        @case('canal+')
+                                        <i class="fas fa-tv text-blue-500 mr-1"></i>
+                                        @break
+                                        @case('jardin')
+                                        @case('garden')
+                                        <i class="fas fa-leaf text-green-500 mr-1"></i>
+                                        @break
+                                        @case('balcon')
+                                        @case('balcony')
+                                        @case('terrasse')
+                                        @case('terrace')
+                                        <i class="fas fa-door-open text-blue-500 mr-1"></i>
+                                        @break
+                                        @case('salle de sport')
+                                        @case('gym')
+                                        @case('fitness')
+                                        <i class="fas fa-dumbbell text-blue-500 mr-1"></i>
+                                        @break
+                                        @case('ascenseur')
+                                        @case('elevator')
+                                        @case('lift')
+                                        <i class="fas fa-elevator text-blue-500 mr-1"></i>
+                                        @break
+                                        @case('sécurité')
+                                        @case('security')
+                                        @case('gardien')
+                                        <i class="fas fa-shield-alt text-blue-500 mr-1"></i>
+                                        @break
+                                        @case('caméra de sécurité')
+                                        @case('camera de securite')
+                                        @case('security camera')
+                                        <i class="fas fa-video text-blue-500 mr-1"></i>
+                                        @break
+                                        @case('coffre-fort')
+                                        @case('coffre fort')
+                                        @case('safe')
+                                        <i class="fas fa-lock text-blue-500 mr-1"></i>
+                                        @break
+                                        @case('détecteur de fumée')
+                                        @case('detecteur de fumee')
+                                        @case('smoke detector')
+                                        <i class="fas fa-bell text-blue-500 mr-1"></i>
+                                        @break
+                                        @case('détecteur de monoxyde de carbone')
+                                        @case('detecteur de monoxyde de carbone')
+                                        @case('carbon monoxide detector')
+                                        <i class="fas fa-exclamation-triangle text-yellow-500 mr-1"></i>
+                                        @break
+                                        @case('extincteur')
+                                        @case('fire extinguisher')
+                                        <i class="fas fa-fire-extinguisher text-red-500 mr-1"></i>
+                                        @break
+                                        @case('trousse de secours')
+                                        @case('first aid kit')
+                                        <i class="fas fa-first-aid text-red-500 mr-1"></i>
+                                        @break
+                                        @case('animaux acceptés')
+                                        @case('animaux autorisés')
+                                        @case('pets allowed')
+                                        @case('pet friendly')
+                                        <i class="fas fa-paw text-pink-500 mr-1"></i>
+                                        @break
+                                        @case('fumeurs')
+                                        @case('smoking')
+                                        <i class="fas fa-smoking text-gray-600 mr-1"></i>
+                                        @break
+                                        @case('non fumeurs')
+                                        @case('non-fumeurs')
+                                        @case('no smoking')
+                                        @case('non smoking')
+                                        <i class="fas fa-smoking-ban text-gray-600 mr-1"></i>
+                                        @break
+                                        @case('bureau')
+                                        @case('workspace')
+                                        @case('desk')
+                                        @case('espace de travail')
+                                        <i class="fas fa-briefcase text-blue-500 mr-1"></i>
+                                        @break
+                                        @case('barbecue')
+                                        @case('bbq')
+                                        @case('grill')
+                                        <i class="fas fa-fire text-orange-600 mr-1"></i>
+                                        @break
+                                        @case('cheminée')
+                                        @case('fireplace')
+                                        <i class="fas fa-fire text-red-500 mr-1"></i>
+                                        @break
+                                        @case('spa')
+                                        @case('jacuzzi')
+                                        @case('hot tub')
+                                        <i class="fas fa-bath text-purple-500 mr-1"></i>
+                                        @break
+                                        @case('sauna')
+                                        @case('hammam')
+                                        @case('steam room')
+                                        <i class="fas fa-temperature-high text-orange-500 mr-1"></i>
+                                        @break
+                                        @case('vue sur mer')
+                                        @case('sea view')
+                                        @case('ocean view')
+                                        @case('lake view')
+                                        <i class="fas fa-water text-blue-500 mr-1"></i>
+                                        @break
+                                        @case('proche plage')
+                                        @case('plage')
+                                        @case('beach')
+                                        @case('beachfront')
+                                        <i class="fas fa-water text-blue-500 mr-1"></i>
+                                        @break
+                                        @case('aire de jeux')
+                                        @case('playground')
+                                        <i class="fas fa-child text-yellow-600 mr-1"></i>
+                                        @break
+                                        @case('lit bébé')
+                                        @case('berceau')
+                                        @case('crib')
+                                        @case('high chair')
+                                        <i class="fas fa-baby text-pink-500 mr-1"></i>
+                                        @break
+                                        @case('accessible')
+                                        @case('accessible pmr')
+                                        @case('pmr')
+                                        @case('wheelchair accessible')
+                                        <i class="fas fa-wheelchair text-blue-500 mr-1"></i>
+                                        @break
+                                        @case('ménage')
+                                        @case('menage')
+                                        @case('housekeeping')
+                                        @case('cleaning')
+                                        <i class="fas fa-broom text-green-600 mr-1"></i>
+                                        @break
+                                        @case('room service')
+                                        <i class="fas fa-concierge-bell text-blue-500 mr-1"></i>
+                                        @break
+                                        @case('petit-déjeuner')
+                                        @case('petit dejeuner')
+                                        @case('breakfast included')
+                                        @case('breakfast')
+                                        <i class="fas fa-coffee text-amber-700 mr-1"></i>
+                                        @break
+                                        @case('restaurant')
+                                        <i class="fas fa-utensils text-blue-500 mr-1"></i>
+                                        @break
+                                        @case('bar')
+                                        <i class="fas fa-glass-martini-alt text-pink-600 mr-1"></i>
+                                        @break
+                                        @case('café')
+                                        @case('cafe')
+                                        @case('coffee shop')
+                                        <i class="fas fa-coffee text-amber-700 mr-1"></i>
+                                        @break
+                                        @case('réception 24h/24')
+                                        @case('reception 24h/24')
+                                        @case('24-hour check-in')
+                                        @case('24/7 check-in')
+                                        <i class="fas fa-clock text-blue-500 mr-1"></i>
+                                        @break
+                                        @case('navette aéroport')
+                                        @case('navette aeroport')
+                                        @case('transport aéroport')
+                                        @case('airport shuttle')
+                                        @case('shuttle')
+                                        <i class="fas fa-bus text-blue-500 mr-1"></i>
+                                        @break
+                                        @case('tennis')
+                                        @case('court de tennis')
+                                        <i class="fas fa-table-tennis text-green-600 mr-1"></i>
+                                        @break
+                                        @case('salle de jeux')
+                                        @case('game room')
+                                        <i class="fas fa-gamepad text-purple-600 mr-1"></i>
+                                        @break
+                                        @case('billard')
+                                        @case('pool table')
+                                        <i class="fas fa-bowling-ball text-purple-600 mr-1"></i>
+                                        @break
+                                        @case('bibliothèque')
+                                        @case('bibliotheque')
+                                        @case('library')
+                                        <i class="fas fa-book text-green-700 mr-1"></i>
+                                        @break
+                                        @case('vélos')
+                                        @case('velos')
+                                        @case('bicyclettes')
+                                        @case('bikes')
+                                        @case('bicycle')
+                                        <i class="fas fa-bicycle text-green-600 mr-1"></i>
+                                        @break
+                                        @case('location de voiture')
+                                        @case('car rental')
+                                        @case('voiture')
+                                        <i class="fas fa-car text-blue-500 mr-1"></i>
+                                        @break
+                                        @case('générateur')
+                                        @case('generateur')
+                                        @case('groupe électrogène')
+                                        @case('groupe electrogene')
+                                        @case('generator')
+                                        <i class="fas fa-bolt text-yellow-500 mr-1"></i>
+                                        @break
+                                        @case('eau chaude')
+                                        @case('hot water')
+                                        <i class="fas fa-tint text-blue-400 mr-1"></i>
+                                        @break
+                                        @default
+                                        <i class="fas fa-check text-green-500 mr-1"></i>
+                                        @endswitch
+                                        {{ ucfirst($amenity) }}
+                                    </span>
                                 </label>
                                 @endforeach
                             </div>

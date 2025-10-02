@@ -96,10 +96,10 @@ class BookingResource extends Resource
     {
         return [
             Tables\Columns\TextColumn::make('property.name')
-                ->label('Propriétés')
+                ->label('Property')
                 ->sortable(),
             Tables\Columns\TextColumn::make('user.name')
-                ->label('Demande emise par')
+                ->label('Requested by')
                 ->sortable(),
             Tables\Columns\TextColumn::make('start_date')
                 ->date()
@@ -107,14 +107,6 @@ class BookingResource extends Resource
             Tables\Columns\TextColumn::make('end_date')
                 ->date()
                 ->sortable(),
-            Tables\Columns\TextColumn::make('created_at')
-                ->dateTime()
-                ->sortable()
-                ->toggleable(isToggledHiddenByDefault: true),
-            Tables\Columns\TextColumn::make('updated_at')
-                ->dateTime()
-                ->sortable()
-                ->toggleable(isToggledHiddenByDefault: true),
             Tables\Columns\TextColumn::make('total_price')
                 ->numeric()
                 ->sortable(),
@@ -126,6 +118,14 @@ class BookingResource extends Resource
                     'warning' => 'pending',
                     'success' => 'paid',
                     'danger' => 'failed',
+                    Tables\Columns\TextColumn::make('created_at')
+                        ->dateTime()
+                        ->sortable()
+                        ->toggleable(isToggledHiddenByDefault: true),
+                    Tables\Columns\TextColumn::make('updated_at')
+                        ->dateTime()
+                        ->sortable()
+                        ->toggleable(isToggledHiddenByDefault: true),
                 ])
                 ->icons([
                     'heroicon-o-clock' => 'pending',

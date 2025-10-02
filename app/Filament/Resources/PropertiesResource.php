@@ -71,6 +71,16 @@ class PropertiesResource extends Resource
                             'ascenseur' => 'Ascenseur',
                             'meuble' => 'Meublé',
                             'terrasse' => 'Terrasse',
+                            'barbecue' => 'Barbecue',
+                            'salle_de_sport' => 'Salle de sport',
+                            'sécurité' => 'Sécurité 24/7',
+                            'cuisine équipée' => 'Cuisine équipée',
+                            'salle_de_bain privée' => 'Salle de bain privée',
+                            'vue_sur_mer' => 'Vue sur mer',
+                            'jacuzzi' => 'Jacuzzi',
+                            'canal+' => 'Canal+',
+                            'netflix' => 'Netflix',
+                            'tv' => 'TV',
                         ]),
                 ])->columns(1),
             Section::make('Localisation')
@@ -161,7 +171,8 @@ class PropertiesResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('title')
+                Tables\Columns\TextColumn::make('name')
+                    ->label('Title')
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('user.name')
@@ -171,8 +182,8 @@ class PropertiesResource extends Resource
                 Tables\Columns\TextColumn::make('city')
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('price')
-                    ->money('usd', true)
+                Tables\Columns\TextColumn::make('price_per_night')
+                    ->money('XOF', true)
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()

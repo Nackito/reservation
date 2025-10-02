@@ -39,6 +39,25 @@ function parseMapData(el) {
 
 function initResultsMap(el) {
     if (!window.L || !el || el.dataset.inited === "1") return;
+    // Attendre que le conteneur ait une taille visible pour éviter un canvas blanc
+    const rect = el.getBoundingClientRect();
+    if ((rect.width === 0 || rect.height === 0) && !el._leaflet_waitSize) {
+        el._leaflet_waitSize = true;
+        let attempts = 0;
+        const t = setInterval(() => {
+            const r = el.getBoundingClientRect();
+            if (r.width > 0 && r.height > 0) {
+                clearInterval(t);
+                el._leaflet_waitSize = false;
+                initResultsMap(el);
+            } else if (++attempts > 15) {
+                // ~3s max
+                clearInterval(t);
+                el._leaflet_waitSize = false;
+            }
+        }, 200);
+        return;
+    }
     const data = parseMapData(el);
     if (!data || !data.center) return;
 
@@ -91,11 +110,17 @@ function initResultsMap(el) {
             map.setView([data.center.lat, data.center.lng], data.zoom || 12);
         }
 
-        setTimeout(() => {
+        const invalidate = () => {
             try {
                 map.invalidateSize();
             } catch (_) {}
-        }, 200);
+        };
+        // multiples invalidations pour couvrir les transitions et le morphing
+        requestAnimationFrame(invalidate);
+        setTimeout(invalidate, 150);
+        setTimeout(invalidate, 400);
+        setTimeout(invalidate, 900);
+        window.addEventListener("resize", invalidate, { passive: true });
 
         el.dataset.inited = "1";
         el._leaflet_map = map;
@@ -179,21 +204,48 @@ function watchResultsMap() {
     // Premier essai au chargement
     tryInit();
 
+    // Petits retries juste après l'apparition pour couvrir les cas de layout async
+    let tries = 10;
+    const bootRetries = setInterval(() => {
+        const el = document.getElementById("results-map");
+        if (el && el._leaflet_map) {
+            clearInterval(bootRetries);
+            return;
+        }
+        tryInit();
+        if (--tries <= 0) clearInterval(bootRetries);
+    }, 200);
+
     // MutationObserver pour détecter l'apparition du conteneur ou le changement de data-map
     const observer = new MutationObserver((mutations) => {
+        let shouldTry = false;
         for (const m of mutations) {
             if (m.type === "childList") {
-                if ([...m.addedNodes].some((n) => n.id === "results-map")) {
-                    tryInit();
+                // Rechercher #results-map dans tout le sous-arbre ajouté
+                for (const node of m.addedNodes) {
+                    if (node.nodeType === 1) {
+                        if (
+                            node.id === "results-map" ||
+                            node.querySelector?.("#results-map")
+                        ) {
+                            shouldTry = true;
+                            break;
+                        }
+                    }
+                }
+            } else if (m.type === "attributes") {
+                if (
+                    m.target.id === "results-map" &&
+                    m.attributeName === "data-map"
+                ) {
+                    shouldTry = true;
                 }
             }
-            if (
-                m.type === "attributes" &&
-                m.target.id === "results-map" &&
-                m.attributeName === "data-map"
-            ) {
-                tryInit();
-            }
+            if (shouldTry) break;
+        }
+        if (shouldTry) {
+            // Throttle via rAF
+            requestAnimationFrame(tryInit);
         }
     });
     observer.observe(document.body, {
@@ -204,15 +256,41 @@ function watchResultsMap() {
     });
 
     // Hooks Livewire
-    document.addEventListener("livewire:init", tryInit);
+    document.addEventListener("livewire:init", () => {
+        tryInit();
+        if (window.Livewire && Livewire.hook) {
+            Livewire.hook("morph.updated", tryInit);
+            Livewire.hook("message.processed", tryInit);
+        }
+    });
     document.addEventListener("livewire:load", tryInit);
     document.addEventListener("livewire:navigated", tryInit);
+    // Au cas où Livewire.hook est déjà présent avant livewire:init
     if (window.Livewire && Livewire.hook) {
         Livewire.hook("morph.updated", tryInit);
+        Livewire.hook("message.processed", tryInit);
     }
 
-    // Notre évènement maison
-    window.addEventListener("refresh-carousels", tryInit);
+    // Notre évènement maison (émis après search/filters côté Livewire)
+    window.addEventListener("refresh-carousels", () => {
+        // Appeler plusieurs fois avec délais pour s’aligner sur le morphing Livewire
+        tryInit();
+        setTimeout(tryInit, 0);
+        setTimeout(tryInit, 150);
+        setTimeout(tryInit, 400);
+        setTimeout(tryInit, 900);
+    });
+
+    // Invalidation à la fin d’une transition CSS du conteneur
+    document.addEventListener("transitionend", (e) => {
+        const el = document.getElementById("results-map");
+        if (!el || !el._leaflet_map) return;
+        if (e.target === el || el.contains(e.target)) {
+            try {
+                el._leaflet_map.invalidateSize();
+            } catch (_) {}
+        }
+    });
 }
 
 // Lancer quand DOM prêt

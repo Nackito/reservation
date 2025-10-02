@@ -6,6 +6,7 @@ use App\Models\Booking;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Schema;
 
 class BookingsStatsOverview extends BaseWidget
 {
@@ -14,9 +15,13 @@ class BookingsStatsOverview extends BaseWidget
   protected function getStats(): array
   {
     $total = Booking::count();
-    $accepted = Booking::where('status', 'accepted')->count();
-    $pending = Booking::where('status', 'pending')->count();
-    $paid = Booking::where('payment_status', 'paid')->count();
+
+    $hasStatus = Schema::hasColumn('bookings', 'status');
+    $hasPaymentStatus = Schema::hasColumn('bookings', 'payment_status');
+
+    $accepted = $hasStatus ? Booking::where('status', 'accepted')->count() : 0;
+    $pending = $hasStatus ? Booking::where('status', 'pending')->count() : 0;
+    $paid = $hasPaymentStatus ? Booking::where('payment_status', 'paid')->count() : 0;
 
     return [
       Stat::make('Réservations', (string) $total)

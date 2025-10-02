@@ -38,13 +38,13 @@ class LatestBooking extends BaseWidget
                 TextColumn::make('status')
                     ->badge()
                     ->searchable()
-                    ->color(fn(string $state) => match ($state) {
+                    ->color(fn($state) => match ($state) {
                         'pending' => 'info',
                         'accepted' => 'success',
                         'cancelled', 'canceled' => 'danger',
                         default => 'gray',
                     })
-                    ->icon(fn(string $state) => match ($state) {
+                    ->icon(fn($state) => match ($state) {
                         'pending' => 'heroicon-m-sparkles',
                         'accepted' => 'heroicon-o-check-badge',
                         'cancelled', 'canceled' => 'heroicon-m-x-circle',

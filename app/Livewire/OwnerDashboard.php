@@ -6,6 +6,7 @@ use App\Models\Booking;
 use App\Models\Property;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -59,10 +60,13 @@ class OwnerDashboard extends Component
 
     [$rangeStart, $rangeEnd] = $this->dateRange();
 
+    $hasPaymentStatus = Schema::hasColumn('bookings', 'payment_status');
+    $hasPaidAt = Schema::hasColumn('bookings', 'paid_at');
+
     $this->monthlyRevenue = (float) Booking::query()
       ->whereIn('property_id', $filteredPropertyIds)
-      ->where('payment_status', 'paid')
-      ->when($rangeStart && $rangeEnd, function ($q) use ($rangeStart, $rangeEnd) {
+      ->when($hasPaymentStatus, fn($q) => $q->where('payment_status', 'paid'))
+      ->when(($rangeStart && $rangeEnd) && $hasPaidAt, function ($q) use ($rangeStart, $rangeEnd) {
         $q->whereBetween('paid_at', [$rangeStart, $rangeEnd]);
       })
       ->sum('total_price');

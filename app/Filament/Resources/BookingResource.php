@@ -118,14 +118,6 @@ class BookingResource extends Resource
                     'warning' => 'pending',
                     'success' => 'paid',
                     'danger' => 'failed',
-                    Tables\Columns\TextColumn::make('created_at')
-                        ->dateTime()
-                        ->sortable()
-                        ->toggleable(isToggledHiddenByDefault: true),
-                    Tables\Columns\TextColumn::make('updated_at')
-                        ->dateTime()
-                        ->sortable()
-                        ->toggleable(isToggledHiddenByDefault: true),
                 ])
                 ->icons([
                     'heroicon-o-clock' => 'pending',
@@ -133,6 +125,14 @@ class BookingResource extends Resource
                     'heroicon-o-x-circle' => 'failed',
                 ])
                 ->sortable(),
+            Tables\Columns\TextColumn::make('created_at')
+                ->dateTime()
+                ->sortable()
+                ->toggleable(isToggledHiddenByDefault: true),
+            Tables\Columns\TextColumn::make('updated_at')
+                ->dateTime()
+                ->sortable()
+                ->toggleable(isToggledHiddenByDefault: true),
             Tables\Columns\TextColumn::make('payment_pending_since')
                 ->label('')
                 ->getStateUsing(fn($record) => $record ? \Carbon\Carbon::parse($record->updated_at ?? $record->created_at)->diffForHumans() : null)

@@ -265,6 +265,10 @@ class BookingManager extends Component
 
         $property = Property::find($this->propertyId);
 
+        // Calculer et stocker le prix total avant la création de la réservation
+        // (sinon $this->totalPrice reste null et ne s'enregistre pas)
+        $this->calculateTotalPrice();
+
         // Vérifier si l'utilisateur essaie de réserver sa propre propriété
         if ($property->user_id == Auth::id()) {
             LivewireAlert::title('Vous ne pouvez pas réserver une de vos propriétés')->error()->show();

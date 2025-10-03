@@ -17,6 +17,7 @@
     <meta name="user-theme" content="{{ Auth::check() ? (Auth::user()->theme ?? 'system') : 'system' }}">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
     <link rel="icon" href="{{ asset('favicon.ico') }}">
 
     <title>{{ $title ?? 'Afridayz'}}</title>

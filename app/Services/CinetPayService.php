@@ -58,7 +58,10 @@ class CinetPayService
       ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
       try {
-        $resp = Http::asJson()->post($initUrl, $payload);
+        $resp = Http::timeout((int) config('cinetpay.timeout', 8))
+          ->connectTimeout((int) config('cinetpay.connect_timeout', 5))
+          ->asJson()
+          ->post($initUrl, $payload);
         if (!$resp->successful()) {
           $result['error'] = 'HTTP ' . $resp->status();
           $result['response'] = $resp->json();

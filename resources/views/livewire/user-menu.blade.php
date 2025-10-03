@@ -15,35 +15,8 @@
       <div>
         <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3 flex items-center"><i class="fas fa-sliders-h mr-2"></i>Préférences</h3>
         <div class="space-y-2">
-          <form method="POST" action="{{ route('user.preferences.update') }}" class="block w-full space-y-4">
-            @csrf
-            <label for="currency" class="block text-sm font-semibold text-gray-700 mb-1"><i class="fas fa-coins mr-2"></i>Devise</label>
-            <select name="currency" id="currency" class="w-full px-4 py-3 rounded-lg bg-gray-50 text-gray-800 font-semibold border border-gray-200 focus:ring-2 focus:ring-blue-500">
-              <option value="EUR" {{ Auth::user()->currency == 'EUR' ? 'selected' : '' }}>Euro (€)</option>
-              <option value="USD" {{ Auth::user()->currency == 'USD' ? 'selected' : '' }}>Dollar ($)</option>
-              <option value="XOF" {{ Auth::user()->currency == 'XOF' ? 'selected' : '' }}>Franc CFA (XOF)</option>
-              <option value="GBP" {{ Auth::user()->currency == 'GBP' ? 'selected' : '' }}>Livre Sterling (£)</option>
-              <option value="CAD" {{ Auth::user()->currency == 'CAD' ? 'selected' : '' }}>Dollar Canadien (CAD)</option>
-            </select>
-
-            <label for="locale" class="block text-sm font-semibold text-gray-700 mb-1 mt-4"><i class="fas fa-language mr-2"></i>Langue</label>
-            <select name="locale" id="locale" class="w-full px-4 py-3 rounded-lg bg-gray-50 text-gray-800 font-semibold border border-gray-200 focus:ring-2 focus:ring-blue-500">
-              <option value="fr" {{ Auth::user()->locale == 'fr' ? 'selected' : '' }}>Français</option>
-              <option value="en" {{ Auth::user()->locale == 'en' ? 'selected' : '' }}>English</option>
-              <option value="es" {{ Auth::user()->locale == 'es' ? 'selected' : '' }}>Español</option>
-              <option value="de" {{ Auth::user()->locale == 'de' ? 'selected' : '' }}>Deutsch</option>
-              <option value="pt" {{ Auth::user()->locale == 'pt' ? 'selected' : '' }}>Português</option>
-            </select>
-
-            <label for="theme" class="block text-sm font-semibold text-gray-700 mb-1 mt-4"><i class="fas fa-desktop mr-2"></i>Affichage</label>
-            <select name="theme" id="theme" class="w-full px-4 py-3 rounded-lg bg-gray-50 text-gray-800 font-semibold border border-gray-200 focus:ring-2 focus:ring-blue-500">
-              <option value="light" {{ Auth::user()->theme == 'light' ? 'selected' : '' }}>Clair</option>
-              <option value="dark" {{ Auth::user()->theme == 'dark' ? 'selected' : '' }}>Sombre</option>
-              <option value="system" {{ Auth::user()->theme == 'system' ? 'selected' : '' }}>Système</option>
-            </select>
-
-            <button type="submit" class="mt-4 w-full px-4 py-2 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 transition">Enregistrer</button>
-          </form>
+          <a href="{{ route('preferences.currency') }}" class="block w-full px-4 py-3 rounded-lg bg-gray-50 text-gray-800 font-semibold border border-gray-200 hover:bg-gray-100 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600 transition"><i class="fas fa-coins mr-2"></i>Devises</a>
+          <a href="{{ route('preferences.display') }}" class="block w-full px-4 py-3 rounded-lg bg-gray-50 text-gray-800 font-semibold border border-gray-200 hover:bg-gray-100 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600 transition"><i class="fas fa-moon mr-2"></i>Affichage</a>
         </div>
       </div>
 

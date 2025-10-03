@@ -8,7 +8,7 @@
 
         @if($isOccupied)
         <div class="mb-4 p-3 bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 rounded text-center">
-            Ce bien est actuellement <span class="font-semibold">occupé</span>. La réservation n'est pas possible pour le moment.
+            Ce bien est actuellement <span class="font-semibold">occupé</span>. Vous pouvez essayer de réserver à une autre date.
         </div>
         @endif
         <!-- Début du composant Livewire : tout est enveloppé dans ce div racine -->

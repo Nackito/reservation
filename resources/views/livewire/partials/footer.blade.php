@@ -14,6 +14,7 @@
             <i class="fas fa-calendar-check text-xl"></i>
             <span class="text-xs">Réservations</span>
         </a>
+
         <a href="{{ route('user.menu') }}" class="flex flex-col items-center text-gray-500 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition">
             <i class="fas fa-user text-xl"></i>
             <span class="text-xs">Profil</span>
@@ -24,7 +25,7 @@
             <!-- Grid -->
             <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
                 <div class="col-span-full lg:col-span-1">
-                    <a class="flex-none text-xl font-semibold text-white dark:text-white dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600" href="#" aria-label="Brand">Afridayz</a>
+                    <a class="flex-none text-xl font-semibold text-white dark:text-white dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600" href="/" aria-label="Brand">Afridayz</a>
                 </div>
                 <!-- End Col -->
 
@@ -32,9 +33,8 @@
                     <h4 class="font-semibold text-gray-100 dark:text-gray-100">Préférences</h4>
 
                     <div class="mt-3 grid space-y-3">
-                        <p><a class="inline-flex gap-x-2 text-gray-400 dark:text-gray-400 hover:text-gray-200 dark:hover:text-gray-200 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600" href="/categories">Dévises</a></p>
-                        <p><a class="inline-flex gap-x-2 text-gray-400 dark:text-gray-400 hover:text-gray-200 dark:hover:text-gray-200 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600" href="/products">Langues</a></p>
-                        <p><a class="inline-flex gap-x-2 text-gray-400 dark:text-gray-400 hover:text-gray-200 dark:hover:text-gray-200 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600" href="/products">Affichages</a></p>
+                        <p><a class="inline-flex gap-x-2 text-gray-400 dark:text-gray-400 hover:text-gray-200 dark:hover:text-gray-200 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600" href="{{ route('preferences.currency') }}">Devises</a></p>
+                        <p><a class="inline-flex gap-x-2 text-gray-400 dark:text-gray-400 hover:text-gray-200 dark:hover:text-gray-200 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600" href="{{ route('preferences.display') }}">Affichage</a></p>
                     </div>
                 </div>
                 <!-- End Col -->

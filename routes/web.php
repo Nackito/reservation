@@ -26,6 +26,7 @@ use App\Livewire\UserCanceledReservationsCity;
 // Auth Google Socialite
 use Laravel\Socialite\Facades\Socialite;
 use App\Models\User;
+use App\Http\Controllers\PreferencesController;
 
 Route::get('/', HomePage::class)->name('home');
 Route::get('/contact-hebergement', ContactForm::class)->name('contact.hebergement');
@@ -101,6 +102,12 @@ Route::get('/auth/callback/google', function () {
 });
 
 // Route pour mettre à jour la devise utilisateur
+
+// Préférences: pages et updates
+Route::get('/preferences/currency', [PreferencesController::class, 'currency'])->name('preferences.currency');
+Route::post('/preferences/currency', [PreferencesController::class, 'updateCurrency'])->name('preferences.currency.update');
+Route::get('/preferences/display', [PreferencesController::class, 'display'])->name('preferences.display');
+Route::post('/preferences/display', [PreferencesController::class, 'updateDisplay'])->name('preferences.display.update');
 
 
 // Routes pour la double authentification

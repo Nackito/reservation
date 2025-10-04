@@ -467,7 +467,7 @@
                                         @default
                                         <i class="fas fa-check text-green-500 mr-2"></i>
                                         @endswitch
-                                        {{ ucfirst($amenity) }}
+                                        {{ $amenityLabels[$amenity] ?? ucfirst(str_replace('_',' ',$amenity)) }}
                                     </span>
                                 </label>
                                 @endforeach
@@ -531,7 +531,7 @@
                         @foreach($selectedAmenities as $amenity)
                         <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-300">
                             <i class="fas fa-star mr-1"></i>
-                            {{ ucfirst($amenity) }}
+                            {{ $amenityLabels[$amenity] ?? ucfirst(str_replace('_',' ',$amenity)) }}
                         </span>
                         @endforeach
                         @endif
@@ -937,7 +937,7 @@
                                         @default
                                         <i class="fas fa-check text-green-500 mr-1"></i>
                                         @endswitch
-                                        {{ ucfirst($amenity) }}
+                                        {{ $amenityLabels[$amenity] ?? ucfirst(str_replace('_',' ',$amenity)) }}
                                     </span>
                                 </label>
                                 @endforeach

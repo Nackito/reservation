@@ -495,6 +495,7 @@ class HomePage extends Component
             'popularCities' => $popularCities,
             'propertyTypes' => $propertyTypes,
             'availableAmenities' => $allFeatures,
+            'amenityLabels' => \App\Models\Property::FEATURES,
             'topPropertiesByCity' => $topPropertiesByCity,
             'mapData' => $mapData,
         ]);

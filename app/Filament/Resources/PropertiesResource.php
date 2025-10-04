@@ -61,27 +61,15 @@ class PropertiesResource extends Resource
                 ->schema([
                     \Filament\Forms\Components\CheckboxList::make('features')
                         ->label('Caractéristiques')
-                        ->options([
-                            'wifi' => 'Wi-Fi',
-                            'parking' => 'Parking',
-                            'clim' => 'Climatisation',
-                            'piscine' => 'Piscine',
-                            'jardin' => 'Jardin',
-                            'balcon' => 'Balcon',
-                            'ascenseur' => 'Ascenseur',
-                            'meuble' => 'Meublé',
-                            'terrasse' => 'Terrasse',
-                            'barbecue' => 'Barbecue',
-                            'salle_de_sport' => 'Salle de sport',
-                            'sécurité' => 'Sécurité 24/7',
-                            'cuisine équipée' => 'Cuisine équipée',
-                            'salle_de_bain privée' => 'Salle de bain privée',
-                            'vue_sur_mer' => 'Vue sur mer',
-                            'jacuzzi' => 'Jacuzzi',
-                            'canal+' => 'Canal+',
-                            'netflix' => 'Netflix',
-                            'tv' => 'TV',
-                        ]),
+                        ->options(\App\Models\Property::FEATURES)
+                        ->afterStateHydrated(function ($state, callable $set) {
+                            $set('features', \App\Models\Property::normalizeFeatureKeys($state));
+                        })
+                        ->dehydrateStateUsing(function ($state) {
+                            return \App\Models\Property::normalizeFeatureKeys($state);
+                        })
+                        ->default([])
+                        ->columns(2),
                 ])->columns(1),
             Section::make('Localisation')
                 ->inlineLabel()
@@ -160,6 +148,13 @@ class PropertiesResource extends Resource
                         ->directory('properties')
                         ->disk('public')
                         ->preserveFilenames()
+                        ->formatStateUsing(function ($state, ?\App\Models\Property $record) {
+                            // En édition, précharger les chemins existants depuis la relation
+                            if ($record) {
+                                return $record->images()->pluck('image_path')->toArray();
+                            }
+                            return $state ?? [];
+                        })
                         ->imageEditor()
                         ->openable()
                         ->downloadable(),
@@ -300,6 +295,7 @@ class PropertiesResource extends Resource
             'Vavoua' => 'Vavoua',
             'Guiglo' => 'Guiglo',
             'Danané' => 'Danané',
+            'Bonoua' => 'Bonoua',
             'Tiassalé' => 'Tiassalé',
             'Akoupé' => 'Akoupé',
             'Tabou' => 'Tabou',

@@ -67,5 +67,4 @@
     </div>
 </div>
 
-@include('livewire.partials.footer')
 @livewireScripts

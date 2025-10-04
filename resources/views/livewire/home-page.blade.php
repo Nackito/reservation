@@ -76,10 +76,7 @@
 
                     {{-- Actions : effacement de la recherche --}}
                     <div class="flex gap-2">
-                        {{--
-                            Bouton d'effacement de la recherche
-                            Affiché seulement quand il y a des résultats de recherche actifs
-                        --}}
+                        {{-- Bouton d'effacement affiché seulement quand il y a des résultats --}}
                         @if($showResults)
                         <button
                             type="button"
@@ -89,23 +86,11 @@
                             <i class="fas fa-times mr-2"></i>
                             Effacer la recherche
                         </button>
-                        @else
-                        {{-- Message informatif quand pas de recherche active --}}
-                        <div class="w-full text-center py-3 text-gray-500 dark:text-gray-400 text-sm">
-                            <i class="fas fa-info-circle mr-1"></i>
-                            Les filtres apparaîtront après votre recherche
-                        </div>
                         @endif
                     </div>
                 </div>
 
-                {{-- Info sur la recherche manuelle --}}
-                <div class="mt-3 text-center">
-                    <p class="text-sm text-gray-500 dark:text-gray-400">
-                        <i class="fas fa-mouse-pointer mr-1"></i>
-                        Cliquez sur <span class="font-semibold text-blue-600 dark:text-blue-400">Rechercher</span> pour lancer la recherche
-                    </p>
-                </div>
+
             </div>
         </div>
     </div>

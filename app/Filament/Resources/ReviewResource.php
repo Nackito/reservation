@@ -4,48 +4,60 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ReviewResource\Pages;
 use App\Models\Reviews;
+use BackedEnum;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Filament\Actions\EditAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\Action;
 use Illuminate\Database\Eloquent\Builder;
+use \Filament\Schemas\Schema;
 
 class ReviewResource extends Resource
 {
     protected static ?string $model = Reviews::class;
 
-    /*protected static ?string $navigationIcon = 'heroicon-o-tag';
+    private const APPROVED_LABEL = 'Approuvé';
+
+    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-tag';
 
     protected static ?string $navigationLabel = 'Avis';
 
     protected static ?string $pluralLabel = 'Avis';
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
-                Forms\Components\TextInput::make('user_id')
-                    ->label('Utilisateur')
-                    ->required()
-                    ->numeric(),
-                Forms\Components\TextInput::make('property_id')
-                    ->label('Propriété')
-                    ->required()
-                    ->numeric(),
-                Forms\Components\Textarea::make('review')
-                    ->label('Avis')
-                    ->required(),
-                Forms\Components\TextInput::make('rating')
-                    ->label('Note')
-                    ->required()
-                    ->numeric()
-                    ->min(1)
-                    ->max(5),
-                Forms\Components\Toggle::make('approved')
-                    ->label('Approuvé')
-                    ->default(false),
-            ]);
+        return $schema->schema([
+            Forms\Components\Select::make('user_id')
+                ->relationship('user', 'name')
+                ->label('Utilisateur')
+                ->required(),
+            Forms\Components\Select::make('property_id')
+                ->relationship('property', 'name')
+                ->label('Propriété')
+                ->required(),
+            Forms\Components\Textarea::make('review')
+                ->label('Avis')
+                ->required()
+                ->maxLength(65535),
+            // Note (1 à 5)
+            Forms\Components\Select::make('rating')
+                ->label('Note')
+                ->options([
+                    1 => '1',
+                    2 => '2',
+                    3 => '3',
+                    4 => '4',
+                    5 => '5',
+                ])
+                ->required()
+                ->native(false),
+            Forms\Components\Toggle::make('approved')
+                ->label('Approuvé')
+                ->default(false),
+        ]);
     }
 
     public static function table(Table $table): Table
@@ -67,7 +79,7 @@ class ReviewResource extends Resource
                     ->label('Note')
                     ->sortable(),
                 Tables\Columns\BooleanColumn::make('approved')
-                    ->label('Approuvé')
+                    ->label(self::APPROVED_LABEL)
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Créé le')
@@ -76,15 +88,15 @@ class ReviewResource extends Resource
             ])
             ->filters([
                 Tables\Filters\Filter::make('approved')
-                    ->label('Approuvé')
+                    ->label(self::APPROVED_LABEL)
                     ->query(fn(Builder $query) => $query->where('approved', true)),
                 Tables\Filters\Filter::make('pending')
                     ->label('En attente')
                     ->query(fn(Builder $query) => $query->where('approved', false)),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\Action::make('approve')
+                EditAction::make(),
+                Action::make('approve')
                     ->label('Approuver')
                     ->action(function (Reviews $record) {
                         $record->update(['approved' => true]);
@@ -92,7 +104,7 @@ class ReviewResource extends Resource
                     ->requiresConfirmation()
                     ->color('success')
                     ->visible(fn(Reviews $record) => !$record->approved),
-                Tables\Actions\Action::make('disapprove')
+                Action::make('disapprove')
                     ->label('Invalider')
                     ->action(function (Reviews $record) {
                         $record->update(['approved' => false]);
@@ -102,7 +114,7 @@ class ReviewResource extends Resource
                     ->visible(fn(Reviews $record) => $record->approved),
             ])
             ->bulkActions([
-                Tables\Actions\DeleteBulkAction::make(),
+                DeleteBulkAction::make(),
             ]);
     }
 
@@ -118,5 +130,5 @@ class ReviewResource extends Resource
             'create' => Pages\CreateReview::route('/create'),
             'edit' => Pages\EditReview::route('/{record}/edit'),
         ];
-    }*/
+    }
 }

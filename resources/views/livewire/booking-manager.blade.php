@@ -438,7 +438,50 @@
             </div>
         </div>
         @else
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 custom-mobile-reviews">
+        <!-- Carrousel mobile (Swiper) -->
+        <div class="block md:hidden">
+            <div id="reviewsCarousel" class="swiper-container reviews-swiper">
+                <div class="swiper-wrapper">
+                    @foreach($reviews as $review)
+                    <div class="swiper-slide">
+                        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col gap-3 border border-gray-100 dark:border-gray-700">
+                            <div class="flex items-center gap-3 mb-2">
+                                <div class="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-2xl font-bold text-blue-600 dark:text-blue-300">
+                                    <span>
+                                        @if(isset($review->user->name))
+                                        {{ strtoupper(mb_substr($review->user->name, 0, 1)) }}
+                                        @else
+                                        <i class="fas fa-user"></i>
+                                        @endif
+                                    </span>
+                                </div>
+                                <div>
+                                    <div class="flex items-center gap-1">
+                                        @for($i = 1; $i <= 5; $i++)
+                                            <svg class="w-5 h-5 {{ $i <= $review->rating ? 'text-yellow-400' : 'text-gray-600 dark:text-gray-400' }}" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.868 1.464 8.826L12 18.896l-7.4 4.104 1.464-8.826L0 9.306l8.332-1.151z" />
+                                            </svg>
+                                            @endfor
+                                    </div>
+                                    <div class="text-sm text-gray-700 dark:text-gray-300 font-semibold">
+                                        {{ $review->user->name ?? 'Utilisateur inconnu' }}
+                                    </div>
+                                    <div class="text-xs text-gray-400 dark:text-gray-400">Posté le {{ $review->created_at->format('d/m/Y') }}</div>
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-gray-800 dark:text-gray-100 text-base leading-relaxed">{{ $review->review }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+                <div class="swiper-pagination"></div>
+            </div>
+        </div>
+
+        <!-- Grille desktop/tablette -->
+        <div class="hidden md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             @foreach($reviews as $review)
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col gap-3 border border-gray-100 dark:border-gray-700">
                 <div class="flex items-center gap-3 mb-2">
@@ -561,6 +604,60 @@
                 },
             });
         });
+    </script>
+    <!-- script pour le carrousel des avis (responsive) -->
+    <script>
+        (function() {
+            const BREAKPOINT = 768; // md
+            function initReviewsSwiper() {
+                const container = document.querySelector('#reviewsCarousel');
+                if (!container || typeof Swiper === 'undefined') return;
+
+                // Détruire une éventuelle instance existante
+                if (window.swiperReviews && typeof window.swiperReviews.destroy === 'function') {
+                    window.swiperReviews.destroy(true, true);
+                    window.swiperReviews = null;
+                }
+
+                window.swiperReviews = new Swiper('#reviewsCarousel', {
+                    slidesPerView: 1.05,
+                    spaceBetween: 12,
+                    autoHeight: true,
+                    pagination: {
+                        el: '#reviewsCarousel .swiper-pagination',
+                        clickable: true,
+                    },
+                });
+            }
+
+            function destroyReviewsSwiper() {
+                if (window.swiperReviews && typeof window.swiperReviews.destroy === 'function') {
+                    window.swiperReviews.destroy(true, true);
+                    window.swiperReviews = null;
+                }
+            }
+
+            function updateReviewsSwiper() {
+                const isMobile = window.innerWidth < BREAKPOINT;
+                if (isMobile) {
+                    initReviewsSwiper();
+                } else {
+                    destroyReviewsSwiper();
+                }
+            }
+
+            const debounce = (fn, delay = 150) => {
+                let t;
+                return () => {
+                    clearTimeout(t);
+                    t = setTimeout(fn, delay);
+                };
+            };
+
+            document.addEventListener('DOMContentLoaded', updateReviewsSwiper);
+            window.addEventListener('resize', debounce(updateReviewsSwiper));
+            window.addEventListener('livewire:navigated', () => setTimeout(updateReviewsSwiper, 0));
+        })();
     </script>
     <!-- script pour le modal de la galerie (pilotage Swiper) -->
     <script>

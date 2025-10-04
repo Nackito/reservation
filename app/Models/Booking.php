@@ -18,10 +18,14 @@ class Booking extends Model
         'payment_transaction_id',
         'payment_status',
         'paid_at',
+        'review_reminder_sent_at',
+        'review_reminder_sent_7d_at',
     ];
 
     protected $casts = [
         'paid_at' => 'datetime',
+        'review_reminder_sent_at' => 'datetime',
+        'review_reminder_sent_7d_at' => 'datetime',
     ];
 
     public function markAsPaid(?string $txId = null): void

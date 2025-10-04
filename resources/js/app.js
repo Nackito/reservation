@@ -42,8 +42,13 @@ import Swal from "sweetalert2";
 import "./leaflet"; // Importation de Leaflet
 import "./leaflet-results-map"; // Gestion de la carte des résultats
 // Swiper importé via Vite
+import Swiper from "swiper/bundle";
 import "swiper/css/bundle";
 import "./carousels";
+// Expose Swiper globally for inline scripts (e.g., Blade views)
+if (typeof window !== "undefined") {
+    window.Swiper = Swiper;
+}
 window.Alpine = Alpine;
 window.Swal = Swal;
 Alpine.start();

@@ -292,23 +292,36 @@
         </div>
 
         <div id="photoGalleryModal" class="fixed inset-0 z-50 hidden bg-black bg-opacity-75 flex items-center justify-center">
-            <div class="relative bg-white rounded-lg shadow-lg w-11/12 lg:w-3/4 max-h-screen overflow-y-auto">
+            <div class="relative bg-white dark:bg-gray-900 rounded-lg shadow-lg w-11/12 lg:w-3/4 max-h-screen overflow-hidden">
                 <button class="absolute top-2 right-2 text-gray-500 hover:text-gray-700" onclick="closeGallery()">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
                 </button>
-                <div class="p-4 flex flex-col items-center">
-                    <div id="galleryMainImageContainer" class="mb-4">
-                        <img id="galleryMainImage" src="{{ asset('storage/' . ($property->images[0]->image_path ?? '')) }}" alt="Image principale" class="w-full max-h-96 object-contain rounded-lg">
+                <div class="p-4">
+                    <!-- Swiper principal -->
+                    <div class="swiper swiper-container mySwiper">
+                        <div class="swiper-wrapper">
+                            @foreach($property->images as $idx => $image)
+                            <div class="swiper-slide flex items-center justify-center">
+                                <img src="{{ asset('storage/' . $image->image_path) }}" alt="Image {{ $idx + 1 }} - {{ $property->name ?? 'Propriété' }}" class="max-h-[70vh] w-auto object-contain rounded-lg" />
+                            </div>
+                            @endforeach
+                        </div>
+                        <div class="swiper-button-prev"></div>
+                        <div class="swiper-button-next"></div>
+                        <div class="swiper-pagination"></div>
                     </div>
-                    <div class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2">
-                        @foreach($property->images as $idx => $image)
-                        <img src="{{ asset('storage/' . $image->image_path) }}"
-                            alt="{{ $property->name ?? 'Propriété' }} chambre ou espace principal avec décoration moderne et ambiance accueillante dans un environnement résidentiel lumineux et confortable"
-                            class="w-20 h-20 object-cover rounded-lg cursor-pointer border-2 border-transparent hover:border-blue-500"
-                            onclick="setGalleryImage({{ $idx }})">
-                        @endforeach
+
+                    <!-- Miniatures -->
+                    <div class="swiper swiper-container mySwiper2 mt-4">
+                        <div class="swiper-wrapper">
+                            @foreach($property->images as $idx => $image)
+                            <div class="swiper-slide !w-auto">
+                                <img src="{{ asset('storage/' . $image->image_path) }}" alt="Miniature {{ $idx + 1 }}" class="w-20 h-20 object-cover rounded-lg border-2 border-transparent hover:border-blue-500" />
+                            </div>
+                            @endforeach
+                        </div>
                     </div>
                 </div>
             </div>
@@ -504,51 +517,71 @@
     <!-- script pour le swiper -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Initialisation du Swiper des miniatures
-            const swiperThumbs = new Swiper('.mySwiper2', {
+            // Détruit d’éventuelles anciennes instances (sécurité)
+            if (window.swiperMain && typeof window.swiperMain.destroy === 'function') {
+                window.swiperMain.destroy(true, true);
+                window.swiperMain = null;
+            }
+            if (window.swiperThumbs && typeof window.swiperThumbs.destroy === 'function') {
+                window.swiperThumbs.destroy(true, true);
+                window.swiperThumbs = null;
+            }
+
+            // Initialisation du Swiper des miniatures (accessible globalement)
+            window.swiperThumbs = new Swiper('#photoGalleryModal .mySwiper2', {
                 spaceBetween: 10,
                 slidesPerView: 4,
                 freeMode: true,
-                watchSlidesProgress: true, // Permet de suivre la progression des miniatures
+                watchSlidesProgress: true,
+                slideToClickedSlide: true,
+                breakpoints: {
+                    640: {
+                        slidesPerView: 5
+                    },
+                    1024: {
+                        slidesPerView: 6
+                    }
+                }
             });
 
-            // Initialisation du Swiper principal
-            const swiperMain = new Swiper('.mySwiper', {
+            // Initialisation du Swiper principal (accessible globalement)
+            window.swiperMain = new Swiper('#photoGalleryModal .mySwiper', {
                 spaceBetween: 10,
+                loop: false,
                 navigation: {
-                    nextEl: '.swiper-button-next',
-                    prevEl: '.swiper-button-prev',
+                    nextEl: '#photoGalleryModal .swiper-button-next',
+                    prevEl: '#photoGalleryModal .swiper-button-prev',
                 },
                 thumbs: {
-                    swiper: swiperThumbs, // Connecte le Swiper principal aux miniatures
+                    swiper: window.swiperThumbs,
+                },
+                pagination: {
+                    el: '#photoGalleryModal .swiper-pagination',
+                    clickable: true,
                 },
             });
         });
     </script>
-    <!-- script pour le modal de la galerie -->
-    @php
-    $galleryImages = collect($property->images)->map(function($img) {
-    return asset('storage/' . $img->image_path);
-    });
-    @endphp
+    <!-- script pour le modal de la galerie (pilotage Swiper) -->
     <script>
-        // Injection du tableau d'images pour la galerie (compatible tous éditeurs)
-        let galleryImages = @json($galleryImages);
-
         function openGallery(index = 0) {
-            document.getElementById('photoGalleryModal').classList.remove('hidden');
-            setGalleryImage(index);
+            const modal = document.getElementById('photoGalleryModal');
+            modal.classList.remove('hidden');
+            // S'assure que Swiper se met à jour après l'affichage du modal
+            setTimeout(() => {
+                if (window.swiperMain) {
+                    window.swiperMain.update();
+                    window.swiperMain.slideTo(index, 0);
+                }
+                if (window.swiperThumbs) {
+                    window.swiperThumbs.update();
+                    window.swiperThumbs.slideTo(index, 0);
+                }
+            }, 0);
         }
 
         function closeGallery() {
             document.getElementById('photoGalleryModal').classList.add('hidden');
-        }
-
-        function setGalleryImage(idx) {
-            const mainImg = document.getElementById('galleryMainImage');
-            if (mainImg && galleryImages[idx]) {
-                mainImg.src = galleryImages[idx];
-            }
         }
     </script>
 </div>

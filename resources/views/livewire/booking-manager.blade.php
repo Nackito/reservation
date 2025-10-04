@@ -412,15 +412,15 @@
 </div>
 
 <!-- Reviews section -->
-<div class="container bg-white mx-auto mt-8 mb-8">
+<div class="container bg-transparent dark:bg-transparent mx-auto mt-8 mb-8 transition-colors duration-300">
     <div id="reviews" class="mt-8">
         <div class="mb-6 px-4 sm:px-0">
-            <span class="block text-xl font-semibold text-gray-800 mt-6 mb-4 sm:mt-0 sm:mb-6">Ce que les personnes ayant séjourné ici ont adoré :</span>
+            <span class="block text-xl font-semibold text-gray-800 dark:text-gray-100 mt-6 mb-4 sm:mt-0 sm:mb-6">Ce que les personnes ayant séjourné ici ont adoré :</span>
         </div>
 
         @if(!$reviews || $reviews->isEmpty())
         <div class="flex justify-center">
-            <div class="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-6 w-full max-w-lg shadow">
+            <div class="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 w-full max-w-lg shadow">
                 <p class="text-xl italic font-medium text-gray-700 dark:text-gray-200 text-center">Aucun avis pour cette propriété pour le moment.</p>
             </div>
         </div>

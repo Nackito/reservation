@@ -6,32 +6,32 @@
     <div class="mb-4 p-3 rounded bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">{{ session('status') }}</div>
     @endif
 
-    <form method="POST" action="{{ route('preferences.display.update') }}" class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow">
+    <form method="POST" action="{{ route('preferences.display.update') }}" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 shadow text-gray-800 dark:text-gray-100">
       @csrf
       <fieldset>
-        <legend class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Thème</legend>
-        <div class="space-y-2">
-          <label class="inline-flex items-center gap-2">
-            <input type="radio" name="theme" value="system" @checked($theme==='system' )>
-            <span>Automatique (système)</span>
+        <legend class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Thème</legend>
+        <div class="space-y-3">
+          <label class="inline-flex items-center gap-3 px-2 py-1 rounded hover:bg-gray-50 dark:hover:bg-gray-700">
+            <input class="accent-blue-600 dark:accent-blue-400" type="radio" name="theme" value="system" @checked($theme==='system' )>
+            <span class="text-gray-800 dark:text-gray-100">Automatique (système)</span>
           </label>
-          <label class="inline-flex items-center gap-2">
-            <input type="radio" name="theme" value="light" @checked($theme==='light' )>
-            <span>Clair</span>
+          <label class="inline-flex items-center gap-3 px-2 py-1 rounded hover:bg-gray-50 dark:hover:bg-gray-700">
+            <input class="accent-blue-600 dark:accent-blue-400" type="radio" name="theme" value="light" @checked($theme==='light' )>
+            <span class="text-gray-800 dark:text-gray-100">Clair</span>
           </label>
-          <label class="inline-flex items-center gap-2">
-            <input type="radio" name="theme" value="dark" @checked($theme==='dark' )>
-            <span>Sombre</span>
+          <label class="inline-flex items-center gap-3 px-2 py-1 rounded hover:bg-gray-50 dark:hover:bg-gray-700">
+            <input class="accent-blue-600 dark:accent-blue-400" type="radio" name="theme" value="dark" @checked($theme==='dark' )>
+            <span class="text-gray-800 dark:text-gray-100">Sombre</span>
           </label>
         </div>
       </fieldset>
 
       @error('theme')
-      <div class="text-red-600 mt-2">{{ $message }}</div>
+      <div class="text-red-600 dark:text-red-400 mt-2">{{ $message }}</div>
       @enderror
 
       <div class="mt-4">
-        <button class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Enregistrer</button>
+        <button class="px-4 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-800">Enregistrer</button>
       </div>
     </form>
 

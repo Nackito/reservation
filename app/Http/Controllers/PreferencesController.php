@@ -35,9 +35,10 @@ class PreferencesController extends Controller
       $user->currency = $validated['currency'];
       $user->save();
     } else {
-      // Utilisateur invité: garder la préférence côté cookie pour un usage invité
-      return back()->with('status', 'Préférence enregistrée pour la session.')
-        ->withCookie(cookie('currency', $validated['currency'], 60 * 24 * 365));
+      // Invité: demander la connexion pour enregistrer en base
+      session(['url.intended' => url()->previous()]);
+      return redirect()->route('login')
+        ->with('error', "Connectez-vous pour enregistrer vos préférences.");
     }
 
     return back()->with('status', 'Votre devise a été mise à jour.');
@@ -68,10 +69,13 @@ class PreferencesController extends Controller
         $user->save();
       } catch (\Throwable $e) { /* ignore */
       }
+    } else {
+      // Invité: demander la connexion pour enregistrer en base
+      session(['url.intended' => url()->previous()]);
+      return redirect()->route('login')
+        ->with('error', "Connectez-vous pour enregistrer vos préférences.");
     }
 
-    // Stocke aussi un cookie (fallback pour invités / cohérence multi-appareils)
-    return back()->with('status', 'Vos préférences d\'affichage ont été mises à jour.')
-      ->withCookie(cookie('theme', $validated['theme'], 60 * 24 * 365));
+    return back()->with('status', 'Vos préférences d\'affichage ont été mises à jour.');
   }
 }

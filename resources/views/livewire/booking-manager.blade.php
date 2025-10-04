@@ -448,7 +448,9 @@
                             <div class="flex items-center gap-3 mb-2">
                                 <div class="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-2xl font-bold text-blue-600 dark:text-blue-300">
                                     <span>
-                                        @if(isset($review->user->name))
+                                        @if(isset($review->user->firstname) && $review->user->firstname)
+                                        {{ strtoupper(mb_substr($review->user->firstname, 0, 1)) }}
+                                        @elseif(isset($review->user->name) && $review->user->name)
                                         {{ strtoupper(mb_substr($review->user->name, 0, 1)) }}
                                         @else
                                         <i class="fas fa-user"></i>
@@ -464,7 +466,7 @@
                                             @endfor
                                     </div>
                                     <div class="text-sm text-gray-700 dark:text-gray-300 font-semibold">
-                                        {{ $review->user->name ?? 'Utilisateur inconnu' }}
+                                        {{ (isset($review->user->firstname) && $review->user->firstname) ? $review->user->firstname : ($review->user->name ?? 'Utilisateur inconnu') }}
                                     </div>
                                     <div class="text-xs text-gray-400 dark:text-gray-400">Posté le {{ $review->created_at->format('d/m/Y') }}</div>
                                 </div>
@@ -487,7 +489,9 @@
                 <div class="flex items-center gap-3 mb-2">
                     <div class="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-2xl font-bold text-blue-600 dark:text-blue-300">
                         <span>
-                            @if(isset($review->user->name))
+                            @if(isset($review->user->firstname) && $review->user->firstname)
+                            {{ strtoupper(mb_substr($review->user->firstname, 0, 1)) }}
+                            @elseif(isset($review->user->name) && $review->user->name)
                             {{ strtoupper(mb_substr($review->user->name, 0, 1)) }}
                             @else
                             <i class="fas fa-user"></i>
@@ -503,7 +507,7 @@
                                 @endfor
                         </div>
                         <div class="text-sm text-gray-700 dark:text-gray-300 font-semibold">
-                            {{ $review->user->name ?? 'Utilisateur inconnu' }}
+                            {{ (isset($review->user->firstname) && $review->user->firstname) ? $review->user->firstname : ($review->user->name ?? 'Utilisateur inconnu') }}
                         </div>
                         <div class="text-xs text-gray-400 dark:text-gray-400">Posté le {{ $review->created_at->format('d/m/Y') }}</div>
                     </div>

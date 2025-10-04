@@ -1068,6 +1068,41 @@
                                 </div>
                                 @endif
 
+                                {{-- Note moyenne (étoiles) --}}
+                                @php
+                                $avg = isset($property->avg_rating) ? round($property->avg_rating, 1) : null;
+                                $count = $property->approved_reviews_count ?? 0;
+                                $filled = (int) floor($avg ?? 0);
+                                $half = ($avg !== null && $avg - $filled >= 0.5) ? 1 : 0;
+                                $empty = 5 - $filled - $half;
+                                @endphp
+                                @if($avg !== null && $count > 0)
+                                <div class="flex items-center mb-2" aria-label="Note moyenne {{ $avg }} sur 5">
+                                    @for($i=0;$i<$filled;$i++)
+                                        <svg class="w-4 h-4 text-yellow-400" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.868 1.464 8.826L12 18.896l-7.4 4.104 1.464-8.826L0 9.306l8.332-1.151z" /></svg>
+                                        @endfor
+                                        @if($half)
+                                        <svg class="w-4 h-4 text-yellow-400" viewBox="0 0 24 24" aria-hidden="true">
+                                            <defs>
+                                                <linearGradient id="half">
+                                                    <stop offset="50%" stop-color="currentColor" />
+                                                    <stop offset="50%" stop-color="transparent" />
+                                                </linearGradient>
+                                            </defs>
+                                            <path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.868 1.464 8.826L12 18.896l-7.4 4.104 1.464-8.826L0 9.306l8.332-1.151z" fill="url(#half)" stroke="currentColor" />
+                                        </svg>
+                                        @endif
+                                        @for($i=0;$i<$empty;$i++)
+                                            <svg class="w-4 h-4 text-gray-300 dark:text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                            <path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.868 1.464 8.826L12 18.896l-7.4 4.104 1.464-8.826L0 9.306l8.332-1.151z" /></svg>
+                                            @endfor
+                                            <span class="ml-2 text-sm text-gray-600 dark:text-gray-300">{{ number_format($avg,1) }} ({{ $count }})</span>
+                                </div>
+                                @else
+                                <div class="text-sm text-gray-400 dark:text-gray-500 mb-2">Pas encore d’avis</div>
+                                @endif
+
                                 {{-- Ligne de bas : prix et bouton de réservation --}}
                                 <div class="flex justify-between items-center">
                                     {{-- Prix par nuit (converti) --}}
@@ -1220,6 +1255,42 @@
                                     @endif
                                 </div>
                                 @endif
+
+                                {{-- Note moyenne (étoiles) --}}
+                                @php
+                                $avg = isset($property->avg_rating) ? round($property->avg_rating, 1) : null;
+                                $count = $property->approved_reviews_count ?? 0;
+                                $filled = (int) floor($avg ?? 0);
+                                $half = ($avg !== null && $avg - $filled >= 0.5) ? 1 : 0;
+                                $empty = 5 - $filled - $half;
+                                @endphp
+                                @if($avg !== null && $count > 0)
+                                <div class="flex items-center mt-1" aria-label="Note moyenne {{ $avg }} sur 5">
+                                    @for($i=0;$i<$filled;$i++)
+                                        <svg class="w-4 h-4 text-yellow-400" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.868 1.464 8.826L12 18.896l-7.4 4.104 1.464-8.826L0 9.306l8.332-1.151z" /></svg>
+                                        @endfor
+                                        @if($half)
+                                        <svg class="w-4 h-4 text-yellow-400" viewBox="0 0 24 24" aria-hidden="true">
+                                            <defs>
+                                                <linearGradient id="half2">
+                                                    <stop offset="50%" stop-color="currentColor" />
+                                                    <stop offset="50%" stop-color="transparent" />
+                                                </linearGradient>
+                                            </defs>
+                                            <path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.868 1.464 8.826L12 18.896l-7.4 4.104 1.464-8.826L0 9.306l8.332-1.151z" fill="url(#half2)" stroke="currentColor" />
+                                        </svg>
+                                        @endif
+                                        @for($i=0;$i<$empty;$i++)
+                                            <svg class="w-4 h-4 text-gray-300 dark:text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                            <path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.868 1.464 8.826L12 18.896l-7.4 4.104 1.464-8.826L0 9.306l8.332-1.151z" /></svg>
+                                            @endfor
+                                            <span class="ml-2 text-xs text-gray-600 dark:text-gray-300">{{ number_format($avg,1) }} ({{ $count }})</span>
+                                </div>
+                                @else
+                                <div class="text-xs text-gray-400 dark:text-gray-500 mt-1">Pas encore d’avis</div>
+                                @endif
+
                                 <div class="flex items-center justify-between mt-auto pt-2">
                                     @php
                                     $user = auth()->user();
@@ -1512,6 +1583,41 @@
                                 </span>
                                 @endif
                             </div>
+                            @endif
+
+                            {{-- Note moyenne (étoiles) --}}
+                            @php
+                            $avg = isset($property->avg_rating) ? round($property->avg_rating, 1) : null;
+                            $count = $property->approved_reviews_count ?? 0;
+                            $filled = (int) floor($avg ?? 0);
+                            $half = ($avg !== null && $avg - $filled >= 0.5) ? 1 : 0;
+                            $empty = 5 - $filled - $half;
+                            @endphp
+                            @if($avg !== null && $count > 0)
+                            <div class="flex items-center mb-2" aria-label="Note moyenne {{ $avg }} sur 5">
+                                @for($i=0;$i<$filled;$i++)
+                                    <svg class="w-4 h-4 text-yellow-400" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.868 1.464 8.826L12 18.896l-7.4 4.104 1.464-8.826L0 9.306l8.332-1.151z" /></svg>
+                                    @endfor
+                                    @if($half)
+                                    <svg class="w-4 h-4 text-yellow-400" viewBox="0 0 24 24" aria-hidden="true">
+                                        <defs>
+                                            <linearGradient id="half3">
+                                                <stop offset="50%" stop-color="currentColor" />
+                                                <stop offset="50%" stop-color="transparent" />
+                                            </linearGradient>
+                                        </defs>
+                                        <path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.868 1.464 8.826L12 18.896l-7.4 4.104 1.464-8.826L0 9.306l8.332-1.151z" fill="url(#half3)" stroke="currentColor" />
+                                    </svg>
+                                    @endif
+                                    @for($i=0;$i<$empty;$i++)
+                                        <svg class="w-4 h-4 text-gray-300 dark:text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.868 1.464 8.826L12 18.896l-7.4 4.104 1.464-8.826L0 9.306l8.332-1.151z" /></svg>
+                                        @endfor
+                                        <span class="ml-2 text-xs text-gray-600 dark:text-gray-300">{{ number_format($avg,1) }} ({{ $count }})</span>
+                            </div>
+                            @else
+                            <div class="text-xs text-gray-400 dark:text-gray-500 mb-2">Pas encore d’avis</div>
                             @endif
 
                             {{-- Note moyenne, prix et bouton de réservation --}}

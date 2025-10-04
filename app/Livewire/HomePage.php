@@ -348,9 +348,34 @@ class HomePage extends Component
                 }
             }
 
+            // Charger la moyenne des notes (avis approuvés uniquement)
+            $query->withAvg([
+                'reviews as avg_rating' => function ($q) {
+                    $q->where('approved', true);
+                },
+            ], 'rating');
+
+            $query->withCount([
+                'reviews as approved_reviews_count' => function ($q) {
+                    $q->where('approved', true);
+                },
+            ]);
+
             $properties = $query->get();
         } else {
-            $properties = Property::all();
+            // Par défaut, charger aussi la moyenne des notes approuvées
+            $properties = Property::query()
+                ->withAvg([
+                    'reviews as avg_rating' => function ($q) {
+                        $q->where('approved', true);
+                    },
+                ], 'rating')
+                ->withCount([
+                    'reviews as approved_reviews_count' => function ($q) {
+                        $q->where('approved', true);
+                    },
+                ])
+                ->get();
         }
 
         // Préparer les données pour la carte
@@ -480,6 +505,16 @@ class HomePage extends Component
         foreach ($topCities as $city) {
             $topProperties = Property::where('city', $city)
                 ->withCount('bookings')
+                ->withAvg([
+                    'reviews as avg_rating' => function ($q) {
+                        $q->where('approved', true);
+                    },
+                ], 'rating')
+                ->withCount([
+                    'reviews as approved_reviews_count' => function ($q) {
+                        $q->where('approved', true);
+                    },
+                ])
                 ->orderByDesc('bookings_count')
                 ->orderByDesc('created_at') // En cas d'égalité, les plus récents d'abord
                 ->limit(3)

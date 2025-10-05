@@ -67,6 +67,55 @@
                 <div class="flex justify-between items-start pl-4 pt-6 pr-4">
                     <div>
                         <h2 class="text-2xl lg:text-3xl text-gray-800 dark:text-gray-100 font-inter font-extrabold">{{ $property->name ?? 'Nom non disponible' }}</h2>
+
+                        {{-- Note moyenne sous le titre --}}
+                        @php
+                        $avg = $avgRating ?? null;
+                        $count = $approvedReviewsCount ?? 0;
+                        $filled = (int) floor($avg ?? 0);
+                        $half = ($avg !== null && $avg - $filled >= 0.5) ? 1 : 0;
+                        $empty = 5 - $filled - $half;
+                        @endphp
+                        @if($avg !== null && $count > 0)
+                        <div class="flex items-center mt-1" aria-label="Note moyenne {{ $avg }} sur 5">
+                            @for($i=0;$i<$filled;$i++)
+                                <svg class="w-5 h-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.868 1.464 8.826L12 18.896l-7.4 4.104 1.464-8.826L0 9.306l8.332-1.151z" /></svg>
+                                @endfor
+                                @if($half)
+                                <svg class="w-5 h-5 text-yellow-400" viewBox="0 0 24 24" aria-hidden="true">
+                                    <defs>
+                                        <linearGradient id="half-booking">
+                                            <stop offset="50%" stop-color="currentColor" />
+                                            <stop offset="50%" stop-color="transparent" />
+                                        </linearGradient>
+                                    </defs>
+                                    <path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.868 1.464 8.826L12 18.896l-7.4 4.104 1.464-8.826L0 9.306l8.332-1.151z" fill="url(#half-booking)" stroke="currentColor" />
+                                </svg>
+                                @endif
+                                @for($i=0;$i<$empty;$i++)
+                                    <svg class="w-5 h-5 text-gray-300 dark:text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.868 1.464 8.826L12 18.896l-7.4 4.104 1.464-8.826L0 9.306l8.332-1.151z" /></svg>
+                                    @endfor
+                                    <span class="ml-2 text-sm text-gray-700 dark:text-gray-300 font-medium">{{ number_format($avg,1) }} ({{ $count }} avis)</span>
+                        </div>
+                        @endif
+
+                        {{-- CTA avis contextuel --}}
+                        @if(Auth::check())
+                        @if($canLeaveReview && !$userHasReview && $eligibleBookingId)
+                        <a href="{{ route('user-reservations.review', ['booking' => $eligibleBookingId]) }}" class="inline-flex items-center mt-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded">
+                            <i class="fas fa-star mr-2"></i>
+                            Laisser un avis
+                        </a>
+                        @elseif($userHasReview)
+                        <a href="{{ route('user-reservations.review', ['booking' => $eligibleBookingId, 'edit' => 1]) }}" class="inline-flex items-center mt-2 px-3 py-1.5 bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-medium rounded">
+                            <i class="fas fa-edit mr-2"></i>
+                            Modifier mon avis
+                        </a>
+                        @endif
+                        @endif
+
                         <p class="text-lg lg:text-xl text-gray-700 dark:text-gray-300">
                             <a href="#map" title="Voir la carte">
                                 <i class="fas fa-map-marker-alt text-blue-500 mr-2 cursor-pointer"></i>

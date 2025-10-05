@@ -39,6 +39,10 @@ class BookingManager extends Component
     public $reviews;
     public $rating;
     public $canLeaveReview = false;
+    public $eligibleBookingId; // booking éligible pour laisser un avis
+    public $userHasReview = false; // l'utilisateur a déjà un avis pour cette propriété
+    public $avgRating; // moyenne des avis approuvés
+    public $approvedReviewsCount; // nombre d'avis approuvés
     // Icônes normalisées par clé (minuscules, sans accents, sans espaces/ponctuation)
     public $featureIcons = [
         // Nouvelles clés (Filament)
@@ -171,6 +175,29 @@ class BookingManager extends Component
                 ->where('approved', true) // Filtrer les avis approuvés
                 ->with('user') // Charger les utilisateurs qui ont laissé des avis
                 ->get();
+
+            $this->approvedReviewsCount = $this->reviews ? $this->reviews->count() : 0;
+            $this->avgRating = ($this->approvedReviewsCount > 0)
+                ? round((float) $this->reviews->avg('rating'), 1)
+                : null;
+
+            // Déterminer si l'utilisateur peut laisser un avis (séjour terminé pour ce bien)
+            if (Auth::check()) {
+                $eligibleBooking = Booking::where('property_id', $this->propertyId)
+                    ->where('user_id', Auth::id())
+                    ->where('status', 'accepted')
+                    ->whereDate('end_date', '<', now())
+                    ->orderByDesc('end_date')
+                    ->first();
+
+                $this->eligibleBookingId = $eligibleBooking?->id;
+                $this->canLeaveReview = (bool) $eligibleBooking;
+
+                // L'utilisateur a-t-il déjà un avis pour ce bien ?
+                $this->userHasReview = Reviews::where('user_id', Auth::id())
+                    ->where('property_id', $this->propertyId)
+                    ->exists();
+            }
         }
     }
 

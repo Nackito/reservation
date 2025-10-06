@@ -10,6 +10,7 @@ class Booking extends Model
     use HasFactory;
     protected $fillable = [
         'property_id',
+        'room_type_id',
         'user_id',
         'start_date',
         'end_date',
@@ -20,6 +21,7 @@ class Booking extends Model
         'paid_at',
         'review_reminder_sent_at',
         'review_reminder_sent_7d_at',
+        'quantity',
     ];
 
     protected $casts = [
@@ -44,8 +46,9 @@ class Booking extends Model
      */
     public function calculateTotalPrice()
     {
-        // S'assurer que la relation property est chargée
-        $property = $this->property ?? $this->loadMissing('property')->property;
+        // S'assurer que les relations nécessaires sont chargées
+        $this->loadMissing('property', 'roomType');
+        $property = $this->property;
         if (!$property || !$this->start_date || !$this->end_date) {
             return null;
         }
@@ -55,12 +58,21 @@ class Booking extends Model
         if ($days < 1) {
             $days = 1;
         }
-        return $days * $property->price_per_night;
+        $unitPrice = $this->roomType && $this->roomType->price_per_night
+            ? $this->roomType->price_per_night
+            : $property->price_per_night;
+        $qty = max(1, (int) ($this->quantity ?? 1));
+        return $days * $unitPrice * $qty;
     }
 
     public function property()
     {
         return $this->belongsTo(Property::class);
+    }
+
+    public function roomType()
+    {
+        return $this->belongsTo(RoomType::class);
     }
 
     public function user()

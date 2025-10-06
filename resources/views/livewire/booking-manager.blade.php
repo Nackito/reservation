@@ -38,6 +38,26 @@
                     disabled:pointer-events-none dark:bg-gray-900 dark:border-blue-700 dark:text-gray-100 dark:placeholder-gray-400 dark:focus:ring-blue-400" placeholder="Choisissez vos dates (arrivée - départ)">
                         @error('dateRange') <span class="text-red-500">{{ $message }}</span> @enderror
                     </div>
+
+                    @if($property && $property->category && in_array($property->category->name, ['Hôtel','Hotel']))
+                    <div class="w-full">
+                        <select wire:model="selectedRoomTypeId" class="py-3 px-4 block w-full border border-blue-400 bg-white text-gray-900 rounded-lg text-sm dark:bg-gray-900 dark:border-blue-700 dark:text-gray-100">
+                            <option value="">Sélectionnez un type</option>
+                            @foreach($property->roomTypes as $rt)
+                            <option value="{{ $rt->id }}">
+                                {{ $rt->name }}
+                                @if(!is_null($rt->price_per_night)) - {{ number_format($rt->price_per_night,2) }} XOF @endif
+                                ({{ $rt->capacity }} pers., {{ $rt->beds }} lits)
+                            </option>
+                            @endforeach
+                        </select>
+                        @error('selectedRoomTypeId') <span class="text-red-500">{{ $message }}</span> @enderror
+                    </div>
+                    <div class="w-40">
+                        <input type="number" wire:model="quantity" min="1" class="py-3 px-4 block w-full border border-blue-400 bg-white text-gray-900 rounded-lg text-sm dark:bg-gray-900 dark:border-blue-700 dark:text-gray-100">
+                        @error('quantity') <span class="text-red-500">{{ $message }}</span> @enderror
+                    </div>
+                    @endif
                     @if(Auth::check())
                     <button type="submit" wire:submit.prevent="addBooking" id="confirm-booking" class="bg-blue-500 text-white py-2 px-4 rounded">
                         Confirmer
@@ -456,6 +476,26 @@
                     disabled:pointer-events-none dark:bg-gray-900 dark:border-blue-700 dark:text-gray-100 dark:placeholder-gray-400 dark:focus:ring-blue-400" placeholder="Choisissez vos dates (arrivée - départ)">
                 @error('dateRange') <span class="text-red-500">{{ $message }}</span> @enderror
             </div>
+
+            @if($property && $property->category && in_array($property->category->name, ['Hôtel','Hotel']))
+            <div class="w-full">
+                <select wire:model="selectedRoomTypeId" class="py-3 px-4 block w-full border border-blue-400 bg-white text-gray-900 rounded-lg text-sm dark:bg-gray-900 dark:border-blue-700 dark:text-gray-100">
+                    <option value="">Sélectionnez un type</option>
+                    @foreach($property->roomTypes as $rt)
+                    <option value="{{ $rt->id }}">
+                        {{ $rt->name }}
+                        @if(!is_null($rt->price_per_night)) - {{ number_format($rt->price_per_night,2) }} XOF @endif
+                        ({{ $rt->capacity }} pers., {{ $rt->beds }} lits)
+                    </option>
+                    @endforeach
+                </select>
+                @error('selectedRoomTypeId') <span class="text-red-500">{{ $message }}</span> @enderror
+            </div>
+            <div class="w-40">
+                <input type="number" wire:model="quantity" min="1" class="py-3 px-4 block w-full border border-blue-400 bg-white text-gray-900 rounded-lg text-sm dark:bg-gray-900 dark:border-blue-700 dark:text-gray-100">
+                @error('quantity') <span class="text-red-500">{{ $message }}</span> @enderror
+            </div>
+            @endif
 
             @if(Auth::check())
             <button type="submit" wire:submit.prevent="addBooking" id="confirm-booking" class="bg-blue-500 text-white py-2 px-4 rounded">

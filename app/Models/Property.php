@@ -51,7 +51,7 @@ class Property extends Model
         return $this->belongsTo(Category::class);
     }
 
-    protected $fillable = ['name', 'description', 'price_per_night', 'user_id', 'property_type', 'number_of_rooms', 'city', 'municipality', 'district', 'status', 'slug', 'features', 'latitude', 'longitude'];
+    protected $fillable = ['name', 'description', 'price_per_night', 'user_id', 'property_type', 'number_of_rooms', 'city', 'municipality', 'district', 'status', 'slug', 'features', 'latitude', 'longitude', 'standing'];
 
     public function images()
     {
@@ -73,6 +73,11 @@ class Property extends Model
         return $this->hasMany(Booking::class);
     }
 
+    public function roomTypes()
+    {
+        return $this->hasMany(RoomType::class);
+    }
+
     public function reviews()
     {
         return $this->hasMany(Reviews::class);
@@ -80,6 +85,7 @@ class Property extends Model
 
     protected $casts = [
         'features' => 'array',
+        'standing' => 'integer',
     ];
 
     /**

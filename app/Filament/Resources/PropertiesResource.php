@@ -33,6 +33,9 @@ class PropertiesResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'title';
 
+    private const CATEGORY_HOTEL_FR = 'Hôtel';
+    private const CATEGORY_RESIDENCE_FR = 'Résidence meublée';
+
     public static function form(\Filament\Schemas\Schema $schema): \Filament\Schemas\Schema
     {
         return $schema->components([
@@ -61,12 +64,12 @@ class PropertiesResource extends Resource
                 ->schema([
                     \Filament\Forms\Components\CheckboxList::make('features')
                         ->label('Caractéristiques')
-                        ->options(\App\Models\Property::FEATURES)
+                        ->options(Property::FEATURES)
                         ->afterStateHydrated(function ($state, callable $set) {
-                            $set('features', \App\Models\Property::normalizeFeatureKeys($state));
+                            $set('features', Property::normalizeFeatureKeys($state));
                         })
                         ->dehydrateStateUsing(function ($state) {
-                            return \App\Models\Property::normalizeFeatureKeys($state);
+                            return Property::normalizeFeatureKeys($state);
                         })
                         ->default([])
                         ->columns(2),
@@ -103,8 +106,12 @@ class PropertiesResource extends Resource
                 ])->columns(2),
             Section::make('Détails')
                 ->inlineLabel()
+                ->visible(fn($get) => optional(\App\Models\Category::find($get('category_id')))?->name === self::CATEGORY_RESIDENCE_FR)
                 ->schema([
-                    TextInput::make('price_per_night')->label('Prix par nuit')->numeric(),
+                    TextInput::make('price_per_night')
+                        ->label('Prix par nuit')
+                        ->numeric()
+                        ->required(),
                     TextInput::make('number_of_rooms')->label('Nombre de pièces')->numeric(),
                 ])->columns(2),
             Section::make('Statut & Catégorie')
@@ -121,12 +128,24 @@ class PropertiesResource extends Resource
                         ->relationship('category', 'name', fn($query) => $query->orderBy('name'))
                         ->searchable()
                         ->preload()
-                        ->reactive(),
+                        ->reactive()
+                        ->required(),
                     Select::make('status')->label('Statut')->options([
                         'available' => 'Disponible',
                         'rented' => 'Occupé',
                         'maintenance' => 'Maintenance',
                     ])->required(),
+                    Select::make('standing')
+                        ->label('Standing')
+                        ->options([
+                            1 => '1 étoile',
+                            2 => '2 étoiles',
+                            3 => '3 étoiles',
+                            4 => '4 étoiles',
+                            5 => '5 étoiles',
+                        ])
+
+                        ->visible(fn($get) => optional(\App\Models\Category::find($get('category_id')))?->name === self::CATEGORY_HOTEL_FR),
                     Select::make('property_type')
                         ->label('Type de résidence')
                         ->options([
@@ -136,8 +155,40 @@ class PropertiesResource extends Resource
                             'villa' => 'Villa',
                             'other' => 'Autre',
                         ])
-                        ->visible(fn($get) => optional(\App\Models\Category::find($get('category_id')))?->name === 'Résidence meublée'),
+                        ->visible(fn($get) => optional(\App\Models\Category::find($get('category_id')))?->name === self::CATEGORY_RESIDENCE_FR),
                 ])->columns(2),
+
+            // Section inline pour gérer les types de chambre quand la catégorie est Hôtel
+            /*Section::make('Types de chambre')
+                ->inlineLabel()
+                ->visible(fn($get) => optional(\App\Models\Category::find($get('category_id')))?->name === self::CATEGORY_HOTEL_FR)
+                ->schema([
+                    \Filament\Forms\Components\RelationshipRepeater::make('roomTypes')
+                        ->label('Chambres')
+                        ->schema([
+                            TextInput::make('name')->label('Nom du type')->required(),
+                            TextInput::make('capacity')->label('Capacité')->numeric()->minValue(1)->default(1),
+                            TextInput::make('beds')->label('Lits')->numeric()->minValue(1)->default(1),
+                            TextInput::make('inventory')->label('Inventaire')->numeric()->minValue(1)->default(1),
+                            TextInput::make('price_per_night')->label('Prix/nuit (optionnel)')->numeric()->minValue(0),
+                            \Filament\Forms\Components\CheckboxList::make('amenities')
+                                ->label('Équipements')
+                                ->options(\App\Models\Property::FEATURES)
+                                ->columns(2),
+                            \Filament\Forms\Components\Textarea::make('description')->label('Description')->rows(3),
+                            FileUpload::make('images')
+                                ->label('Images du type')
+                                ->image()
+                                ->multiple()
+                                ->directory('room-types')
+                                ->disk('public')
+                                ->preserveFilenames(),
+                        ])
+                        ->defaultItems(0)
+                        ->collapsed() // garde les items compacts par défaut
+                        ->orderable(false),
+                ])->columns(1),
+            */
             Section::make('Images')
                 ->inlineLabel()
                 ->schema([
@@ -240,7 +291,7 @@ class PropertiesResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            \App\Filament\Resources\PropertiesResource\RelationManagers\RoomTypesRelationManager::class,
         ];
     }
     public static function getPages(): array

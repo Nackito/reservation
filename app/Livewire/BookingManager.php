@@ -43,6 +43,9 @@ class BookingManager extends Component
     public $userHasReview = false; // l'utilisateur a déjà un avis pour cette propriété
     public $avgRating; // moyenne des avis approuvés
     public $approvedReviewsCount; // nombre d'avis approuvés
+    // Gestion des types de chambre pour les hôtels
+    public $selectedRoomTypeId = null;
+    public $quantity = 1;
     // Icônes normalisées par clé (minuscules, sans accents, sans espaces/ponctuation)
     public $featureIcons = [
         // Nouvelles clés (Filament)
@@ -156,7 +159,7 @@ class BookingManager extends Component
     public function mount()
     {
         // Recupérer la propriété
-        $this->property = Property::find($this->propertyId);
+        $this->property = Property::with(['images', 'category', 'roomTypes'])->find($this->propertyId);
 
         $this->dateRange = null;
         $this->checkInDate = null;
@@ -169,6 +172,12 @@ class BookingManager extends Component
 
         if (isset($this->propertyId)) {
             $this->bookings = Booking::where('property_id', $this->propertyId)->get();
+
+            // Pré-sélection d'un type de chambre pour les hôtels (si disponible)
+            if ($this->property && $this->property->category && ($this->property->category->name === 'Hôtel' || $this->property->category->name === 'Hotel')) {
+                $firstType = $this->property->roomTypes->first();
+                $this->selectedRoomTypeId = $firstType?->id;
+            }
 
             // Récupérer les avis approuvés liés à cette propriété
             $this->reviews = Reviews::where('property_id', $this->propertyId)
@@ -247,11 +256,23 @@ class BookingManager extends Component
 
     public function calculateTotalPrice()
     {
-        $property = Property::find($this->propertyId);
+        $property = $this->property ?? Property::with('roomTypes')->find($this->propertyId);
         $checkIn = strtotime($this->checkInDate);
         $checkOut = strtotime($this->checkOutDate);
         $days = ($checkOut - $checkIn) / 86400; // 86400 seconds in a day
-        $this->totalPrice = $days * $property->price_per_night;
+        if ($days < 1) {
+            $days = 1;
+        }
+        // Déterminer le prix unitaire selon le type de chambre sélectionné
+        $unitPrice = $property->price_per_night;
+        if ($this->selectedRoomTypeId) {
+            $rt = $property->roomTypes->firstWhere('id', (int) $this->selectedRoomTypeId);
+            if ($rt && $rt->price_per_night !== null) {
+                $unitPrice = (float) $rt->price_per_night;
+            }
+        }
+        $qty = max(1, (int) $this->quantity);
+        $this->totalPrice = $days * $unitPrice * $qty;
         // Conversion pour affichage (facultatif, à utiliser dans la vue)
         $converted = $this->getConvertedPrice($this->totalPrice);
         $this->convertedPrice = $converted['amount'];
@@ -267,7 +288,14 @@ class BookingManager extends Component
         if (!Auth::check()) {
             return redirect()->route('login');
         }
-        $this->validate();
+        $rules = $this->rules;
+        // Si hôtel, type de chambre requis et quantité valide
+        $isHotel = $this->property && $this->property->category && ($this->property->category->name === 'Hôtel' || $this->property->category->name === 'Hotel');
+        if ($isHotel) {
+            $rules['selectedRoomTypeId'] = 'required|integer|exists:room_types,id';
+            $rules['quantity'] = 'required|integer|min:1';
+        }
+        $this->validate($rules);
 
         // Découper la plage de dates (tous séparateurs courants FR/EN, nettoyage des espaces insécables)
         if ($this->dateRange) {
@@ -290,11 +318,38 @@ class BookingManager extends Component
             return;
         }
 
-        $property = Property::find($this->propertyId);
+        $property = $this->property ?? Property::with('roomTypes')->find($this->propertyId);
 
         // Calculer et stocker le prix total avant la création de la réservation
         // (sinon $this->totalPrice reste null et ne s'enregistre pas)
         $this->calculateTotalPrice();
+
+        // Vérifier l'inventaire/ disponibilité pour le type de chambre (si hôtel)
+        if ($isHotel && $this->selectedRoomTypeId) {
+            $roomType = $property->roomTypes->firstWhere('id', (int) $this->selectedRoomTypeId);
+            if (!$roomType) {
+                $this->addError('selectedRoomTypeId', 'Type de chambre introuvable.');
+                return;
+            }
+            // Somme des quantités réservées qui se chevauchent sur la période, statut accepté
+            $overlap = Booking::where('property_id', $property->id)
+                ->where('room_type_id', $roomType->id)
+                ->where('status', 'accepted')
+                ->where(function ($q) {
+                    $q->whereBetween('start_date', [$this->checkInDate, $this->checkOutDate])
+                        ->orWhereBetween('end_date', [$this->checkInDate, $this->checkOutDate])
+                        ->orWhere(function ($q2) {
+                            $q2->where('start_date', '<=', $this->checkInDate)
+                                ->where('end_date', '>=', $this->checkOutDate);
+                        });
+                })
+                ->sum('quantity');
+            $requested = max(1, (int) $this->quantity);
+            if (($overlap + $requested) > (int) $roomType->inventory) {
+                $this->addError('quantity', 'La quantité demandée dépasse la disponibilité pour ces dates.');
+                return;
+            }
+        }
 
         // Vérifier si l'utilisateur essaie de réserver sa propre propriété
         if ($property->user_id == Auth::id()) {
@@ -311,6 +366,8 @@ class BookingManager extends Component
 
         $booking = Booking::create([
             'property_id' => $this->propertyId,
+            'room_type_id' => $this->selectedRoomTypeId,
+            'quantity' => max(1, (int) $this->quantity),
             'user_id' => Auth::id(),
             'start_date' => $this->checkInDate,
             'end_date' => $this->checkOutDate,

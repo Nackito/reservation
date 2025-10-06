@@ -199,7 +199,7 @@ class PropertiesResource extends Resource
                         ->directory('properties')
                         ->disk('public')
                         ->preserveFilenames()
-                        ->formatStateUsing(function ($state, ?\App\Models\Property $record) {
+                        ->formatStateUsing(function ($state, ?Property $record) {
                             // En édition, précharger les chemins existants depuis la relation
                             if ($record) {
                                 return $record->images()->pluck('image_path')->toArray();

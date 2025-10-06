@@ -55,11 +55,19 @@ class RoomTypeResource extends Resource
             Textarea::make('description')->label('Description')->rows(4),
             FileUpload::make('images')
                 ->label('Images du type')
+                ->inlineLabel()
                 ->image()
                 ->multiple()
                 ->directory('room-types')
                 ->disk('public')
-                ->preserveFilenames(),
+                ->preserveFilenames()
+                ->formatStateUsing(function ($state, ?RoomType $record) {
+                    // En édition, précharger les chemins existants depuis la relation
+                    if ($record) {
+                        return $record->images ?? [];
+                    }
+                    return $state;
+                })
         ])->columns(2);
     }
 

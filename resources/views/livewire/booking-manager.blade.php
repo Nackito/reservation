@@ -347,13 +347,21 @@
                         $user = auth()->user();
                         $userCurrency = $user && $user->currency ? $user->currency : 'XOF';
                         $rate = app('App\\Livewire\\BookingManager')->getExchangeRate('XOF', $userCurrency);
-                        $converted = $rate ? round($property->price_per_night * $rate, 2) : $property->price_per_night;
+                        $basePrice = $property->starting_price ?? $property->price_per_night; // Utiliser le prix de départ pour les hôtels
+                        $converted = $rate && $basePrice !== null ? round($basePrice * $rate, 2) : $basePrice;
+                        $isHotel = $property && $property->category && in_array($property->category->name, ['Hôtel','Hotel']);
                         @endphp
+                        @if($basePrice !== null)
                         <p class="text-gray-600 dark:text-gray-200 text-right font-bold mt-5">
+                            @if($isHotel)
+                            À partir de {{ number_format($converted, 2) }} {{ $userCurrency }} par nuit
+                            @else
                             {{ number_format($converted, 2) }} {{ $userCurrency }} par nuit
+                            @endif
                         </p>
+                        @endif
                         <div class="mt-4">
-                            <a href="#Reservation" class="border border-blue-500 bg-white-500 text-blue-500 text-center py-2 px-4 rounded block w-full">Réserver cette résidence</a>
+                            <a href="#Reservation" class="border border-blue-500 bg-white-500 text-blue-500 text-center py-2 px-4 rounded block w-full">Réserver</a>
                         </div>
                     </div>
                 </div>

@@ -237,6 +237,59 @@ class BookingManager extends Component
         if (!$this->property) {
             return [];
         }
+
+        $isHotel = $this->property->category && in_array($this->property->category->name, ['Hôtel', 'Hotel']);
+
+        // Si c'est un hôtel et un type de chambre est sélectionné, on calcule les dates où ce type est saturé
+        if ($isHotel && $this->selectedRoomTypeId) {
+            $roomType = $this->property->roomTypes->firstWhere('id', (int) $this->selectedRoomTypeId);
+            if (!$roomType) {
+                return [];
+            }
+
+            $inventory = max(0, (int) $roomType->inventory);
+            if ($inventory <= 0) {
+                // Aucun stock: toutes les dates deviennent grisées? On retourne vide pour ne pas bloquer toute l'année.
+                return [];
+            }
+
+            // Récupérer toutes les réservations acceptées pour ce room type
+            $bookings = \App\Models\Booking::query()
+                ->where('property_id', $this->property->id)
+                ->where('room_type_id', $roomType->id)
+                ->where('status', 'accepted')
+                ->get(['start_date', 'end_date', 'quantity']);
+
+            if ($bookings->isEmpty()) {
+                return [];
+            }
+
+            // Construire un compteur par jour: somme des quantities par date
+            $counts = [];
+            foreach ($bookings as $b) {
+                $period = new \DatePeriod(
+                    new \DateTime($b->start_date),
+                    new \DateInterval('P1D'),
+                    (new \DateTime($b->end_date))->modify('+1 day')
+                );
+                foreach ($period as $date) {
+                    $key = $date->format('Y-m-d');
+                    $counts[$key] = ($counts[$key] ?? 0) + (int) $b->quantity;
+                }
+            }
+
+            // Dates saturées = somme >= inventaire
+            $occupied = [];
+            foreach ($counts as $d => $sum) {
+                if ($sum >= $inventory) {
+                    $occupied[] = $d;
+                }
+            }
+            sort($occupied);
+            return $occupied;
+        }
+
+        // Sinon: fallback occupation globale de la propriété (résidences meublées etc.)
         $bookings = $this->property->bookings()
             ->where('status', 'accepted')
             ->get(['start_date', 'end_date']);

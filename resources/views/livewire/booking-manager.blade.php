@@ -368,6 +368,29 @@
             </div>
         </div>
 
+        <div class="p-4">
+            <div class="prose dark:prose-invert max-w-none text-gray-800 dark:text-gray-100 mt-5">
+                {!! $property->description ?? 'Description non disponible' !!}
+            </div>
+            <p id="pricing" class="text-gray-600 dark:text-gray-200 mt-5">
+                @php
+                $user = auth()->user();
+                $userCurrency = $user && $user->currency ? $user->currency : 'XOF';
+                $rate = app('App\\Livewire\\BookingManager')->getExchangeRate('XOF', $userCurrency);
+                $basePrice = $property->starting_price ?? $property->price_per_night; // starting_price pour hôtel
+                $converted = $rate && $basePrice !== null ? round($basePrice * $rate, 2) : $basePrice;
+                $isHotel = $property && $property->category && in_array($property->category->name, ['Hôtel','Hotel']);
+                @endphp
+                @if($basePrice !== null)
+                @if($isHotel)
+                À partir de <span class="text-xl font-bold">{{ number_format($converted, 2) }} {{ $userCurrency }} par nuit</span>
+                @else
+                Vous pouvez disposez de ce logement à <span class="text-xl font-bold">{{ number_format($converted, 2) }} {{ $userCurrency }} par nuit</span>
+                @endif
+                @endif
+            </p>
+        </div>
+
         {{-- Tableau des types de chambre (Hôtel uniquement) --}}
         @if($property && $property->category && in_array($property->category->name, ['Hôtel','Hotel']) && $property->roomTypes && $property->roomTypes->count())
         <div class="container mx-auto mt-8 px-4">
@@ -384,7 +407,6 @@
                             <th scope="col" class="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-200">Type de chambre</th>
                             <th scope="col" class="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-200">Nombre de personnes</th>
                             <th scope="col" class="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-200">Lits</th>
-                            <th scope="col" class="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-200">Disponibilité</th>
                             <th scope="col" class="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-200">Prix</th>
                         </tr>
                     </thead>
@@ -434,16 +456,10 @@
                                         <span>{{ $rt->beds }}</span>
                                     </span>
                                 </td>
-                                <td class="px-4 py-3 text-sm">
-                                    @if(!is_null($availabilityLabel))
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ $availableQty > 0 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' }}">{{ $availabilityLabel }}</span>
-                                    @else
-                                    <span class="text-gray-400 dark:text-gray-500">Sélectionnez des dates</span>
-                                    @endif
-                                </td>
+
                                 <td class="px-4 py-3 text-sm text-gray-800 dark:text-gray-200">
                                     @if(!is_null($rtBasePrice))
-                                    {{ number_format($rtConverted, 2) }} {{ $userCurrency }} / nuit
+                                    {{ number_format($rtConverted, 2) }} {{ $userCurrency }}
                                     @else
                                     <span class="text-gray-400">N/A</span>
                                     @endif
@@ -451,7 +467,7 @@
                             </tr>
                             {{-- Ligne de détails repliable pour ce type de chambre --}}
                             <tr id="rt-{{ $rt->id }}" class="hidden bg-gray-50 dark:bg-gray-900">
-                                <td colspan="6" class="px-4 py-4">
+                                <td colspan="4" class="px-4 py-4">
                                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                         <div class="md:col-span-2">
                                             <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2">Description</h3>
@@ -530,28 +546,7 @@
                 </div>
             </div>
         </div>
-        <div class="p-4">
-            <div class="prose dark:prose-invert max-w-none text-gray-800 dark:text-gray-100 mt-5">
-                {!! $property->description ?? 'Description non disponible' !!}
-            </div>
-            <p id="pricing" class="text-gray-600 dark:text-gray-200 mt-5">
-                @php
-                $user = auth()->user();
-                $userCurrency = $user && $user->currency ? $user->currency : 'XOF';
-                $rate = app('App\\Livewire\\BookingManager')->getExchangeRate('XOF', $userCurrency);
-                $basePrice = $property->starting_price ?? $property->price_per_night; // starting_price pour hôtel
-                $converted = $rate && $basePrice !== null ? round($basePrice * $rate, 2) : $basePrice;
-                $isHotel = $property && $property->category && in_array($property->category->name, ['Hôtel','Hotel']);
-                @endphp
-                @if($basePrice !== null)
-                @if($isHotel)
-                À partir de <span class="text-xl font-bold">{{ number_format($converted, 2) }} {{ $userCurrency }} par nuit</span>
-                @else
-                Vous pouvez disposez de ce logement à <span class="text-xl font-bold">{{ number_format($converted, 2) }} {{ $userCurrency }} par nuit</span>
-                @endif
-                @endif
-            </p>
-        </div>
+
         @if(!is_null($property->latitude) && !is_null($property->longitude))
         <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mt-8 mb-4 pl-4">Emplacement de l'établissement</h2>
         <div id="map"
@@ -650,8 +645,55 @@
             </button>
             @endif
         </div>
+        <script id="occupied-dates" type="application/json">
+            {
+                !!json_encode($occupiedDates ?? []) !!
+            }
+        </script>
         <script>
-            window.occupiedDates = @json($occupiedDates);
+            (function() {
+                try {
+                    const el = document.getElementById('occupied-dates');
+                    window.occupiedDates = el ? JSON.parse(el.textContent || '[]') : [];
+                } catch (e) {
+                    window.occupiedDates = [];
+                }
+            })();
+            // Fonction pour recharger les dates occupées et mettre à jour Flatpickr (si présent)
+            window.refreshOccupiedDates = function() {
+                try {
+                    const el = document.getElementById('occupied-dates');
+                    const parsed = el ? JSON.parse(el.textContent || '[]') : [];
+                    window.occupiedDates = Array.isArray(parsed) ? parsed : [];
+                } catch (e) {
+                    window.occupiedDates = [];
+                }
+                // Maj de Flatpickr si déjà initialisé
+                const disable = (window.occupiedDates || []).slice();
+                const el1 = document.getElementById('ReservationDateRange');
+                const el2 = document.getElementById('ReservationDateRange2');
+                if (el1 && el1._flatpickr) {
+                    try {
+                        el1._flatpickr.set('disable', disable);
+                        el1._flatpickr.redraw();
+                    } catch (_) {}
+                }
+                if (el2 && el2._flatpickr) {
+                    try {
+                        el2._flatpickr.set('disable', disable);
+                        el2._flatpickr.redraw();
+                    } catch (_) {}
+                }
+            };
+
+            // Rafraîchir après chargement Livewire et navigation Livewire
+            document.addEventListener('livewire:load', () => setTimeout(window.refreshOccupiedDates, 0));
+            document.addEventListener('livewire:navigated', () => setTimeout(window.refreshOccupiedDates, 0));
+
+            // Appel initial après ce rendu (utile lors des re-rendus Livewire)
+            if (typeof window.refreshOccupiedDates === 'function') {
+                window.refreshOccupiedDates();
+            }
         </script>
     </form>
 </div>

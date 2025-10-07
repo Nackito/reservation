@@ -89,6 +89,29 @@ class Property extends Model
     ];
 
     /**
+     * Prix de départ: pour un Hôtel, le plus petit prix/nuit des types de chambre.
+     * Pour les autres catégories, le price_per_night de la propriété.
+     */
+    public function getStartingPriceAttribute(): ?float
+    {
+        $categoryName = optional($this->category)->name;
+        if ($categoryName === 'Hôtel' || $categoryName === 'Hotel') {
+            if ($this->relationLoaded('roomTypes')) {
+                $min = collect($this->roomTypes)
+                    ->pluck('price_per_night')
+                    ->filter(fn($p) => $p !== null)
+                    ->min();
+            } else {
+                $min = $this->roomTypes()
+                    ->whereNotNull('price_per_night')
+                    ->min('price_per_night');
+            }
+            return $min !== null ? (float) $min : null;
+        }
+        return $this->price_per_night !== null ? (float) $this->price_per_night : null;
+    }
+
+    /**
      * Normalise une valeur arbitraire de caractéristique vers une clé canonique.
      * Retourne null si aucune clé ne correspond.
      */

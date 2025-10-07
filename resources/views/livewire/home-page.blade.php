@@ -1110,11 +1110,19 @@
                                     $user = auth()->user();
                                     $userCurrency = $user && $user->currency ? $user->currency : 'XOF';
                                     $rate = app('App\\Livewire\\BookingManager')->getExchangeRate('XOF', $userCurrency);
-                                    $converted = $rate ? round($property->price_per_night * $rate, 2) : $property->price_per_night;
+                                    $basePrice = $property->starting_price ?? $property->price_per_night;
+                                    $converted = $rate && $basePrice !== null ? round($basePrice * $rate, 2) : $basePrice;
+                                    $isHotel = $property && $property->category && in_array($property->category->name, ['Hôtel','Hotel']);
                                     @endphp
+                                    @if($basePrice !== null)
                                     <span class="text-lg font-bold text-blue-600 dark:text-blue-400">
+                                        @if($isHotel)
+                                        À partir de {{ number_format($converted, 2) }} {{ $userCurrency }}/nuit
+                                        @else
                                         {{ number_format($converted, 2) }} {{ $userCurrency }}/nuit
+                                        @endif
                                     </span>
+                                    @endif
                                 </div>
                             </div>
                     </div>
@@ -1296,11 +1304,19 @@
                                     $user = auth()->user();
                                     $userCurrency = $user && $user->currency ? $user->currency : 'XOF';
                                     $rate = app('App\\Livewire\\BookingManager')->getExchangeRate('XOF', $userCurrency);
-                                    $converted = $rate ? round($property->price_per_night * $rate, 2) : $property->price_per_night;
+                                    $basePrice = $property->starting_price ?? $property->price_per_night;
+                                    $converted = $rate && $basePrice !== null ? round($basePrice * $rate, 2) : $basePrice;
+                                    $isHotel = $property && $property->category && in_array($property->category->name, ['Hôtel','Hotel']);
                                     @endphp
+                                    @if($basePrice !== null)
                                     <span class="text-lg font-bold text-blue-600">
+                                        @if($isHotel)
+                                        À partir de {{ number_format($converted, 2) }} {{ $userCurrency }} / nuit
+                                        @else
                                         {{ number_format($converted, 2) }} {{ $userCurrency }} / nuit
+                                        @endif
                                     </span>
+                                    @endif
                                 </div>
                             </div>
                     </div>
@@ -1622,16 +1638,23 @@
 
                             {{-- Note moyenne, prix et bouton de réservation --}}
                             <div class="flex justify-between items-center mt-4">
-
                                 @php
                                 $user = auth()->user();
                                 $userCurrency = $user && $user->currency ? $user->currency : 'XOF';
                                 $rate = app('App\\Livewire\\BookingManager')->getExchangeRate('XOF', $userCurrency);
-                                $converted = $rate ? round($property->price_per_night * $rate, 2) : $property->price_per_night;
+                                $basePrice = $property->starting_price ?? $property->price_per_night;
+                                $converted = $rate && $basePrice !== null ? round($basePrice * $rate, 2) : $basePrice;
+                                $isHotel = $property && $property->category && in_array($property->category->name, ['Hôtel','Hotel']);
                                 @endphp
-                                <span class="text-lg font-bold text-blue-600">
+                                @if($basePrice !== null)
+                                <span class="text-lg font-bold text-blue-600 dark:text-blue-400">
+                                    @if($isHotel)
+                                    À partir de {{ number_format($converted, 2) }} {{ $userCurrency }}/nuit
+                                    @else
                                     {{ number_format($converted, 2) }} {{ $userCurrency }}/nuit
+                                    @endif
                                 </span>
+                                @endif
                                 <a href="{{ route('booking-manager', ['propertyId' => $property->id]) }}"
                                     class="inline-flex items-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 ml-2">
                                     <i class="fas fa-calendar-check mr-1"></i>

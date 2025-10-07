@@ -6,7 +6,23 @@
       <div class="carousel-caption absolute text-center">
         <h5 class="text-xl">{{ $property->name }}</h5>
         <p>{{ $property->address }}</p>
-        <p>{{ $property->price_per_night }} FrCFA par nuit</p>
+        @php
+        $isHotel = $property && $property->category && in_array($property->category->name, ['Hôtel','Hotel']);
+        $basePrice = $property->starting_price ?? $property->price_per_night;
+        $user = auth()->user();
+        $userCurrency = $user && $user->currency ? $user->currency : 'XOF';
+        $rate = app('App\\Livewire\\BookingManager')->getExchangeRate('XOF', $userCurrency);
+        $converted = $rate && $basePrice !== null ? round($basePrice * $rate, 2) : $basePrice;
+        @endphp
+        @if(!is_null($converted))
+        <p>
+          @if($isHotel)
+          À partir du prix de la chambre la moins chère: {{ number_format($converted, 2) }} {{ $userCurrency }} / nuit
+          @else
+          {{ number_format($converted, 2) }} {{ $userCurrency }} par nuit
+          @endif
+        </p>
+        @endif
         <a href="{{ route('booking', ['property' => $property->id]) }}" class="bg-primary text-white px-4 py-2 rounded">RESERVATION</a>
       </div>
     </div>

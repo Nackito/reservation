@@ -368,6 +368,123 @@
             </div>
         </div>
 
+        {{-- Tableau des types de chambre (Hôtel uniquement) --}}
+        @if($property && $property->category && in_array($property->category->name, ['Hôtel','Hotel']) && $property->roomTypes && $property->roomTypes->count())
+        <div class="container mx-auto mt-8 px-4">
+            <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4">Les chambres</h2>
+            @php
+            $user = auth()->user();
+            $userCurrency = $user && $user->currency ? $user->currency : 'XOF';
+            $rate = app('App\\Livewire\\BookingManager')->getExchangeRate('XOF', $userCurrency);
+            @endphp
+            <div class="overflow-x-auto bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead class="bg-gray-50 dark:bg-gray-900">
+                        <tr>
+                            <th scope="col" class="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-200">Type de chambre</th>
+                            <th scope="col" class="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-200">Nombre de personnes</th>
+                            <th scope="col" class="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-200">Lits</th>
+                            <th scope="col" class="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-200">Disponibilité</th>
+                            <th scope="col" class="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-200">Prix</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                        @foreach($property->roomTypes as $rt)
+                        @php
+                        $rtBasePrice = $rt->price_per_night;
+                        $rtConverted = $rate && $rtBasePrice !== null ? round($rtBasePrice * $rate, 2) : $rtBasePrice;
+                        // Disponibilité selon la plage de dates sélectionnée
+                        $availabilityLabel = null;
+                        $availableQty = null;
+                        if (!empty($dateRange) && !empty($rt->inventory)) {
+                        $parts = preg_split('/\s+(?:to|à|au|\-|–|—)\s+/ui', $dateRange);
+                        if (is_array($parts) && count($parts) === 2) {
+                        try {
+                        $start = \Carbon\Carbon::parse(trim($parts[0]))->startOfDay();
+                        $end = \Carbon\Carbon::parse(trim($parts[1]))->endOfDay();
+                        if ($start && $end && $start->lte($end)) {
+                        $booked = \App\Models\Booking::query()
+                        ->where('room_type_id', $rt->id)
+                        ->where('status', 'accepted')
+                        ->whereDate('start_date', '<', $end->toDateString())
+                            ->whereDate('end_date', '>', $start->toDateString())
+                            ->sum('quantity');
+                            $inv = max(0, (int) $rt->inventory);
+                            $avail = max(0, $inv - (int) $booked);
+                            $availableQty = $avail;
+                            $availabilityLabel = $avail > 0 ? ($avail . ' dispo') : 'Complet';
+                            }
+                            } catch (\Throwable $e) {
+                            $availabilityLabel = '—';
+                            }
+                            }
+                            }
+                            @endphp
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer" onclick="toggleRoomTypeDetails('rt-{{ $rt->id }}')">
+                                <td class="px-4 py-3 text-sm text-gray-800 dark:text-gray-200 font-medium">{{ $rt->name }}</td>
+                                <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">{{ $rt->capacity }} personne{{ $rt->capacity > 1 ? 's' : '' }}</td>
+                                <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">{{ $rt->beds }} lit{{ $rt->beds > 1 ? 's' : '' }}</td>
+                                <td class="px-4 py-3 text-sm">
+                                    @if(!is_null($availabilityLabel))
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ $availableQty > 0 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' }}">{{ $availabilityLabel }}</span>
+                                    @else
+                                    <span class="text-gray-400 dark:text-gray-500">Sélectionnez des dates</span>
+                                    @endif
+                                </td>
+                                <td class="px-4 py-3 text-sm text-gray-800 dark:text-gray-200">
+                                    @if(!is_null($rtBasePrice))
+                                    {{ number_format($rtConverted, 2) }} {{ $userCurrency }} / nuit
+                                    @else
+                                    <span class="text-gray-400">N/A</span>
+                                    @endif
+                                </td>
+                            </tr>
+                            {{-- Ligne de détails repliable pour ce type de chambre --}}
+                            <tr id="rt-{{ $rt->id }}" class="hidden bg-gray-50 dark:bg-gray-900">
+                                <td colspan="6" class="px-4 py-4">
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div class="md:col-span-2">
+                                            <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2">Description</h3>
+                                            <p class="text-sm text-gray-700 dark:text-gray-300">{{ $rt->description ?? 'Aucune description fournie.' }}</p>
+                                            @if(is_array($rt->amenities) && count($rt->amenities))
+                                            <h4 class="text-sm font-semibold text-gray-800 dark:text-gray-200 mt-4 mb-2">Caractéristiques de la chambre</h4>
+                                            <ul class="flex flex-wrap gap-2">
+                                                @foreach($rt->amenities as $amenity)
+                                                <li class="px-2 py-1 rounded bg-gray-100 dark:bg-gray-800 text-xs text-gray-700 dark:text-gray-300">{{ ucfirst($amenity) }}</li>
+                                                @endforeach
+                                            </ul>
+                                            @endif
+                                        </div>
+                                        <div>
+                                            <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2">Images</h3>
+                                            <div class="grid grid-cols-3 gap-2">
+                                                @if(is_array($rt->images) && count($rt->images))
+                                                @foreach(array_slice($rt->images, 0, 6) as $img)
+                                                <img src="{{ asset('storage/' . ltrim($img, '/')) }}" alt="{{ $rt->name }}" class="w-full h-16 object-cover rounded border border-gray-200 dark:border-gray-700" />
+                                                @endforeach
+                                                @else
+                                                <span class="text-sm text-gray-400">Aucune image</span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            @endforeach
+                    </tbody>
+                </table>
+            </div>
+            <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">Astuce: cliquez sur une ligne pour afficher les détails du type de chambre.</p>
+            <script>
+                function toggleRoomTypeDetails(id) {
+                    const row = document.getElementById(id);
+                    if (!row) return;
+                    row.classList.toggle('hidden');
+                }
+            </script>
+        </div>
+        @endif
+
         <div id="photoGalleryModal" class="fixed inset-0 z-50 hidden bg-black bg-opacity-75 flex items-center justify-center">
             <div class="relative bg-white dark:bg-gray-900 rounded-lg shadow-lg w-11/12 lg:w-3/4 max-h-screen overflow-hidden">
                 <button class="absolute top-2 right-2 text-gray-500 hover:text-gray-700" onclick="closeGallery()">

@@ -422,8 +422,18 @@
                             @endphp
                             <tr class="hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer" onclick="toggleRoomTypeDetails('rt-{{ $rt->id }}')">
                                 <td class="px-4 py-3 text-sm text-gray-800 dark:text-gray-200 font-medium">{{ $rt->name }}</td>
-                                <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">{{ $rt->capacity }} personne{{ $rt->capacity > 1 ? 's' : '' }}</td>
-                                <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">{{ $rt->beds }} lit{{ $rt->beds > 1 ? 's' : '' }}</td>
+                                <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
+                                    <span class="inline-flex items-center gap-1" aria-label="{{ $rt->capacity }} personne{{ $rt->capacity > 1 ? 's' : '' }}">
+                                        <i class="fas fa-user text-blue-600 dark:text-blue-400"></i>
+                                        <span>{{ $rt->capacity }}</span>
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
+                                    <span class="inline-flex items-center gap-1" aria-label="{{ $rt->beds }} lit{{ $rt->beds > 1 ? 's' : '' }}">
+                                        <i class="fas fa-bed text-gray-700 dark:text-gray-300"></i>
+                                        <span>{{ $rt->beds }}</span>
+                                    </span>
+                                </td>
                                 <td class="px-4 py-3 text-sm">
                                     @if(!is_null($availabilityLabel))
                                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ $availableQty > 0 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' }}">{{ $availabilityLabel }}</span>

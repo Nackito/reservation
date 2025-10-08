@@ -103,7 +103,11 @@ class CinetPayService
       'transaction_id' => $transactionId,
     ];
     try {
-      $resp = Http::asJson()->post($checkUrl, $payload);
+      $resp = Http::asJson()
+        ->timeout((int) config('cinetpay.timeout', 8))
+        ->connectTimeout((int) config('cinetpay.connect_timeout', 5))
+        ->retry(1, 200)
+        ->post($checkUrl, $payload);
       $data = $resp->json();
       if (!$resp->successful()) {
         $result['error'] = 'HTTP ' . $resp->status();

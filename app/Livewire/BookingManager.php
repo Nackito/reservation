@@ -13,6 +13,9 @@ use Illuminate\Support\Facades\Auth;
 use Jantinnerezo\LivewireAlert\Facades\LivewireAlert;
 use Carbon\Carbon;
 use App\Events\MessageSent;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Récupère le taux de change depuis une API externe (exchangerate-api.com)
@@ -113,21 +116,202 @@ class BookingManager extends Component
     }
     public function getExchangeRate($from, $to)
     {
-        if ($from === $to) return 1.0;
-        // Remplacez par votre clé API réelle
-        $apiKey = config('services.exchangerate.key', 'YOUR_API_KEY');
-        $url = "https://v6.exchangerate-api.com/v6/{$apiKey}/pair/{$from}/{$to}";
-        try {
-            $response = @file_get_contents($url);
-            if ($response === false) return null;
-            $data = json_decode($response, true);
-            if (isset($data['conversion_rate'])) {
-                return (float) $data['conversion_rate'];
-            }
-        } catch (\Exception $e) {
-            // Log::error($e->getMessage());
+        // Mémoïsation par requête pour éviter des appels HTTP répétés au sein d'un même cycle
+        static $memo = [];
+        $start = microtime(true);
+        $budget = 7.0; // secondes max pour toute la résolution du taux
+        $errors = [];
+        $from = strtoupper((string)$from);
+        $to = strtoupper((string)$to);
+        if (!$from || !$to) {
+            return null;
         }
-        return null;
+        if ($from === $to) {
+            return 1.0;
+        }
+
+        $cacheKey = "fx:{$from}:{$to}";
+        if (array_key_exists($cacheKey, $memo)) {
+            return $memo[$cacheKey];
+        }
+        // 1) Cache d'abord
+        $cached = Cache::get($cacheKey);
+        // Si on a un succès en cache
+        if (is_numeric($cached) && (float)$cached > 0) {
+            $memo[$cacheKey] = (float) $cached;
+            return $memo[$cacheKey];
+        }
+        // Si on a un échec en cache (sentinelle 0)
+        if ($cached === 0 || $cached === 'fail') {
+            return $memo[$cacheKey] = null;
+        }
+
+        // 2) Essai direct via exchangerate.host (gratuit, supporte XOF)
+        try {
+            $resp = Http::acceptJson()
+                ->timeout(4)
+                ->connectTimeout(2)
+                ->retry(1, 200)
+                ->get('https://api.exchangerate.host/convert', [
+                    'from' => $from,
+                    'to' => $to,
+                ]);
+            if ($resp->successful()) {
+                $data = $resp->json();
+                $rate = isset($data['result']) ? (float) $data['result'] : 0.0;
+                if ($rate > 0) {
+                    Cache::put($cacheKey, $rate, now()->addHours(6));
+                    return $memo[$cacheKey] = $rate;
+                }
+            }
+        } catch (\Throwable $e) {
+            $errors[] = 'convert: ' . $e->getMessage();
+            // on tente un fallback ensuite
+        }
+
+        // Stop si on a déjà consommé le budget
+        if ((microtime(true) - $start) >= $budget) {
+            Cache::put($cacheKey, 0, now()->addMinutes(10));
+            return $memo[$cacheKey] = null;
+        }
+
+        // 3) Fallback via EUR comme devise pivot (XOF est arrimé à l'EUR à 655.957)
+        $EUR_XOF = 655.957; // 1 EUR = 655.957 XOF
+        $getEurTo = function (string $symbol) use ($EUR_XOF, $start, $budget) {
+            $symbol = strtoupper($symbol);
+            if ($symbol === 'EUR') return 1.0;
+            if ($symbol === 'XOF') return $EUR_XOF;
+            if ((microtime(true) - $start) >= $budget) {
+                return 0.0;
+            }
+            try {
+                $r = Http::acceptJson()
+                    ->timeout(3)
+                    ->connectTimeout(1)
+                    // pas de retry pour ne pas dépasser le budget
+                    ->get('https://api.exchangerate.host/latest', [
+                        'base' => 'EUR',
+                        'symbols' => $symbol,
+                    ]);
+                if ($r->successful()) {
+                    $j = $r->json();
+                    $val = $j['rates'][$symbol] ?? 0.0;
+                    return (float) $val;
+                }
+            } catch (\Throwable $e) {
+                $errors[] = 'latest(EUR→' . $symbol . '): ' . $e->getMessage();
+                // ignore
+            }
+            return 0.0;
+        };
+
+        $eurToTo = $getEurTo($to);
+        $eurToFrom = $getEurTo($from);
+        if ($eurToTo > 0 && $eurToFrom > 0) {
+            $rate = $eurToTo / $eurToFrom;
+            Cache::put($cacheKey, $rate, now()->addHours(6));
+            return $memo[$cacheKey] = $rate;
+        }
+
+        // 4) Dernier recours: ancienne API si une clé est fournie
+        $apiKey = config('services.exchangerate.key');
+        if ((microtime(true) - $start) >= $budget) {
+            Cache::put($cacheKey, 0, now()->addMinutes(10));
+            return $memo[$cacheKey] = null;
+        }
+        if ($apiKey && $apiKey !== 'YOUR_API_KEY') {
+            $url = "https://v6.exchangerate-api.com/v6/{$apiKey}/pair/{$from}/{$to}";
+            try {
+                $resp = Http::acceptJson()->timeout(3)->connectTimeout(1)->retry(0, 0)->get($url);
+                if ($resp->successful()) {
+                    $data = $resp->json();
+                    $rate = isset($data['conversion_rate']) ? (float) $data['conversion_rate'] : 0.0;
+                    if ($rate > 0) {
+                        Cache::put($cacheKey, $rate, now()->addHours(6));
+                        return $memo[$cacheKey] = $rate;
+                    }
+                }
+            } catch (\Throwable $e) {
+                $errors[] = 'v6 pair ' . $from . '→' . $to . ': ' . $e->getMessage();
+                // noop
+            }
+
+            // Tentative via pivot EUR (utile si la paire directe XOF/* est refusée par l'API)
+            if ((microtime(true) - $start) < $budget) {
+                $EUR_XOF = 655.957;
+                $getEurToV6 = function (string $symbol) use ($apiKey, $EUR_XOF) {
+                    $symbol = strtoupper($symbol);
+                    if ($symbol === 'EUR') return 1.0;
+                    if ($symbol === 'XOF') return $EUR_XOF;
+                    try {
+                        $u = "https://v6.exchangerate-api.com/v6/{$apiKey}/pair/EUR/{$symbol}";
+                        $r = Http::acceptJson()->timeout(3)->connectTimeout(1)->retry(0, 0)->get($u);
+                        if ($r->successful()) {
+                            $j = $r->json();
+                            $v = isset($j['conversion_rate']) ? (float) $j['conversion_rate'] : 0.0;
+                            return $v;
+                        }
+                    } catch (\Throwable $e) {
+                        $errors[] = 'v6 pair EUR→' . $symbol . ': ' . $e->getMessage();
+                        // ignore
+                    }
+                    return 0.0;
+                };
+                $eurToTo = $getEurToV6($to);
+                $eurToFrom = $getEurToV6($from);
+                if ($eurToTo > 0 && $eurToFrom > 0) {
+                    $rate = $eurToTo / $eurToFrom;
+                    Cache::put($cacheKey, $rate, now()->addHours(6));
+                    return $memo[$cacheKey] = $rate;
+                }
+            }
+        }
+
+        // 4bis) Fallback local: fichier JSON de secours (resources/fx/rates.json)
+        try {
+            if ((microtime(true) - $start) < $budget) {
+                $path = resource_path('fx/rates.json');
+                if (is_file($path)) {
+                    $json = json_decode(file_get_contents($path), true);
+                    $base = strtoupper($json['base'] ?? 'XOF');
+                    $table = $json['rates'] ?? [];
+                    if ($base === $from && isset($table[$to]) && is_numeric($table[$to])) {
+                        $rate = (float) $table[$to];
+                        if ($rate > 0) {
+                            Cache::put($cacheKey, $rate, now()->addHours(6));
+                            Log::info('FX local fallback used', ['pair' => $from . '→' . $to, 'rate' => $rate]);
+                            return $memo[$cacheKey] = $rate;
+                        }
+                    } elseif ($base === 'XOF' && $from !== 'XOF') {
+                        // Si base XOF mais on demande p.ex EUR→USD, essayer via XOF pivot
+                        $toXof = isset($table[$from]) && (float)$table[$from] > 0 ? (float)$table[$from] : 0.0;
+                        $xofToTo = isset($table[$to]) && (float)$table[$to] > 0 ? (float)$table[$to] : 0.0;
+                        if ($toXof > 0 && $xofToTo > 0) {
+                            $rate = $xofToTo / $toXof;
+                            Cache::put($cacheKey, $rate, now()->addHours(6));
+                            Log::info('FX local fallback via pivot', ['pair' => $from . '→' . $to, 'rate' => $rate]);
+                            return $memo[$cacheKey] = $rate;
+                        }
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            $errors[] = 'local rates.json: ' . $e->getMessage();
+        }
+
+        // 5) Échec: mémoriser un échec court et laisser les vues tomber en XOF non converti
+        Cache::put($cacheKey, 0, now()->addMinutes(10));
+        // Loguer une fois toutes les 10 minutes par paire pour diagnostiquer (réseau / SSL / DNS)
+        $logKey = 'fxlog:' . $from . ':' . $to;
+        if (!Cache::has($logKey)) {
+            Log::warning('FX conversion failed; fallback to XOF', [
+                'pair' => $from . '→' . $to,
+                'elapsed' => round(microtime(true) - $start, 3) . 's',
+                'errors' => $errors,
+            ]);
+            Cache::put($logKey, 1, now()->addMinutes(10));
+        }
+        return $memo[$cacheKey] = null;
     }
 
     /**

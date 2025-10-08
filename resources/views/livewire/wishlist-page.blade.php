@@ -14,9 +14,13 @@
       $user = auth()->user();
       $userCurrency = $user && $user->currency ? $user->currency : 'XOF';
       $rate = app('App\\Livewire\\BookingManager')->getExchangeRate('XOF', $userCurrency);
-      $converted = $rate ? round($wishlist->property->price_per_night * $rate, 2) : $wishlist->property->price_per_night;
+      $basePrice = $wishlist->property->starting_price ?? $wishlist->property->price_per_night;
+      $displayCurrency = ($rate && $rate > 0) ? $userCurrency : 'XOF';
+      $converted = ($rate && $rate > 0 && $basePrice !== null) ? round($basePrice * $rate, 2) : $basePrice;
       @endphp
-      <p class="text-blue-600 dark:text-blue-300 font-bold mb-4">{{ number_format($converted, 2) }} {{ $userCurrency }} / nuit</p>
+      @if($basePrice !== null)
+      <p class="text-blue-600 dark:text-blue-300 font-bold mb-4">{{ number_format($converted, 2) }} {{ $displayCurrency }} / nuit</p>
+      @endif
       <button wire:click.stop="removeFromWishlist({{ $wishlist->id }})" class="mt-2 px-3 py-2 bg-pink-100 dark:bg-pink-900 hover:bg-pink-200 dark:hover:bg-pink-800 text-pink-600 dark:text-pink-200 rounded shadow flex items-center gap-2 self-end" title="Retirer de la liste de souhaits">
         <i class="fas fa-heart-broken"></i> Retirer
       </button>

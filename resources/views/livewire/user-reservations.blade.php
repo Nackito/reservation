@@ -54,10 +54,11 @@
                 $user = auth()->user();
                 $userCurrency = $user && $user->currency ? $user->currency : 'XOF';
                 $rate = app('App\\Livewire\\BookingManager')->getExchangeRate('XOF', $userCurrency);
-                $converted = $rate ? round($booking->total_price * $rate, 2) : $booking->total_price;
+                $displayCurrency = ($rate && $rate > 0) ? $userCurrency : 'XOF';
+                $converted = ($rate && $rate > 0 && $booking->total_price !== null) ? round($booking->total_price * $rate, 2) : $booking->total_price;
                 @endphp
                 <p class="text-gray-500 dark:text-gray-200 text-xs">
-                    {{ number_format($converted, 2) }} {{ $userCurrency }}
+                    {{ number_format($converted, 2) }} {{ $displayCurrency }}
                 </p>
                 <p class="text-gray-400 dark:text-gray-400 text-xs">Soumis le : {{ $booking->created_at }}</p>
                 <div class="mt-2 flex justify-between">

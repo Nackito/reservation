@@ -364,15 +364,16 @@
                         $userCurrency = $user && $user->currency ? $user->currency : 'XOF';
                         $rate = app('App\\Livewire\\BookingManager')->getExchangeRate('XOF', $userCurrency);
                         $basePrice = $property->starting_price ?? $property->price_per_night; // Utiliser le prix de départ pour les hôtels
-                        $converted = $rate && $basePrice !== null ? round($basePrice * $rate, 2) : $basePrice;
+                        $displayCurrency = ($rate && $rate > 0) ? $userCurrency : 'XOF';
+                        $converted = ($rate && $rate > 0 && $basePrice !== null) ? round($basePrice * $rate, 2) : $basePrice;
                         $isHotel = $property && $property->category && in_array($property->category->name, ['Hôtel','Hotel']);
                         @endphp
                         @if($basePrice !== null)
                         <p class="text-gray-600 dark:text-gray-200 text-right font-bold mt-5">
                             @if($isHotel)
-                            À partir de {{ number_format($converted, 2) }} {{ $userCurrency }} par nuit
+                            À partir de {{ number_format($converted, 2) }} {{ $displayCurrency }} par nuit
                             @else
-                            {{ number_format($converted, 2) }} {{ $userCurrency }} par nuit
+                            {{ number_format($converted, 2) }} {{ $displayCurrency }} par nuit
                             @endif
                         </p>
                         @endif
@@ -394,14 +395,15 @@
                 $userCurrency = $user && $user->currency ? $user->currency : 'XOF';
                 $rate = app('App\\Livewire\\BookingManager')->getExchangeRate('XOF', $userCurrency);
                 $basePrice = $property->starting_price ?? $property->price_per_night; // starting_price pour hôtel
-                $converted = $rate && $basePrice !== null ? round($basePrice * $rate, 2) : $basePrice;
+                $displayCurrency = ($rate && $rate > 0) ? $userCurrency : 'XOF';
+                $converted = ($rate && $rate > 0 && $basePrice !== null) ? round($basePrice * $rate, 2) : $basePrice;
                 $isHotel = $property && $property->category && in_array($property->category->name, ['Hôtel','Hotel']);
                 @endphp
                 @if($basePrice !== null)
                 @if($isHotel)
-                À partir de <span class="text-xl font-bold">{{ number_format($converted, 2) }} {{ $userCurrency }} par nuit</span>
+                À partir de <span class="text-xl font-bold">{{ number_format($converted, 2) }} {{ $displayCurrency }} par nuit</span>
                 @else
-                Vous pouvez disposez de ce logement à <span class="text-xl font-bold">{{ number_format($converted, 2) }} {{ $userCurrency }} par nuit</span>
+                Vous pouvez disposez de ce logement à <span class="text-xl font-bold">{{ number_format($converted, 2) }} {{ $displayCurrency }} par nuit</span>
                 @endif
                 @endif
             </p>
@@ -415,6 +417,7 @@
             $user = auth()->user();
             $userCurrency = $user && $user->currency ? $user->currency : 'XOF';
             $rate = app('App\\Livewire\\BookingManager')->getExchangeRate('XOF', $userCurrency);
+            $displayCurrency = ($rate && $rate > 0) ? $userCurrency : 'XOF';
             @endphp
             <div class="overflow-x-auto bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700">
                 <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -430,7 +433,7 @@
                         @foreach($property->roomTypes as $rt)
                         @php
                         $rtBasePrice = $rt->price_per_night;
-                        $rtConverted = $rate && $rtBasePrice !== null ? round($rtBasePrice * $rate, 2) : $rtBasePrice;
+                        $rtConverted = ($rate && $rate > 0 && $rtBasePrice !== null) ? round($rtBasePrice * $rate, 2) : $rtBasePrice;
                         // Disponibilité selon la plage de dates sélectionnée
                         $availabilityLabel = null;
                         $availableQty = null;
@@ -475,7 +478,7 @@
 
                                 <td class="px-4 py-3 text-sm text-gray-800 dark:text-gray-200">
                                     @if(!is_null($rtBasePrice))
-                                    {{ number_format($rtConverted, 2) }} {{ $userCurrency }}
+                                    {{ number_format($rtConverted, 2) }} {{ $displayCurrency }}
                                     @else
                                     <span class="text-gray-400">N/A</span>
                                     @endif

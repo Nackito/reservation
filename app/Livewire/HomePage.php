@@ -385,26 +385,28 @@ class HomePage extends Component
             ->whereNotNull('longitude')
             ->get();
 
-        // Préparer la devise utilisateur et un seul taux de change pour toute la série
+        // Préparer la devise utilisateur et un seul taux de change pour toute la série, avec fallback propre
         $user = Auth::user();
         $userCurrency = $user && $user->currency ? $user->currency : 'XOF';
+        $displayCurrency = 'XOF';
         $rate = 1.0;
         if ($userCurrency !== 'XOF') {
             try {
                 $rateSrv = app(\App\Livewire\BookingManager::class)->getExchangeRate('XOF', $userCurrency);
-                if ($rateSrv) {
+                if (is_numeric($rateSrv) && (float)$rateSrv > 0) {
                     $rate = (float) $rateSrv;
+                    $displayCurrency = $userCurrency;
                 }
             } catch (\Exception $e) {
-                $rate = 1.0; // fallback
+                // garde fallback XOF
             }
         }
 
         $markers = [];
         foreach ($allWithCoords as $p) {
             $base = (float) ($p->price_per_night ?? 0);
-            $converted = $rate ? round($base * $rate, 2) : $base;
-            $priceText = $base > 0 ? number_format($converted, 2) . ' ' . $userCurrency : null;
+            $converted = round($base * $rate, 2);
+            $priceText = $base > 0 ? number_format($converted, 2) . ' ' . $displayCurrency : null;
             $markers[] = [
                 'lat' => (float) $p->latitude,
                 'lng' => (float) $p->longitude,

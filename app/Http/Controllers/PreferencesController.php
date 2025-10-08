@@ -12,22 +12,16 @@ class PreferencesController extends Controller
   {
     $user = Auth::user();
     $current = $user?->currency ?? 'XOF';
-    $currencies = [
-      'XOF' => 'Franc CFA (XOF)',
-      'EUR' => 'Euro (EUR)',
-      'USD' => 'US Dollar (USD)',
-      'XAF' => 'Franc CFA (XAF)',
-      'NGN' => 'Naira (NGN)',
-      'GHS' => 'Ghana Cedi (GHS)',
-    ];
+    $currencies = config('currency.labels');
     return view('preferences.currency', compact('current', 'currencies'));
   }
 
   // POST: mise à jour de la devise
   public function updateCurrency(Request $request)
   {
+    $supported = implode(',', config('currency.supported'));
     $validated = $request->validate([
-      'currency' => 'required|in:XOF,EUR,USD,XAF,NGN,GHS',
+      'currency' => "required|in:$supported",
     ]);
 
     $user = Auth::user();

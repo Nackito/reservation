@@ -12,14 +12,15 @@
         $user = auth()->user();
         $userCurrency = $user && $user->currency ? $user->currency : 'XOF';
         $rate = app('App\\Livewire\\BookingManager')->getExchangeRate('XOF', $userCurrency);
-        $converted = $rate && $basePrice !== null ? round($basePrice * $rate, 2) : $basePrice;
+        $displayCurrency = ($rate && $rate > 0) ? $userCurrency : 'XOF';
+        $converted = ($rate && $rate > 0 && $basePrice !== null) ? round($basePrice * $rate, 2) : $basePrice;
         @endphp
-        @if(!is_null($converted))
+        @if(!is_null($basePrice))
         <p>
           @if($isHotel)
-          À partir du prix de la chambre la moins chère: {{ number_format($converted, 2) }} {{ $userCurrency }} / nuit
+          À partir de {{ number_format($converted, 2) }} {{ $displayCurrency }} / nuit
           @else
-          {{ number_format($converted, 2) }} {{ $userCurrency }} par nuit
+          {{ number_format($converted, 2) }} {{ $displayCurrency }} / nuit
           @endif
         </p>
         @endif

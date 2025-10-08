@@ -49,8 +49,9 @@ Route::middleware(['auth'])->get('/security-settings', App\Livewire\SecuritySett
 
 // Route unique pour mettre à jour toutes les préférences utilisateur
 Route::middleware(['auth'])->post('/user/preferences', function (\Illuminate\Http\Request $request) {
+    $supported = implode(',', config('currency.supported'));
     $request->validate([
-        'currency' => 'required|string|in:EUR,USD,XOF,GBP,CAD',
+        'currency' => "required|string|in:$supported",
         'locale' => 'required|string|in:fr,en,es,de,pt',
         'theme' => 'required|string|in:light,dark,system',
     ]);

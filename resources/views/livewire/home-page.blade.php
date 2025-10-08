@@ -1123,15 +1123,16 @@
                                     $userCurrency = $user && $user->currency ? $user->currency : 'XOF';
                                     $rate = app('App\\Livewire\\BookingManager')->getExchangeRate('XOF', $userCurrency);
                                     $basePrice = $property->starting_price ?? $property->price_per_night;
-                                    $converted = $rate && $basePrice !== null ? round($basePrice * $rate, 2) : $basePrice;
+                                    $displayCurrency = ($rate && $rate > 0) ? $userCurrency : 'XOF';
+                                    $converted = ($rate && $rate > 0 && $basePrice !== null) ? round($basePrice * $rate, 2) : $basePrice;
                                     $isHotel = $property && $property->category && in_array($property->category->name, ['Hôtel','Hotel']);
                                     @endphp
                                     @if($basePrice !== null)
                                     <span class="text-lg font-bold text-blue-600 dark:text-blue-400">
                                         @if($isHotel)
-                                        À partir de {{ number_format($converted, 2) }} {{ $userCurrency }}/nuit
+                                        À partir de {{ number_format($converted, 2) }} {{ $displayCurrency }}/nuit
                                         @else
-                                        {{ number_format($converted, 2) }} {{ $userCurrency }}/nuit
+                                        {{ number_format($converted, 2) }} {{ $displayCurrency }}/nuit
                                         @endif
                                     </span>
                                     @endif
@@ -1328,15 +1329,16 @@
                                     $userCurrency = $user && $user->currency ? $user->currency : 'XOF';
                                     $rate = app('App\\Livewire\\BookingManager')->getExchangeRate('XOF', $userCurrency);
                                     $basePrice = $property->starting_price ?? $property->price_per_night;
-                                    $converted = $rate && $basePrice !== null ? round($basePrice * $rate, 2) : $basePrice;
+                                    $displayCurrency = ($rate && $rate > 0) ? $userCurrency : 'XOF';
+                                    $converted = ($rate && $rate > 0 && $basePrice !== null) ? round($basePrice * $rate, 2) : $basePrice;
                                     $isHotel = $property && $property->category && in_array($property->category->name, ['Hôtel','Hotel']);
                                     @endphp
                                     @if($basePrice !== null)
                                     <span class="text-lg font-bold text-blue-600">
                                         @if($isHotel)
-                                        À partir de {{ number_format($converted, 2) }} {{ $userCurrency }} / nuit
+                                        À partir de {{ number_format($converted, 2) }} {{ $displayCurrency }} / nuit
                                         @else
-                                        {{ number_format($converted, 2) }} {{ $userCurrency }} / nuit
+                                        {{ number_format($converted, 2) }} {{ $displayCurrency }} / nuit
                                         @endif
                                     </span>
                                     @endif
@@ -1677,15 +1679,16 @@
                                 $userCurrency = $user && $user->currency ? $user->currency : 'XOF';
                                 $rate = app('App\\Livewire\\BookingManager')->getExchangeRate('XOF', $userCurrency);
                                 $basePrice = $property->starting_price ?? $property->price_per_night;
-                                $converted = $rate && $basePrice !== null ? round($basePrice * $rate, 2) : $basePrice;
+                                $displayCurrency = ($rate && $rate > 0) ? $userCurrency : 'XOF';
+                                $converted = ($rate && $rate > 0 && $basePrice !== null) ? round($basePrice * $rate, 2) : $basePrice;
                                 $isHotel = $property && $property->category && in_array($property->category->name, ['Hôtel','Hotel']);
                                 @endphp
                                 @if($basePrice !== null)
                                 <span class="text-lg font-bold text-blue-600 dark:text-blue-400">
                                     @if($isHotel)
-                                    À partir de {{ number_format($converted, 2) }} {{ $userCurrency }}/nuit
+                                    À partir de {{ number_format($converted, 2) }} {{ $displayCurrency }}/nuit
                                     @else
-                                    {{ number_format($converted, 2) }} {{ $userCurrency }}/nuit
+                                    {{ number_format($converted, 2) }} {{ $displayCurrency }}/nuit
                                     @endif
                                 </span>
                                 @endif

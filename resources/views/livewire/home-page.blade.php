@@ -961,13 +961,25 @@
                         ->whereDate('start_date', '<=', now())
                             ->whereDate('end_date', '>=', now())
                             ->exists();
+                            // Afficher le badge uniquement pour Résidence meublée (catégorie id = 2)
+                            $catId = (int) ($property->category_id ?? 0);
+                            $catName = $property->category->name ?? null;
+                            $normalized = $catName ? mb_strtolower($catName) : null;
+                            $isResidenceMeublee = ($catId === 2) || ($normalized && in_array($normalized, [
+                            'résidence meublée',
+                            'residence meublée',
+                            'residence meublee',
+                            'résidence meublee',
+                            ]));
                             @endphp
+                            @if($isResidenceMeublee)
                             <div class="absolute top-3 left-3 z-10">
                                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold {{ $isOccupied ? 'bg-gray-200 text-gray-700' : 'bg-green-100 text-green-800' }}">
                                     <i class="fas {{ $isOccupied ? 'fa-lock' : 'fa-unlock' }} mr-1"></i>
                                     {{ $isOccupied ? 'Occupé' : 'Disponible' }}
                                 </span>
                             </div>
+                            @endif
                             {{-- Image de la propriété avec lien : première image ou image par défaut --}}
                             <a href="{{ route('booking-manager', ['propertyId' => $property->id]) }}"
                                 class="block"
@@ -1172,13 +1184,24 @@
                         ->whereDate('start_date', '<=', now())
                             ->whereDate('end_date', '>=', now())
                             ->exists();
+                            $catId = (int) ($property->category_id ?? 0);
+                            $catName = $property->category->name ?? null;
+                            $normalized = $catName ? mb_strtolower($catName) : null;
+                            $isResidenceMeublee = ($catId === 2) || ($normalized && in_array($normalized, [
+                            'résidence meublée',
+                            'residence meublée',
+                            'residence meublee',
+                            'résidence meublee',
+                            ]));
                             @endphp
+                            @if($isResidenceMeublee)
                             <div class="absolute top-3 left-3 z-10">
                                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold {{ $isOccupied ? 'bg-gray-200 text-gray-700' : 'bg-green-100 text-green-800' }}">
                                     <i class="fas {{ $isOccupied ? 'fa-lock' : 'fa-unlock' }} mr-1"></i>
                                     {{ $isOccupied ? 'Occupé' : 'Disponible' }}
                                 </span>
                             </div>
+                            @endif
 
                             {{-- Container d'image avec lazy loading et lien vers booking --}}
                             <div class="relative overflow-hidden">
@@ -1487,11 +1510,22 @@
                             ->whereDate('start_date', '<=', now())
                                 ->whereDate('end_date', '>=', now())
                                 ->exists();
+                                $catId = (int) ($property->category_id ?? 0);
+                                $catName = $property->category->name ?? null;
+                                $normalized = $catName ? mb_strtolower($catName) : null;
+                                $isResidenceMeublee = ($catId === 2) || ($normalized && in_array($normalized, [
+                                'résidence meublée',
+                                'residence meublée',
+                                'residence meublee',
+                                'résidence meublee',
+                                ]));
                                 @endphp
+                                @if($isResidenceMeublee)
                                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold {{ $isOccupied ? 'bg-gray-200 text-gray-700' : 'bg-green-100 text-green-800' }}">
                                     <i class="fas {{ $isOccupied ? 'fa-lock' : 'fa-unlock' }} mr-1"></i>
                                     {{ $isOccupied ? 'Occupé' : 'Disponible' }}
                                 </span>
+                                @endif
                         </div>
 
                         {{-- Bouton wishlist (j'aime) --}}

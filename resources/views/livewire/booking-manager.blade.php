@@ -4,23 +4,39 @@
     ->whereDate('start_date', '<=', now())
         ->whereDate('end_date', '>=', now())
         ->exists();
+        // Afficher uniquement pour les résidences meublées (catégorie id = 2) – robuste (id ou nom)
+        $isResidenceMeublee = false;
+        if ($property) {
+        $catId = (int) ($property->category_id ?? 0);
+        $catName = $property->category->name ?? null;
+        $normalized = $catName ? mb_strtolower($catName) : null;
+        $isResidenceMeublee = ($catId === 2)
+        || ($normalized && in_array($normalized, [
+        'résidence meublée',
+        'residence meublée',
+        'residence meublee',
+        'résidence meublee',
+        ]));
+        }
         @endphp
 
-        @if($isOccupied)
+        @if($isResidenceMeublee && $isOccupied)
         <div class="mb-4 p-3 bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 rounded text-center">
             Ce bien est actuellement <span class="font-semibold">occupé</span>. Vous pouvez essayer de réserver à une autre date.
         </div>
         @endif
         <!-- Début du composant Livewire : tout est enveloppé dans ce div racine -->
         <div class="container mx-auto py-8">
-            {{-- Statut de la propriété --}}
-            {{-- $isOccupied est déjà défini en haut du fichier --}}
+            {{-- Statut de la propriété (affiché uniquement pour Résidence meublée) --}}
+            {{-- $isOccupied et $isResidenceMeublee sont définis en haut du fichier --}}
+            @if($isResidenceMeublee)
             <div class="mb-4">
                 <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold {{ $isOccupied ? 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200' : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' }}">
                     <i class="fas {{ $isOccupied ? 'fa-lock' : 'fa-unlock' }} mr-2"></i>
                     {{ $isOccupied ? 'Occupé' : 'Disponible' }}
                 </span>
             </div>
+            @endif
 
             <form wire:submit.prevent="addBooking" class="mb-4 hidden md:block">
                 <div class="flex mt-4 flex-col sm:flex-row gap-2 sm:gap-3 items-center bg-white rounded-lg p-2 dark:bg-gray-800">
@@ -442,7 +458,7 @@
                             }
                             }
                             @endphp
-                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer" onclick="toggleRoomTypeDetails('rt-{{ $rt->id }}')">
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer" onclick="toggleRoomTypeDetails('rt-{{ $rt->id }}')" data-rt-id="{{ $rt->id }}" data-rt-images='@json($rt->images ?? [])'>
                                 <td class="px-4 py-3 text-sm text-gray-800 dark:text-gray-200 font-medium">{{ $rt->name }}</td>
                                 <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
                                     <span class="inline-flex items-center gap-1" aria-label="{{ $rt->capacity }} personne{{ $rt->capacity > 1 ? 's' : '' }}">
@@ -486,7 +502,7 @@
                                             <div class="grid grid-cols-3 gap-2">
                                                 @if(is_array($rt->images) && count($rt->images))
                                                 @foreach(array_slice($rt->images, 0, 6) as $img)
-                                                <img src="{{ asset('storage/' . ltrim($img, '/')) }}" alt="{{ $rt->name }}" class="w-full h-16 object-cover rounded border border-gray-200 dark:border-gray-700" />
+                                                <img src="{{ asset('storage/' . ltrim($img, '/')) }}" alt="{{ $rt->name }}" class="w-full h-16 object-cover rounded border border-gray-200 dark:border-gray-700 cursor-pointer" onclick="openRoomTypeGallery({{ $rt->id }}, {{ $loop->index }})" />
                                                 @endforeach
                                                 @else
                                                 <span class="text-sm text-gray-400">Aucune image</span>
@@ -510,6 +526,84 @@
             </script>
         </div>
         @endif
+
+        <!-- Modal galerie pour types de chambre -->
+        <div id="roomTypeGalleryModal" class="fixed inset-0 z-50 hidden bg-black bg-opacity-75 flex items-center justify-center">
+            <div class="relative bg-white dark:bg-gray-900 rounded-lg shadow-lg w-11/12 lg:w-3/4 max-h-screen overflow-hidden">
+                <button class="absolute top-2 right-2 text-gray-500 hover:text-gray-700" onclick="closeRoomTypeGallery()">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+                <div class="p-4">
+                    <div class="swiper swiper-container rtSwiper">
+                        <div class="swiper-wrapper" id="rt-swiper-wrapper"></div>
+                        <div class="swiper-button-prev"></div>
+                        <div class="swiper-button-next"></div>
+                        <div class="swiper-pagination"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            window.openRoomTypeGallery = function(roomTypeId, startIndex = 0) {
+                const modal = document.getElementById('roomTypeGalleryModal');
+                const wrapper = document.getElementById('rt-swiper-wrapper');
+                if (!modal || !wrapper) return;
+                // Trouver la ligne avec les data-attributes
+                const row = document.querySelector(`tr[data-rt-id="${roomTypeId}"]`);
+                if (!row) return;
+                let images = [];
+                try {
+                    const data = row.getAttribute('data-rt-images');
+                    images = data ? JSON.parse(data) : [];
+                } catch (e) {
+                    images = [];
+                }
+                // Nettoyage
+                wrapper.innerHTML = '';
+                // Peupler
+                (images || []).forEach((img) => {
+                    const src = (img || '').replace(/^\/+/, '');
+                    const slide = document.createElement('div');
+                    slide.className = 'swiper-slide flex items-center justify-center';
+                    slide.innerHTML = `<img src="${window.location.origin}/storage/${src}" class="max-h-[70vh] w-auto object-contain rounded-lg" alt="RoomType Image" />`;
+                    wrapper.appendChild(slide);
+                });
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    // Détruire instance précédente si besoin
+                    if (window.rtSwiper && typeof window.rtSwiper.destroy === 'function') {
+                        window.rtSwiper.destroy(true, true);
+                        window.rtSwiper = null;
+                    }
+                    window.rtSwiper = new Swiper('#roomTypeGalleryModal .rtSwiper', {
+                        spaceBetween: 10,
+                        loop: false,
+                        navigation: {
+                            nextEl: '#roomTypeGalleryModal .swiper-button-next',
+                            prevEl: '#roomTypeGalleryModal .swiper-button-prev',
+                        },
+                        pagination: {
+                            el: '#roomTypeGalleryModal .swiper-pagination',
+                            clickable: true,
+                        },
+                    });
+                    if (typeof startIndex === 'number' && startIndex >= 0) {
+                        try {
+                            window.rtSwiper.slideTo(startIndex, 0);
+                        } catch (_) {}
+                    }
+                }, 0);
+            };
+
+            window.closeRoomTypeGallery = function() {
+                const modal = document.getElementById('roomTypeGalleryModal');
+                if (!modal) return;
+                modal.classList.add('hidden');
+            };
+        </script>
 
         <div id="photoGalleryModal" class="fixed inset-0 z-50 hidden bg-black bg-opacity-75 flex items-center justify-center">
             <div class="relative bg-white dark:bg-gray-900 rounded-lg shadow-lg w-11/12 lg:w-3/4 max-h-screen overflow-hidden">
@@ -646,9 +740,7 @@
             @endif
         </div>
         <script id="occupied-dates" type="application/json">
-            {
-                !!json_encode($occupiedDates ?? []) !!
-            }
+            @json($occupiedDates ?? [])
         </script>
         <script>
             (function() {

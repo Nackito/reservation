@@ -102,4 +102,9 @@ class RoomTypeResource extends Resource
             'edit' => Pages\EditRoomType::route('/{record}/edit'),
         ];
     }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
+    }
 }

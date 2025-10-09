@@ -23,7 +23,7 @@ class ReviewResource extends Resource
 
     protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-tag';
 
-    protected static ?string $navigationLabel = 'Avis';
+    protected static ?string $navigationLabel = 'Reviews';
 
     protected static ?string $pluralLabel = 'Avis';
 

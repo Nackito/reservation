@@ -19,11 +19,13 @@
 <div>
     {{-- Section de bienvenue avec image d'arrière-plan --}}
     <div class="welcome-section relative bg-cover bg-center bg-no-repeat text-white dark:text-white" style="--welcome-bg: url('{{ asset('images/welcome-bg.jpg') }}')">
-        <div class="container mx-auto py-16 px-4">
+        <!-- Overlay pour améliorer le contraste du texte sur fonds clairs -->
+        <div class="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/10"></div>
+        <div class="container mx-auto py-16 px-4 relative z-10">
             {{-- Titre et sous-titre de bienvenue --}}
             <div class="text-center mb-8">
-                <h1 class="text-4xl font-bold mb-4">Bienvenue sur Afridayz</h1>
-                <p class="text-xl text-blue-100">Trouvez la propriété idéale pour votre séjour en Côte d'Ivoire</p>
+                <h1 class="text-4xl font-bold mb-4 drop-shadow-md">Bienvenue sur Afridayz</h1>
+                <p class="text-xl md:text-2xl text-white font-semibold drop-shadow-md">Trouvez la propriété idéale pour votre séjour en Côte d'Ivoire</p>
             </div>
 
             {{--

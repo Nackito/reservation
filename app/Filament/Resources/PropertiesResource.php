@@ -243,6 +243,10 @@ class PropertiesResource extends Resource
                     ->label('Owner')
                     ->relationship('user', 'name')
                     ->searchable(),
+                Tables\Filters\SelectFilter::make('category_id')
+                    ->label('Catégorie')
+                    ->relationship('category', 'name')
+                    ->searchable(),
                 Tables\Filters\SelectFilter::make('status')
                     ->options([
                         'available' => 'Available',

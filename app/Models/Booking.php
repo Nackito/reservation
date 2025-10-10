@@ -37,6 +37,10 @@ class Booking extends Model
             $this->payment_transaction_id = $txId;
         }
         $this->paid_at = now();
+        // Si la réservation n'est pas encore marquée comme acceptée, on l'accepte automatiquement
+        if (!in_array($this->status, ['accepted', 'canceled'], true)) {
+            $this->status = 'accepted';
+        }
         $this->save();
     }
 

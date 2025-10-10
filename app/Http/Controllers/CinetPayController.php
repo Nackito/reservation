@@ -13,6 +13,7 @@ use App\Services\Admin\BookingActionHelper;
 
 class CinetPayController extends Controller
 {
+  private const NOT_FOUND_MSG = 'Réservation introuvable';
   // Helpers privés
   private function extractTxId(array $payload): ?string
   {
@@ -152,7 +153,7 @@ class CinetPayController extends Controller
                   Log::warning('Conflit de paiements (notify) non traité', ['err' => $e->getMessage()]);
                 }
                 $amountFmt = is_numeric($booking->total_price) ? number_format($booking->total_price, 0, ',', ' ') : (string)$booking->total_price;
-                $msg = "Paiement confirmé. Nous avons bien reçu {$amountFmt} FrCFA pour votre réservation. Merci !";
+                $msg = "Paiement confirmé. Nous avons bien reçu {$amountFmt} FrCFA pour votre réservation. Réf: {$txId}. Merci !";
                 $this->sendPaymentMessageToConversation($booking, $msg);
 
                 // Emails d'information
@@ -232,7 +233,7 @@ class CinetPayController extends Controller
             Log::warning('Conflit de paiements (return) non traité', ['err' => $e->getMessage()]);
           }
           $amountFmt = is_numeric($booking->total_price) ? number_format($booking->total_price, 0, ',', ' ') : (string)$booking->total_price;
-          $msg = "Paiement confirmé. Nous avons bien reçu {$amountFmt} FrCFA pour votre réservation. Merci !";
+          $msg = "Paiement confirmé. Nous avons bien reçu {$amountFmt} FrCFA pour votre réservation. Réf: {$txId}. Merci !";
           $this->sendPaymentMessageToConversation($booking, $msg);
 
           try {
@@ -272,5 +273,115 @@ class CinetPayController extends Controller
     return redirect()->route('user-reservations')->with('status', $statusLabel);
   }
 
-  // Méthodes de simulation retirées
+  // --- Simulation de paiement (pour tests et démo) ---
+  public function simulateSuccess(Request $request)
+  {
+    if (!config('cinetpay.simulation_enabled')) {
+      abort(404);
+    }
+    $txId = $request->input('transaction_id');
+    $bookingId = $request->input('booking_id');
+    $booking = $this->findBookingByTxId($txId);
+    if (!$booking && $bookingId) {
+      $booking = \App\Models\Booking::find((int) $bookingId);
+      if ($booking && !$txId) {
+        $txId = 'BK-' . $booking->id . '-' . now()->timestamp;
+      }
+    }
+    if (!$booking) {
+      return response()->json(['ok' => false, 'message' => self::NOT_FOUND_MSG], 404);
+    }
+    if ($booking->payment_status !== 'paid') {
+      $booking->markAsPaid($txId ?? ('BK-' . $booking->id . '-' . now()->timestamp));
+      try {
+        \App\Services\Admin\BookingActionHelper::handlePaymentConflictsForOthers($booking);
+      } catch (\Throwable $e) { /* ignore */
+      }
+      $amountFmt = is_numeric($booking->total_price) ? number_format($booking->total_price, 0, ',', ' ') : (string)$booking->total_price;
+      $tx = $booking->payment_transaction_id ?: ($txId ?? '');
+      $this->sendPaymentMessageToConversation($booking, "Paiement confirmé (simulation). Nous avons bien reçu {$amountFmt} FrCFA. Réf: {$tx}");
+      // Emails de confirmation
+      try {
+        $user = $booking->user;
+        if ($user && $user->email) {
+          \Illuminate\Support\Facades\Mail::raw(
+            "Votre paiement (simulation) a été confirmé. Montant: {$amountFmt} FrCFA. Référence: {$tx}.",
+            function ($m) use ($user, $booking) {
+              $m->to($user->email)->subject('Paiement confirmé (simulation) - Réservation #' . $booking->id);
+            }
+          );
+        }
+        $adminMail = config('mail.admin_email') ?? env('MAIL_ADMIN_EMAIL');
+        if ($adminMail) {
+          \Illuminate\Support\Facades\Mail::raw(
+            'Paiement simulé confirmé pour la réservation #' . $booking->id . ' (tx: ' . ($booking->payment_transaction_id ?: '') . ')',
+            function ($m) use ($adminMail) {
+              $m->to($adminMail)->subject('Paiement confirmé (simulation) - Réservation');
+            }
+          );
+        }
+      } catch (\Throwable $e) {
+        Log::warning('Email post-paiement simulation non envoyé', ['err' => $e->getMessage()]);
+      }
+    }
+    $this->auditPayment($booking, $txId ?? ('BK-' . $booking->id), 'SIMULATED_SUCCESS', 'simulate', null, [
+      'payload' => $request->all(),
+      'headers' => ['user-agent' => $request->header('user-agent')],
+      'ip' => $request->ip(),
+    ]);
+    return response()->json(['ok' => true, 'status' => 'paid']);
+  }
+
+  public function simulateFail(Request $request)
+  {
+    if (!config('cinetpay.simulation_enabled')) {
+      abort(404);
+    }
+    $txId = $request->input('transaction_id');
+    $bookingId = $request->input('booking_id');
+    $booking = $this->findBookingByTxId($txId);
+    if (!$booking && $bookingId) {
+      $booking = \App\Models\Booking::find((int) $bookingId);
+      if ($booking && !$txId) {
+        $txId = 'BK-' . $booking->id . '-' . now()->timestamp;
+      }
+    }
+    if (!$booking) {
+      return response()->json(['ok' => false, 'message' => self::NOT_FOUND_MSG], 404);
+    }
+    $booking->payment_status = 'failed';
+    $booking->save();
+    $this->auditPayment($booking, $txId ?? ('BK-' . $booking->id), 'SIMULATED_FAILED', 'simulate', null, [
+      'payload' => $request->all(),
+      'headers' => ['user-agent' => $request->header('user-agent')],
+      'ip' => $request->ip(),
+    ]);
+    return response()->json(['ok' => true, 'status' => 'failed']);
+  }
+
+  public function simulateCancel(Request $request)
+  {
+    if (!config('cinetpay.simulation_enabled')) {
+      abort(404);
+    }
+    $txId = $request->input('transaction_id');
+    $bookingId = $request->input('booking_id');
+    $booking = $this->findBookingByTxId($txId);
+    if (!$booking && $bookingId) {
+      $booking = \App\Models\Booking::find((int) $bookingId);
+      if ($booking && !$txId) {
+        $txId = 'BK-' . $booking->id . '-' . now()->timestamp;
+      }
+    }
+    if (!$booking) {
+      return response()->json(['ok' => false, 'message' => self::NOT_FOUND_MSG], 404);
+    }
+    // On ne change pas le statut paid/failed, juste trace l'annulation
+    $this->auditPayment($booking, $txId ?? ('BK-' . $booking->id), 'SIMULATED_CANCELED', 'simulate', null, [
+      'payload' => $request->all(),
+      'headers' => ['user-agent' => $request->header('user-agent')],
+      'ip' => $request->ip(),
+    ]);
+    return response()->json(['ok' => true, 'status' => 'canceled']);
+  }
 }

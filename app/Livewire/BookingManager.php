@@ -424,32 +424,30 @@ class BookingManager extends Component
 
         $isHotel = $this->property->category && in_array($this->property->category->name, ['Hôtel', 'Hotel']);
 
-        // Si c'est un hôtel et un type de chambre est sélectionné, on calcule les dates où ce type est saturé
+        // Si c'est un hôtel et un type de chambre est sélectionné, on grise toutes les dates
+        // couvertes par des réservations de ce type de chambre (accepted OU paid)
         if ($isHotel && $this->selectedRoomTypeId) {
             $roomType = $this->property->roomTypes->firstWhere('id', (int) $this->selectedRoomTypeId);
             if (!$roomType) {
                 return [];
             }
 
-            $inventory = max(0, (int) $roomType->inventory);
-            if ($inventory <= 0) {
-                // Aucun stock: toutes les dates deviennent grisées? On retourne vide pour ne pas bloquer toute l'année.
-                return [];
-            }
-
-            // Récupérer toutes les réservations acceptées pour ce room type
+            // Récupérer toutes les réservations acceptées OU payées pour ce room type
             $bookings = \App\Models\Booking::query()
                 ->where('property_id', $this->property->id)
                 ->where('room_type_id', $roomType->id)
-                ->where('status', 'accepted')
-                ->get(['start_date', 'end_date', 'quantity']);
+                ->where(function ($q) {
+                    $q->where('status', 'accepted')
+                        ->orWhere('payment_status', 'paid');
+                })
+                ->get(['start_date', 'end_date']);
 
             if ($bookings->isEmpty()) {
                 return [];
             }
 
-            // Construire un compteur par jour: somme des quantities par date
-            $counts = [];
+            // Union de toutes les dates couvertes par ces réservations
+            $dates = [];
             foreach ($bookings as $b) {
                 $period = new \DatePeriod(
                     new \DateTime($b->start_date),
@@ -457,25 +455,20 @@ class BookingManager extends Component
                     (new \DateTime($b->end_date))->modify('+1 day')
                 );
                 foreach ($period as $date) {
-                    $key = $date->format('Y-m-d');
-                    $counts[$key] = ($counts[$key] ?? 0) + (int) $b->quantity;
+                    $dates[] = $date->format('Y-m-d');
                 }
             }
-
-            // Dates saturées = somme >= inventaire
-            $occupied = [];
-            foreach ($counts as $d => $sum) {
-                if ($sum >= $inventory) {
-                    $occupied[] = $d;
-                }
-            }
-            sort($occupied);
-            return $occupied;
+            $dates = array_values(array_unique($dates));
+            sort($dates);
+            return $dates;
         }
 
         // Sinon: fallback occupation globale de la propriété (résidences meublées etc.)
         $bookings = $this->property->bookings()
-            ->where('status', 'accepted')
+            ->where(function ($q) {
+                $q->where('status', 'accepted')
+                    ->orWhere('payment_status', 'paid');
+            })
             ->get(['start_date', 'end_date']);
         $dates = [];
         foreach ($bookings as $booking) {
@@ -489,6 +482,13 @@ class BookingManager extends Component
             }
         }
         return array_values(array_unique($dates));
+    }
+
+    // Rafraîchir le calendrier quand le type de chambre change
+    public function updatedSelectedRoomTypeId($value = null): void
+    {
+        // Déclenche un événement navigateur pour que le JS relise le JSON et mette à jour Flatpickr
+        $this->dispatch('occupied-dates-updated');
     }
 
     public function calculateTotalPrice()
@@ -568,10 +568,14 @@ class BookingManager extends Component
                 $this->addError('selectedRoomTypeId', 'Type de chambre introuvable.');
                 return;
             }
-            // Somme des quantités réservées qui se chevauchent sur la période, statut accepté
+            // Somme des quantités réservées qui se chevauchent sur la période,
+            // soit déjà acceptées, soit déjà payées
             $overlap = Booking::where('property_id', $property->id)
                 ->where('room_type_id', $roomType->id)
-                ->where('status', 'accepted')
+                ->where(function ($q) {
+                    $q->where('status', 'accepted')
+                        ->orWhere('payment_status', 'paid');
+                })
                 ->where(function ($q) {
                     $q->whereBetween('start_date', [$this->checkInDate, $this->checkOutDate])
                         ->orWhereBetween('end_date', [$this->checkInDate, $this->checkOutDate])
@@ -584,6 +588,27 @@ class BookingManager extends Component
             $requested = max(1, (int) $this->quantity);
             if (($overlap + $requested) > (int) $roomType->inventory) {
                 $this->addError('quantity', 'La quantité demandée dépasse la disponibilité pour ces dates.');
+                return;
+            }
+        }
+        // Sinon, résidences meublées: empêcher toute réservation qui chevauche une réservation acceptée ou payée
+        if (!$isHotel) {
+            $existsOverlap = Booking::where('property_id', $property->id)
+                ->where(function ($q) {
+                    $q->where('status', 'accepted')
+                        ->orWhere('payment_status', 'paid');
+                })
+                ->where(function ($q) {
+                    $q->whereBetween('start_date', [$this->checkInDate, $this->checkOutDate])
+                        ->orWhereBetween('end_date', [$this->checkInDate, $this->checkOutDate])
+                        ->orWhere(function ($q2) {
+                            $q2->where('start_date', '<=', $this->checkInDate)
+                                ->where('end_date', '>=', $this->checkOutDate);
+                        });
+                })
+                ->exists();
+            if ($existsOverlap) {
+                $this->addError('dateRange', 'Ces dates sont déjà réservées. Veuillez choisir une autre période.');
                 return;
             }
         }

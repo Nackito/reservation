@@ -1,6 +1,10 @@
 <div>
     @php
-    $isOccupied = $property && $property->bookings()->where('status', 'accepted')
+    $isOccupied = $property && $property->bookings()
+    ->where(function($q){
+    $q->where('status','accepted')
+    ->orWhere('payment_status','paid');
+    })
     ->whereDate('start_date', '<=', now())
         ->whereDate('end_date', '>=', now())
         ->exists();
@@ -48,13 +52,6 @@
                             placeholder="Nom de l'établissement">
                     </div>
 
-                    <div class="w-full">
-                        <input type="text" wire:model.defer="dateRange" id="ReservationDateRange" class="py-3 px-4 block w-full border border-blue-400 bg-white text-gray-900 placeholder-gray-500 rounded-lg text-sm
-                    focus:border-blue-600 focus:ring-blue-500 disabled:opacity-50
-                    disabled:pointer-events-none dark:bg-gray-900 dark:border-blue-700 dark:text-gray-100 dark:placeholder-gray-400 dark:focus:ring-blue-400" placeholder="Choisissez vos dates (arrivée - départ)">
-                        @error('dateRange') <span class="text-red-500">{{ $message }}</span> @enderror
-                    </div>
-
                     @if($property && $property->category && in_array($property->category->name, ['Hôtel','Hotel']))
                     <div class="w-full">
                         <select wire:model="selectedRoomTypeId" class="py-3 px-4 block w-full border border-blue-400 bg-white text-gray-900 rounded-lg text-sm dark:bg-gray-900 dark:border-blue-700 dark:text-gray-100">
@@ -69,11 +66,13 @@
                         </select>
                         @error('selectedRoomTypeId') <span class="text-red-500">{{ $message }}</span> @enderror
                     </div>
-                    <div class="w-40">
-                        <input type="number" wire:model="quantity" min="1" class="py-3 px-4 block w-full border border-blue-400 bg-white text-gray-900 rounded-lg text-sm dark:bg-gray-900 dark:border-blue-700 dark:text-gray-100">
-                        @error('quantity') <span class="text-red-500">{{ $message }}</span> @enderror
-                    </div>
                     @endif
+                    <div class="w-full">
+                        <input type="text" wire:model.defer="dateRange" id="ReservationDateRange" class="py-3 px-4 block w-full border border-blue-400 bg-white text-gray-900 placeholder-gray-500 rounded-lg text-sm
+                    focus:border-blue-600 focus:ring-blue-500 disabled:opacity-50
+                    disabled:pointer-events-none dark:bg-gray-900 dark:border-blue-700 dark:text-gray-100 dark:placeholder-gray-400 dark:focus:ring-blue-400" placeholder="Choisissez vos dates (arrivée - départ)">
+                        @error('dateRange') <span class="text-red-500">{{ $message }}</span> @enderror
+                    </div>
                     @if(Auth::check())
                     <button type="submit" wire:submit.prevent="addBooking" id="confirm-booking" class="bg-blue-500 text-white py-2 px-4 rounded">
                         Confirmer
@@ -705,13 +704,6 @@
                     placeholder="Nom de l'établissement">
             </div>
 
-            <div class="w-full">
-                <input type="text" wire:model.defer="dateRange" id="ReservationDateRange2" class="py-3 px-4 block w-full border border-blue-400 bg-white text-gray-900 placeholder-gray-500 rounded-lg text-sm cursor-pointer
-                    focus:border-blue-600 focus:ring-blue-500 disabled:opacity-50
-                    disabled:pointer-events-none dark:bg-gray-900 dark:border-blue-700 dark:text-gray-100 dark:placeholder-gray-400 dark:focus:ring-blue-400" placeholder="Choisissez vos dates (arrivée - départ)">
-                @error('dateRange') <span class="text-red-500">{{ $message }}</span> @enderror
-            </div>
-
             @if($property && $property->category && in_array($property->category->name, ['Hôtel','Hotel']))
             <div class="w-full">
                 <select wire:model="selectedRoomTypeId" class="py-3 px-4 block w-full border border-blue-400 bg-white text-gray-900 rounded-lg text-sm dark:bg-gray-900 dark:border-blue-700 dark:text-gray-100">
@@ -726,11 +718,13 @@
                 </select>
                 @error('selectedRoomTypeId') <span class="text-red-500">{{ $message }}</span> @enderror
             </div>
-            <div class="w-40">
-                <input type="number" wire:model="quantity" min="1" class="py-3 px-4 block w-full border border-blue-400 bg-white text-gray-900 rounded-lg text-sm dark:bg-gray-900 dark:border-blue-700 dark:text-gray-100">
-                @error('quantity') <span class="text-red-500">{{ $message }}</span> @enderror
-            </div>
             @endif
+            <div class="w-full">
+                <input type="text" wire:model.defer="dateRange" id="ReservationDateRange2" class="py-3 px-4 block w-full border border-blue-400 bg-white text-gray-900 placeholder-gray-500 rounded-lg text-sm cursor-pointer
+                    focus:border-blue-600 focus:ring-blue-500 disabled:opacity-50
+                    disabled:pointer-events-none dark:bg-gray-900 dark:border-blue-700 dark:text-gray-100 dark:placeholder-gray-400 dark:focus:ring-blue-400" placeholder="Choisissez vos dates (arrivée - départ)">
+                @error('dateRange') <span class="text-red-500">{{ $message }}</span> @enderror
+            </div>
 
             @if(Auth::check())
             <button type="submit" wire:submit.prevent="addBooking" id="confirm-booking" class="bg-blue-500 text-white py-2 px-4 rounded">
@@ -742,7 +736,7 @@
             </button>
             @endif
         </div>
-        <script id="occupied-dates" type="application/json">
+        <script id="occupied-dates" type="application/json" wire:key="occupied-{{ $property->id ?? 'p' }}-{{ $selectedRoomTypeId ?? 'none' }}">
             @json($occupiedDates ?? [])
         </script>
         <script>
@@ -784,6 +778,78 @@
             // Rafraîchir après chargement Livewire et navigation Livewire
             document.addEventListener('livewire:load', () => setTimeout(window.refreshOccupiedDates, 0));
             document.addEventListener('livewire:navigated', () => setTimeout(window.refreshOccupiedDates, 0));
+            // Rafraîchir quand le room type change (événement navigateur Livewire v3)
+            document.addEventListener('occupied-dates-updated', () => setTimeout(window.refreshOccupiedDates, 0));
+
+            // Ouverture automatique du calendrier après changement de chambre (avec scroll)
+            window._calendarOpenTarget = null;
+            window.openCalendarForInput = function(inputEl) {
+                if (!inputEl) return;
+                try {
+                    inputEl.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'center'
+                    });
+                } catch (_) {}
+                const tryOpen = () => {
+                    if (inputEl._flatpickr) {
+                        try {
+                            inputEl._flatpickr.open();
+                        } catch (_) {}
+                        return true;
+                    }
+                    return false;
+                };
+                if (!tryOpen() && typeof window.flatpickr === 'function') {
+                    try {
+                        window.flatpickr(inputEl, {
+                            mode: 'range',
+                            dateFormat: 'Y-m-d',
+                            minDate: 'today',
+                            disable: (window.occupiedDates || []).slice(),
+                            allowInput: false
+                        });
+                        setTimeout(() => {
+                            tryOpen();
+                        }, 0);
+                    } catch (_) {}
+                }
+            };
+
+            window.bindRoomTypeSelectOpenCalendar = function() {
+                const selects = document.querySelectorAll('select[wire\\:model="selectedRoomTypeId"]');
+                selects.forEach((sel) => {
+                    if (sel.dataset.openBound === '1') return;
+                    sel.dataset.openBound = '1';
+                    sel.addEventListener('change', () => {
+                        if (!sel.value) return;
+                        // cibler l'input de date dans le même formulaire
+                        let target = null;
+                        const form = sel.closest('form');
+                        if (form) target = form.querySelector('input[id^="ReservationDateRange"]');
+                        if (!target) target = (window.innerWidth < 768) ? document.getElementById('ReservationDateRange2') : document.getElementById('ReservationDateRange');
+                        window._calendarOpenTarget = target;
+                        // sécurité: si l'événement n'arrive pas, ouvrir quand même
+                        setTimeout(() => {
+                            if (window._calendarOpenTarget) {
+                                window.openCalendarForInput(window._calendarOpenTarget);
+                                window._calendarOpenTarget = null;
+                            }
+                        }, 600);
+                    });
+                });
+            };
+
+            // Lier au chargement et re-navigation Livewire
+            document.addEventListener('livewire:load', () => setTimeout(window.bindRoomTypeSelectOpenCalendar, 0));
+            document.addEventListener('livewire:navigated', () => setTimeout(window.bindRoomTypeSelectOpenCalendar, 0));
+            // Après mise à jour des dates occupées, ouvrir l'input ciblé si nécessaire
+            document.addEventListener('occupied-dates-updated', () => setTimeout(() => {
+                window.refreshOccupiedDates();
+                const target = window._calendarOpenTarget || ((window.innerWidth < 768) ? document.getElementById('ReservationDateRange2') : document.getElementById('ReservationDateRange'));
+                if (target) window.openCalendarForInput(target);
+                window._calendarOpenTarget = null;
+            }, 0));
 
             // Appel initial après ce rendu (utile lors des re-rendus Livewire)
             if (typeof window.refreshOccupiedDates === 'function') {

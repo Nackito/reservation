@@ -6,6 +6,8 @@ return [
   'secret_key' => env('CINETPAY_SECRET_KEY'),
   'currency' => env('CINETPAY_CURRENCY', 'XOF'),
   'channels' => env('CINETPAY_CHANNELS', 'ALL'),
+  // Activer les routes de simulation (désactivé par défaut en production)
+  'simulation_enabled' => env('CINETPAY_SIMULATION', env('APP_ENV') !== 'production'),
   // API base URL for initialization
   'init_url' => env('CINETPAY_INIT_URL', 'https://api-checkout.cinetpay.com/v2/payment'),
   // API URL for verify/check transaction

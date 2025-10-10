@@ -33,10 +33,13 @@ use Filament\Forms\Components\DatePicker;
 //use App\Models\Booking;
 use Filament\Resources\Pages\CreateRecord;
 use BackedEnum;
+use Filament\Notifications\Notification;
+use App\Models\Payment;
 
 class BookingResource extends Resource
 {
     private const DATE_FMT = 'd/m/Y';
+    private const SIM_SUFFIX = '-sim-';
     protected static ?string $model = Booking::class;
     protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-rectangle-stack';
     protected static ?string $recordTitleAttribute = 'name';
@@ -164,10 +167,160 @@ class BookingResource extends Resource
             EditAction::make(),
             self::actionAccept(),
             self::actionCancel(),
+            self::actionSimulateSuccess(),
+            self::actionSimulateFail(),
+            self::actionSimulateCancel(),
         ];
     }
 
     // Actions de simulation retirées
+
+    private static function actionSimulateSuccess(): Action
+    {
+        return Action::make('simulate_success')
+            ->label('Simuler paiement OK')
+            ->icon('heroicon-m-check-circle')
+            ->color('success')
+            ->requiresConfirmation()
+            ->visible(fn($record) => config('cinetpay.simulation_enabled') && $record && (($record->payment_status ?? 'pending') !== 'paid'))
+            ->action(function (Booking $record) {
+                $txId = $record->payment_transaction_id ?: ('BK-' . $record->id . self::SIM_SUFFIX . now()->timestamp);
+                // Marquer payé si pas déjà fait
+                if (($record->payment_status ?? 'pending') !== 'paid') {
+                    $record->markAsPaid($txId);
+                    try {
+                        BookingActionHelper::handlePaymentConflictsForOthers($record);
+                    } catch (\Throwable $e) {
+                        Log::warning('Conflit de paiements (simulate_success) non traité', ['err' => $e->getMessage()]);
+                    }
+                    // Message dans la conversation + emails de confirmation
+                    try {
+                        $amountFmt = is_numeric($record->total_price) ? number_format($record->total_price, 0, ',', ' ') : (string)$record->total_price;
+                        $conversation = \App\Models\Conversation::where('is_admin_channel', true)
+                            ->where('booking_id', $record->id)
+                            ->first();
+                        if ($conversation) {
+                            $msg = "Paiement confirmé (simulation). Nous avons bien reçu {$amountFmt} FrCFA. Réf: {$txId}";
+                            $message = \App\Models\Message::create([
+                                'conversation_id' => $conversation->id,
+                                'sender_id' => Auth::id() ?: 1,
+                                'receiver_id' => $record->user?->id,
+                                'content' => $msg,
+                            ]);
+                            try {
+                                broadcast(new \App\Events\MessageSent($message));
+                            } catch (\Throwable $e) { /* ignore */
+                            }
+                        }
+                        $user = $record->user;
+                        if ($user && $user->email) {
+                            Mail::raw(
+                                "Votre paiement (simulation) a été confirmé. Montant: {$amountFmt} FrCFA. Référence: {$txId}.",
+                                function ($m) use ($user, $record) {
+                                    $m->to($user->email)->subject('Paiement confirmé (simulation) - Réservation #' . $record->id);
+                                }
+                            );
+                        }
+                        $adminMail = config('mail.admin_email') ?? env('MAIL_ADMIN_EMAIL');
+                        if ($adminMail) {
+                            Mail::raw(
+                                'Paiement simulé confirmé pour la réservation #' . $record->id . ' (tx: ' . $txId . ')',
+                                function ($m) use ($adminMail) {
+                                    $m->to($adminMail)->subject('Paiement confirmé (simulation) - Réservation');
+                                }
+                            );
+                        }
+                    } catch (\Throwable $e) {
+                        Log::warning('Post-simulate_success notifications non envoyées', ['err' => $e->getMessage()]);
+                    }
+                }
+                // Audit
+                try {
+                    Payment::create([
+                        'booking_id' => $record->id,
+                        'transaction_id' => $txId,
+                        'status' => 'SIMULATED_SUCCESS',
+                        'source' => 'admin',
+                        'signature_valid' => null,
+                        'payload' => ['by' => Auth::id()],
+                        'headers' => null,
+                        'ip' => request()->ip(),
+                    ]);
+                } catch (\Throwable $e) {
+                    Log::warning('Payment audit (simulate_success) échoué', ['err' => $e->getMessage()]);
+                }
+                Notification::make()
+                    ->title('Paiement simulé avec succès')
+                    ->success()
+                    ->send();
+            });
+    }
+
+    private static function actionSimulateFail(): Action
+    {
+        return Action::make('simulate_fail')
+            ->label('Simuler paiement échoué')
+            ->icon('heroicon-m-x-circle')
+            ->color('danger')
+            ->requiresConfirmation()
+            ->visible(fn($record) => config('cinetpay.simulation_enabled') && $record && (($record->payment_status ?? 'pending') !== 'paid'))
+            ->action(function (Booking $record) {
+                $txId = $record->payment_transaction_id ?: ('BK-' . $record->id . self::SIM_SUFFIX . now()->timestamp);
+                $record->payment_status = 'failed';
+                $record->save();
+                // Audit
+                try {
+                    Payment::create([
+                        'booking_id' => $record->id,
+                        'transaction_id' => $txId,
+                        'status' => 'SIMULATED_FAILED',
+                        'source' => 'admin',
+                        'signature_valid' => null,
+                        'payload' => ['by' => Auth::id()],
+                        'headers' => null,
+                        'ip' => request()->ip(),
+                    ]);
+                } catch (\Throwable $e) {
+                    Log::warning('Payment audit (simulate_fail) échoué', ['err' => $e->getMessage()]);
+                }
+                Notification::make()
+                    ->title("Statut de paiement marqué 'échoué'")
+                    ->danger()
+                    ->send();
+            });
+    }
+
+    private static function actionSimulateCancel(): Action
+    {
+        return Action::make('simulate_cancel')
+            ->label('Simuler annulation')
+            ->icon('heroicon-m-arrow-uturn-left')
+            ->color('warning')
+            ->requiresConfirmation()
+            ->visible(fn($record) => config('cinetpay.simulation_enabled') && $record)
+            ->action(function (Booking $record) {
+                $txId = $record->payment_transaction_id ?: ('BK-' . $record->id . self::SIM_SUFFIX . now()->timestamp);
+                // Ne change pas le statut, juste audit
+                try {
+                    Payment::create([
+                        'booking_id' => $record->id,
+                        'transaction_id' => $txId,
+                        'status' => 'SIMULATED_CANCELED',
+                        'source' => 'admin',
+                        'signature_valid' => null,
+                        'payload' => ['by' => Auth::id()],
+                        'headers' => null,
+                        'ip' => request()->ip(),
+                    ]);
+                } catch (\Throwable $e) {
+                    Log::warning('Payment audit (simulate_cancel) échoué', ['err' => $e->getMessage()]);
+                }
+                Notification::make()
+                    ->title('Annulation simulée enregistrée')
+                    ->warning()
+                    ->send();
+            });
+    }
 
     private static function actionAccept(): Action
     {

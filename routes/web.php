@@ -157,4 +157,17 @@ require_once __DIR__ . '/auth.php';
 Route::post('/cinetpay/notify', [\App\Http\Controllers\CinetPayController::class, 'notify'])->name('cinetpay.notify');
 Route::get('/cinetpay/return', [\App\Http\Controllers\CinetPayController::class, 'return'])->name('cinetpay.return');
 
-// Routes de simulation CinetPay retirées
+// Routes de simulation CinetPay (activables via config)
+if (config('cinetpay.simulation_enabled')) {
+    Route::middleware(['auth'])
+        ->prefix('cinetpay/sim')
+        ->name('cinetpay.sim.')
+        ->group(function () {
+            Route::post('/success', [\App\Http\Controllers\CinetPayController::class, 'simulateSuccess'])
+                ->name('success');
+            Route::post('/fail', [\App\Http\Controllers\CinetPayController::class, 'simulateFail'])
+                ->name('fail');
+            Route::post('/cancel', [\App\Http\Controllers\CinetPayController::class, 'simulateCancel'])
+                ->name('cancel');
+        });
+}

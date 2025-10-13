@@ -42,7 +42,7 @@
                             <i class="fas fa-search mr-1"></i>Ville, commune ou quartier
                         </label>
                         <div class="relative">
-                            <form wire:submit.prevent="search" class="flex gap-2">
+                            <form wire:submit.prevent="search" class="flex gap-2 flex-col md:flex-row">
                                 <input
                                     type="text"
                                     id="searchQuery"
@@ -51,6 +51,7 @@
                                     placeholder="Entrez une ville, une commune ou un quartier..."
                                     class="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:bg-gray-800 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 transition-colors duration-300"
                                     autocomplete="on">
+
                                 <button type="submit"
                                     class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors duration-200 flex items-center justify-center"
                                     aria-label="Lancer la recherche">
@@ -541,9 +542,11 @@
                     @endif
 
                     {{-- Actions de tri et vue mobile --}}
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
                         {{-- Compteur de propriétés trouvées --}}
                         <p class="text-gray-600 dark:text-gray-300 text-lg mb-2 sm:mb-0">{{ count($properties) }} propriété(s) trouvée(s)</p>
+
+
 
                         {{-- Bouton pour afficher les filtres sur mobile --}}
                         <div class="lg:hidden">
@@ -1711,3 +1714,5 @@
         @endif
     </div>
 </div>
+
+<!-- Champ date et scripts associés retirés à la demande -->

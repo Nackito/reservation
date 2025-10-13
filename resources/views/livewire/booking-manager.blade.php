@@ -42,7 +42,7 @@
             </div>
             @endif
 
-            <form wire:submit.prevent="addBooking" class="mb-4 hidden md:block">
+            <form wire:submit.prevent="searchDates" class="mb-4 hidden md:block">
                 <div class="flex mt-4 flex-col sm:flex-row gap-2 sm:gap-3 items-center bg-white rounded-lg p-2 dark:bg-gray-800">
                     <div class="w-full">
                         <input type="text" value="{{ $property->name ?? '' }}" readonly
@@ -52,36 +52,16 @@
                             placeholder="Nom de l'établissement">
                     </div>
 
-                    @if($property && $property->category && in_array($property->category->name, ['Hôtel','Hotel']))
-                    <div class="w-full">
-                        <select wire:model="selectedRoomTypeId" class="py-3 px-4 block w-full border border-blue-400 bg-white text-gray-900 rounded-lg text-sm dark:bg-gray-900 dark:border-blue-700 dark:text-gray-100">
-                            <option value="">Sélectionnez un type</option>
-                            @foreach($property->roomTypes as $rt)
-                            <option value="{{ $rt->id }}">
-                                {{ $rt->name }}
-                                @if(!is_null($rt->price_per_night)) - {{ number_format($rt->price_per_night,2) }} XOF @endif
-                                ({{ $rt->capacity }} pers., {{ $rt->beds }} lits)
-                            </option>
-                            @endforeach
-                        </select>
-                        @error('selectedRoomTypeId') <span class="text-red-500">{{ $message }}</span> @enderror
-                    </div>
-                    @endif
+                    {{-- Champ type de chambre supprimé: le choix se fait via le bouton Réserver du tableau --}}
                     <div class="w-full">
                         <input type="text" wire:model.defer="dateRange" id="ReservationDateRange" class="py-3 px-4 block w-full border border-blue-400 bg-white text-gray-900 placeholder-gray-500 rounded-lg text-sm
                     focus:border-blue-600 focus:ring-blue-500 disabled:opacity-50
                     disabled:pointer-events-none dark:bg-gray-900 dark:border-blue-700 dark:text-gray-100 dark:placeholder-gray-400 dark:focus:ring-blue-400" placeholder="Choisissez vos dates (arrivée - départ)">
                         @error('dateRange') <span class="text-red-500">{{ $message }}</span> @enderror
                     </div>
-                    @if(Auth::check())
-                    <button type="submit" wire:submit.prevent="addBooking" id="confirm-booking" class="bg-blue-500 text-white py-2 px-4 rounded">
-                        Confirmer
+                    <button type="submit" id="confirm-booking" class="bg-blue-500 text-white py-2 px-4 rounded">
+                        Rechercher
                     </button>
-                    @else
-                    <button type="button" onclick="showReservationLoginNotification()" class="bg-blue-500 text-white py-2 px-4 rounded">
-                        Confirmer
-                    </button>
-                    @endif
                 </div>
             </form>
         </div>
@@ -408,260 +388,39 @@
             </p>
         </div>
 
-        {{-- Tableau des types de chambre (Hôtel uniquement) --}}
-        @if($property && $property->category && in_array($property->category->name, ['Hôtel','Hotel']) && $property->roomTypes && $property->roomTypes->count())
-        <div class="container mx-auto mt-8 px-4">
-            <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4">Les chambres</h2>
-            @php
-            $user = auth()->user();
-            $userCurrency = $user && $user->currency ? $user->currency : 'XOF';
-            $rate = app('App\\Livewire\\BookingManager')->getExchangeRate('XOF', $userCurrency);
-            $displayCurrency = ($rate && $rate > 0) ? $userCurrency : 'XOF';
-            @endphp
-            <div class="overflow-x-auto bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700">
-                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                    <thead class="bg-gray-50 dark:bg-gray-900">
-                        <tr>
-                            <th scope="col" class="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-200">Type de chambre</th>
-                            <th scope="col" class="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-200">Nombre de personnes</th>
-                            <th scope="col" class="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-200">Lits</th>
-                            <th scope="col" class="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-200">Prix</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                        @foreach($property->roomTypes as $rt)
-                        @php
-                        $rtBasePrice = $rt->price_per_night;
-                        $rtConverted = ($rate && $rate > 0 && $rtBasePrice !== null) ? round($rtBasePrice * $rate, 2) : $rtBasePrice;
-                        // Disponibilité selon la plage de dates sélectionnée
-                        $availabilityLabel = null;
-                        $availableQty = null;
-                        if (!empty($dateRange) && !empty($rt->inventory)) {
-                        $parts = preg_split('/\s+(?:to|à|au|\-|–|—)\s+/ui', $dateRange);
-                        if (is_array($parts) && count($parts) === 2) {
-                        try {
-                        $start = \Carbon\Carbon::parse(trim($parts[0]))->startOfDay();
-                        $end = \Carbon\Carbon::parse(trim($parts[1]))->endOfDay();
-                        if ($start && $end && $start->lte($end)) {
-                        $booked = \App\Models\Booking::query()
-                        ->where('room_type_id', $rt->id)
-                        ->where('status', 'accepted')
-                        ->whereDate('start_date', '<', $end->toDateString())
-                            ->whereDate('end_date', '>', $start->toDateString())
-                            ->sum('quantity');
-                            $inv = max(0, (int) $rt->inventory);
-                            $avail = max(0, $inv - (int) $booked);
-                            $availableQty = $avail;
-                            $availabilityLabel = $avail > 0 ? ($avail . ' dispo') : 'Complet';
-                            }
-                            } catch (\Throwable $e) {
-                            $availabilityLabel = '—';
-                            }
-                            }
-                            }
-                            @endphp
-                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer" onclick="toggleRoomTypeDetails('rt-{{ $rt->id }}')" data-rt-id="{{ $rt->id }}" data-rt-images='@json($rt->images ?? [])'>
-                                <td class="px-4 py-3 text-sm text-gray-800 dark:text-gray-200 font-medium">{{ $rt->name }}</td>
-                                <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
-                                    <span class="inline-flex items-center gap-1" aria-label="{{ $rt->capacity }} personne{{ $rt->capacity > 1 ? 's' : '' }}">
-                                        <i class="fas fa-user text-blue-600 dark:text-blue-400"></i>
-                                        <span>{{ $rt->capacity }}</span>
-                                    </span>
-                                </td>
-                                <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
-                                    <span class="inline-flex items-center gap-1" aria-label="{{ $rt->beds }} lit{{ $rt->beds > 1 ? 's' : '' }}">
-                                        <i class="fas fa-bed text-gray-700 dark:text-gray-300"></i>
-                                        <span>{{ $rt->beds }}</span>
-                                    </span>
-                                </td>
-
-                                <td class="px-4 py-3 text-sm text-gray-800 dark:text-gray-200">
-                                    @if(!is_null($rtBasePrice))
-                                    {{ number_format($rtConverted, 2) }} {{ $displayCurrency }}
-                                    @else
-                                    <span class="text-gray-400">N/A</span>
-                                    @endif
-                                </td>
-                            </tr>
-                            {{-- Ligne de détails repliable pour ce type de chambre --}}
-                            <tr id="rt-{{ $rt->id }}" class="hidden bg-gray-50 dark:bg-gray-900">
-                                <td colspan="4" class="px-4 py-4">
-                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                        <div class="md:col-span-2">
-                                            <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2">Description</h3>
-                                            <p class="text-sm text-gray-700 dark:text-gray-300">{{ $rt->description ?? 'Aucune description fournie.' }}</p>
-                                            @if(is_array($rt->amenities) && count($rt->amenities))
-                                            <h4 class="text-sm font-semibold text-gray-800 dark:text-gray-200 mt-4 mb-2">Caractéristiques de la chambre</h4>
-                                            <ul class="flex flex-wrap gap-2">
-                                                @foreach($rt->amenities as $amenity)
-                                                <li class="px-2 py-1 rounded bg-gray-100 dark:bg-gray-800 text-xs text-gray-700 dark:text-gray-300">{{ ucfirst($amenity) }}</li>
-                                                @endforeach
-                                            </ul>
-                                            @endif
-                                        </div>
-                                        <div>
-                                            <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2">Images</h3>
-                                            <div class="grid grid-cols-3 gap-2">
-                                                @if(is_array($rt->images) && count($rt->images))
-                                                @foreach(array_slice($rt->images, 0, 6) as $img)
-                                                <img src="{{ asset('storage/' . ltrim($img, '/')) }}" alt="{{ $rt->name }}" class="w-full h-16 object-cover rounded border border-gray-200 dark:border-gray-700 cursor-pointer" onclick="openRoomTypeGallery({{ $rt->id }}, {{ $loop->index }})" />
-                                                @endforeach
-                                                @else
-                                                <span class="text-sm text-gray-400">Aucune image</span>
-                                                @endif
-                                            </div>
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                            @endforeach
-                    </tbody>
-                </table>
-            </div>
-            <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">Astuce: cliquez sur une ligne pour afficher les détails du type de chambre.</p>
-            <script>
-                function toggleRoomTypeDetails(id) {
-                    const row = document.getElementById(id);
-                    if (!row) return;
-                    row.classList.toggle('hidden');
-                }
-            </script>
-        </div>
-        @endif
-
-        <!-- Modal galerie pour types de chambre -->
-        <div id="roomTypeGalleryModal" class="fixed inset-0 z-50 hidden bg-black bg-opacity-75 flex items-center justify-center">
-            <div class="relative bg-white dark:bg-gray-900 rounded-lg shadow-lg w-11/12 lg:w-3/4 max-h-screen overflow-hidden">
-                <button class="absolute top-2 right-2 text-gray-500 hover:text-gray-700" onclick="closeRoomTypeGallery()">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-                <div class="p-4">
-                    <div class="swiper swiper-container rtSwiper">
-                        <div class="swiper-wrapper" id="rt-swiper-wrapper"></div>
-                        <div class="swiper-button-prev"></div>
-                        <div class="swiper-button-next"></div>
-                        <div class="swiper-pagination"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <script>
-            window.openRoomTypeGallery = function(roomTypeId, startIndex = 0) {
-                const modal = document.getElementById('roomTypeGalleryModal');
-                const wrapper = document.getElementById('rt-swiper-wrapper');
-                if (!modal || !wrapper) return;
-                // Trouver la ligne avec les data-attributes
-                const row = document.querySelector(`tr[data-rt-id="${roomTypeId}"]`);
-                if (!row) return;
-                let images = [];
-                try {
-                    const data = row.getAttribute('data-rt-images');
-                    images = data ? JSON.parse(data) : [];
-                } catch (e) {
-                    images = [];
-                }
-                // Nettoyage
-                wrapper.innerHTML = '';
-                // Peupler
-                (images || []).forEach((img) => {
-                    const src = (img || '').replace(/^\/+/, '');
-                    const slide = document.createElement('div');
-                    slide.className = 'swiper-slide flex items-center justify-center';
-                    slide.innerHTML = `<img src="${window.location.origin}/storage/${src}" class="max-h-[70vh] w-auto object-contain rounded-lg" alt="RoomType Image" />`;
-                    wrapper.appendChild(slide);
-                });
-                modal.classList.remove('hidden');
-                setTimeout(() => {
-                    // Détruire instance précédente si besoin
-                    if (window.rtSwiper && typeof window.rtSwiper.destroy === 'function') {
-                        window.rtSwiper.destroy(true, true);
-                        window.rtSwiper = null;
-                    }
-                    window.rtSwiper = new Swiper('#roomTypeGalleryModal .rtSwiper', {
-                        spaceBetween: 10,
-                        loop: false,
-                        navigation: {
-                            nextEl: '#roomTypeGalleryModal .swiper-button-next',
-                            prevEl: '#roomTypeGalleryModal .swiper-button-prev',
-                        },
-                        pagination: {
-                            el: '#roomTypeGalleryModal .swiper-pagination',
-                            clickable: true,
-                        },
-                    });
-                    if (typeof startIndex === 'number' && startIndex >= 0) {
-                        try {
-                            window.rtSwiper.slideTo(startIndex, 0);
-                        } catch (_) {}
-                    }
-                }, 0);
-            };
-
-            window.closeRoomTypeGallery = function() {
-                const modal = document.getElementById('roomTypeGalleryModal');
-                if (!modal) return;
-                modal.classList.add('hidden');
-            };
-        </script>
-
-        <div id="photoGalleryModal" class="fixed inset-0 z-50 hidden bg-black bg-opacity-75 flex items-center justify-center">
-            <div class="relative bg-white dark:bg-gray-900 rounded-lg shadow-lg w-11/12 lg:w-3/4 max-h-screen overflow-hidden">
-                <button class="absolute top-2 right-2 text-gray-500 hover:text-gray-700" onclick="closeGallery()">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-                <div class="p-4">
-                    <!-- Swiper principal -->
-                    <div class="swiper swiper-container mySwiper">
-                        <div class="swiper-wrapper">
-                            @foreach($property->images as $idx => $image)
-                            <div class="swiper-slide flex items-center justify-center">
-                                <img src="{{ asset('storage/' . $image->image_path) }}" alt="Image {{ $idx + 1 }} - {{ $property->name ?? 'Propriété' }}" class="max-h-[70vh] w-auto object-contain rounded-lg" />
-                            </div>
-                            @endforeach
-                        </div>
-                        <div class="swiper-button-prev"></div>
-                        <div class="swiper-button-next"></div>
-                        <div class="swiper-pagination"></div>
-                    </div>
-
-                    <!-- Miniatures -->
-                    <div class="swiper swiper-container mySwiper2 mt-4">
-                        <div class="swiper-wrapper">
-                            @foreach($property->images as $idx => $image)
-                            <div class="swiper-slide !w-auto">
-                                <img src="{{ asset('storage/' . $image->image_path) }}" alt="Miniature {{ $idx + 1 }}" class="w-20 h-20 object-cover rounded-lg border-2 border-transparent hover:border-blue-500" />
-                            </div>
-                            @endforeach
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         @if(!is_null($property->latitude) && !is_null($property->longitude))
         <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mt-8 mb-4 pl-4">Emplacement de l'établissement</h2>
-        <div id="map"
+        <div id="map" wire:ignore
             data-lat="{{ $property->latitude }}"
             data-lng="{{ $property->longitude }}"
             data-label="{{ $property->name ?? 'Résidence' }}">
         </div>
         <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                var el = document.getElementById('map');
-                if (!el) return;
-                var lat = parseFloat(el.dataset.lat);
-                var lng = parseFloat(el.dataset.lng);
-                if (!isFinite(lat) || !isFinite(lng)) return;
-                var label = el.dataset.label || 'Résidence';
-                if (typeof window.init === 'function') {
-                    window.init(lat, lng, label);
+            (function() {
+                function initPropertyMap() {
+                    try {
+                        var el = document.getElementById('map');
+                        if (!el) return;
+                        // Empêcher des ré-initialisations multiples sur le même élément
+                        if (el.dataset && el.dataset.inited === '1') return;
+                        var lat = parseFloat(el.dataset.lat);
+                        var lng = parseFloat(el.dataset.lng);
+                        if (!isFinite(lat) || !isFinite(lng)) return;
+                        var label = el.dataset.label || 'Résidence';
+                        if (typeof window.init === 'function') {
+                            window.init(lat, lng, label);
+                            if (el && el.dataset) el.dataset.inited = '1';
+                        }
+                    } catch (e) {
+                        // ignore
+                    }
                 }
-            });
+                window.initPropertyMap = initPropertyMap;
+                document.addEventListener('DOMContentLoaded', initPropertyMap);
+                document.addEventListener('livewire:load', () => setTimeout(initPropertyMap, 0));
+                document.addEventListener('livewire:navigated', () => setTimeout(initPropertyMap, 0));
+            })();
         </script>
         @endif
 </div>
@@ -693,7 +452,7 @@
 <div class="container mx-auto mt-8">
     <h1 class="block text-3xl font-bold text-gray-800 dark:text-gray-100 sm:text-4xl lg:text-2xl lg:leading-tight mt-6 mb-4 sm:mt-0 sm:mb-6 px-4 sm:px-0">Entrez vos dates</h1>
 
-    <form wire:submit.prevent="addBooking" class="mb-4" id="Reservation">
+    <form wire:submit.prevent="searchDates" class="mb-4" id="Reservation">
         <div class="flex mt-4 flex-col sm:flex-row gap-2 sm:gap-3 items-center bg-white rounded-lg p-2 dark:bg-gray-800 custom-mobile-reservation-form">
 
             <div class="w-full">
@@ -704,21 +463,7 @@
                     placeholder="Nom de l'établissement">
             </div>
 
-            @if($property && $property->category && in_array($property->category->name, ['Hôtel','Hotel']))
-            <div class="w-full">
-                <select wire:model="selectedRoomTypeId" class="py-3 px-4 block w-full border border-blue-400 bg-white text-gray-900 rounded-lg text-sm dark:bg-gray-900 dark:border-blue-700 dark:text-gray-100">
-                    <option value="">Sélectionnez un type</option>
-                    @foreach($property->roomTypes as $rt)
-                    <option value="{{ $rt->id }}">
-                        {{ $rt->name }}
-                        @if(!is_null($rt->price_per_night)) - {{ number_format($rt->price_per_night,2) }} XOF @endif
-                        ({{ $rt->capacity }} pers., {{ $rt->beds }} lits)
-                    </option>
-                    @endforeach
-                </select>
-                @error('selectedRoomTypeId') <span class="text-red-500">{{ $message }}</span> @enderror
-            </div>
-            @endif
+            {{-- Champ type de chambre supprimé: le choix se fait via le bouton Réserver du tableau --}}
             <div class="w-full">
                 <input type="text" wire:model.defer="dateRange" id="ReservationDateRange2" class="py-3 px-4 block w-full border border-blue-400 bg-white text-gray-900 placeholder-gray-500 rounded-lg text-sm cursor-pointer
                     focus:border-blue-600 focus:ring-blue-500 disabled:opacity-50
@@ -726,15 +471,9 @@
                 @error('dateRange') <span class="text-red-500">{{ $message }}</span> @enderror
             </div>
 
-            @if(Auth::check())
-            <button type="submit" wire:submit.prevent="addBooking" id="confirm-booking" class="bg-blue-500 text-white py-2 px-4 rounded">
-                Confirmer
+            <button type="submit" id="confirm-booking" class="bg-blue-500 text-white py-2 px-4 rounded">
+                Rechercher
             </button>
-            @else
-            <button type="button" onclick="showReservationLoginNotification()" class="bg-blue-500 text-white py-2 px-4 rounded">
-                Confirmer
-            </button>
-            @endif
         </div>
         <script id="occupied-dates" type="application/json" wire:key="occupied-{{ $property->id ?? 'p' }}-{{ $selectedRoomTypeId ?? 'none' }}">
             @json($occupiedDates ?? [])
@@ -748,6 +487,219 @@
                     window.occupiedDates = [];
                 }
             })();
+            // ===== Récupération de la plage de dates depuis URL / localStorage (JSON structuré) =====
+            function normalizeRange(val) {
+                if (!val) return '';
+                return String(val)
+                    .replace(/\s+à\s+/gi, ' to ')
+                    .replace(/\s+au\s+/gi, ' to ')
+                    .replace(/\s+–\s+/g, ' to ')
+                    .replace(/\s+—\s+/g, ' to ')
+                    .replace(/\s+-\s+/g, ' to ')
+                    .replace(/\s+to\s+/gi, ' to ')
+                    .trim();
+            }
+
+            function parseToArray(isoRange) {
+                const v = normalizeRange(isoRange);
+                const parts = v.split(' to ').map(s => s && s.trim()).filter(Boolean);
+                return parts.length === 2 ? parts : null;
+            }
+
+            function getUrlDateRange() {
+                try {
+                    const url = new URL(window.location.href);
+                    const p = url.searchParams.get('dateRange');
+                    return p ? normalizeRange(p) : '';
+                } catch (_) {
+                    return '';
+                }
+            }
+
+            function getStoredJsonRange() {
+                try {
+                    const j = localStorage.getItem('search.dateRange.json');
+                    if (j) {
+                        const obj = JSON.parse(j);
+                        if (obj && obj.start && obj.end) return `${obj.start} to ${obj.end}`;
+                    }
+                } catch (_) {}
+                // Fallback legacy
+                try {
+                    const legacy = localStorage.getItem('booking.dateRange');
+                    return legacy ? normalizeRange(legacy) : '';
+                } catch (_) {
+                    return '';
+                }
+            }
+
+            function getTodayTomorrow() {
+                const d = new Date();
+                const pad = (n) => String(n).padStart(2, '0');
+                const fmt = (dt) => `${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())}`;
+                const today = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+                const tomorrow = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
+                return {
+                    today,
+                    tomorrow,
+                    iso: `${fmt(today)} to ${fmt(tomorrow)}`
+                };
+            }
+
+            function applyRangeToInputs(isoRange) {
+                if (!isoRange) return;
+                const el1 = document.getElementById('ReservationDateRange');
+                const el2 = document.getElementById('ReservationDateRange2');
+                const parts = parseToArray(isoRange);
+                // Mettre la valeur dans les inputs visibles et déclencher un événement input pour Livewire
+                [el1, el2].forEach((el) => {
+                    if (!el) return;
+                    try {
+                        // Verrou pour éviter les boucles avec onChange Flatpickr
+                        window._rangeUpdateLock = (window._rangeUpdateLock || 0) + 1;
+                        el.value = isoRange;
+                        el.dispatchEvent(new Event('input', {
+                            bubbles: true
+                        }));
+                        if (el._flatpickr && parts) {
+                            try {
+                                el._flatpickr.setDate(parts, true);
+                            } catch (_) {}
+                        }
+                    } catch (_) {} finally {
+                        window._rangeUpdateLock = Math.max(0, (window._rangeUpdateLock || 1) - 1);
+                    }
+                });
+            }
+
+            // ===== Helpers d'enregistrement JSON (persistance inverse) =====
+            function isoToHuman(isoRange) {
+                const parts = parseToArray(isoRange);
+                if (!parts) return '';
+                const toHuman = (s) => {
+                    const [y, m, d] = String(s).split('-');
+                    if (!y || !m || !d) return s;
+                    return `${d.padStart(2,'0')}/${m.padStart(2,'0')}/${y}`;
+                };
+                return `${toHuman(parts[0])} au ${toHuman(parts[1])}`;
+            }
+
+            function saveSearchDateRangeJson(isoRange) {
+                const norm = normalizeRange(isoRange);
+                const parts = parseToArray(norm);
+                if (!parts) return;
+                const obj = {
+                    start: parts[0],
+                    end: parts[1],
+                    iso: `${parts[0]} to ${parts[1]}`,
+                    human: isoToHuman(`${parts[0]} to ${parts[1]}`),
+                    updatedAt: new Date().toISOString()
+                };
+                try {
+                    localStorage.setItem('search.dateRange.json', JSON.stringify(obj));
+                    // Compat legacy
+                    localStorage.setItem('booking.dateRange', obj.iso);
+                    localStorage.setItem('booking.checkIn', obj.start);
+                    localStorage.setItem('booking.checkOut', obj.end);
+                    // Expose global + événement
+                    window.searchDateRange = obj;
+                    window.dispatchEvent(new CustomEvent('search-date-range-updated', {
+                        detail: obj
+                    }));
+                } catch (_) {}
+            }
+
+            function bindRangePersistenceListeners() {
+                const el1 = document.getElementById('ReservationDateRange');
+                const el2 = document.getElementById('ReservationDateRange2');
+                const bindFor = (el) => {
+                    if (!el || el.dataset.rangeSaveBound === '1') return;
+                    el.dataset.rangeSaveBound = '1';
+                    // Sauvegarde lors de la saisie utilisateur uniquement (événements trusted)
+                    const onUserInput = (e) => {
+                        if (!e || e.isTrusted !== true) return; // ignorer événements synthétiques
+                        const v = normalizeRange(el.value);
+                        const parts = parseToArray(v);
+                        if (parts) {
+                            saveSearchDateRangeJson(v);
+                            // Garder les deux inputs synchronisés
+                            applyRangeToInputs(v);
+                        }
+                    };
+                    el.addEventListener('change', onUserInput);
+                    el.addEventListener('input', onUserInput);
+                };
+                bindFor(el1);
+                bindFor(el2);
+            }
+            // (Ré)initialise Flatpickr sur les champs de date si nécessaire
+            window.ensureInitDatePickers = function() {
+                const opts = {
+                    mode: 'range',
+                    dateFormat: 'Y-m-d',
+                    minDate: 'today',
+                    // On n'empêche plus de sélectionner des dates occupées
+                    disable: [],
+                    allowInput: false,
+                    onChange: function(selectedDates, dateStr, instance) {
+                        // Éviter la boucle si on vient d'appliquer programmatiquement
+                        if (window._rangeUpdateLock && window._rangeUpdateLock > 0) return;
+                        const norm = normalizeRange(dateStr);
+                        const parts = parseToArray(norm);
+                        if (parts) {
+                            saveSearchDateRangeJson(norm);
+                            // Synchroniser l'autre input et Livewire
+                            applyRangeToInputs(norm);
+                        }
+                    }
+                };
+                const el1 = document.getElementById('ReservationDateRange');
+                const el2 = document.getElementById('ReservationDateRange2');
+                const initial = getUrlDateRange() || getStoredJsonRange();
+                if (typeof window.flatpickr !== 'function') {
+                    // Flatpickr non dispo: appliquer quand même la valeur pour Livewire
+                    if (initial) applyRangeToInputs(initial);
+                    else {
+                        const def = getTodayTomorrow();
+                        applyRangeToInputs(def.iso);
+                    }
+                    // Binder la persistance sur saisie classique
+                    bindRangePersistenceListeners();
+                    return;
+                }
+                if (el1 && !el1._flatpickr) {
+                    try {
+                        const inst = window.flatpickr(el1, opts);
+                        const setInit = initial || getTodayTomorrow().iso;
+                        const arr = parseToArray(setInit);
+                        if (arr) {
+                            try {
+                                inst.setDate(arr, true);
+                            } catch (_) {}
+                        }
+                    } catch (_) {}
+                }
+                if (el2 && !el2._flatpickr) {
+                    try {
+                        const inst2 = window.flatpickr(el2, opts);
+                        const setInit2 = initial || getTodayTomorrow().iso;
+                        const arr2 = parseToArray(setInit2);
+                        if (arr2) {
+                            try {
+                                inst2.setDate(arr2, true);
+                            } catch (_) {}
+                        }
+                    } catch (_) {}
+                }
+                // S'assurer que la valeur Livewire reflète la plage choisie
+                if (initial) applyRangeToInputs(initial);
+                else {
+                    const def = getTodayTomorrow();
+                    applyRangeToInputs(def.iso);
+                }
+                // Binder la persistance après init
+                bindRangePersistenceListeners();
+            };
             // Fonction pour recharger les dates occupées et mettre à jour Flatpickr (si présent)
             window.refreshOccupiedDates = function() {
                 try {
@@ -758,7 +710,8 @@
                     window.occupiedDates = [];
                 }
                 // Maj de Flatpickr si déjà initialisé
-                const disable = (window.occupiedDates || []).slice();
+                // Autoriser la sélection même des dates occupées: ne pas désactiver
+                const disable = [];
                 const el1 = document.getElementById('ReservationDateRange');
                 const el2 = document.getElementById('ReservationDateRange2');
                 if (el1 && el1._flatpickr) {
@@ -776,8 +729,17 @@
             };
 
             // Rafraîchir après chargement Livewire et navigation Livewire
-            document.addEventListener('livewire:load', () => setTimeout(window.refreshOccupiedDates, 0));
-            document.addEventListener('livewire:navigated', () => setTimeout(window.refreshOccupiedDates, 0));
+            document.addEventListener('livewire:load', () => setTimeout(() => {
+                window.ensureInitDatePickers();
+                window.refreshOccupiedDates();
+                // Rebind persistance si nécessaire
+                if (typeof bindRangePersistenceListeners === 'function') bindRangePersistenceListeners();
+            }, 0));
+            document.addEventListener('livewire:navigated', () => setTimeout(() => {
+                window.ensureInitDatePickers();
+                window.refreshOccupiedDates();
+                if (typeof bindRangePersistenceListeners === 'function') bindRangePersistenceListeners();
+            }, 0));
             // Rafraîchir quand le room type change (événement navigateur Livewire v3)
             document.addEventListener('occupied-dates-updated', () => setTimeout(window.refreshOccupiedDates, 0));
 
@@ -806,7 +768,8 @@
                             mode: 'range',
                             dateFormat: 'Y-m-d',
                             minDate: 'today',
-                            disable: (window.occupiedDates || []).slice(),
+                            // Autoriser la sélection des dates occupées
+                            disable: [],
                             allowInput: false
                         });
                         setTimeout(() => {
@@ -840,23 +803,338 @@
                 });
             };
 
+            // Lier le clic sur les inputs de date pour ouvrir Flatpickr à coup sûr
+            window.bindDateInputsClickOpen = function() {
+                const inputs = [
+                    document.getElementById('ReservationDateRange'),
+                    document.getElementById('ReservationDateRange2')
+                ].filter(Boolean);
+                inputs.forEach((input) => {
+                    if (input.dataset.clickOpenBound === '1') return;
+                    input.dataset.clickOpenBound = '1';
+                    input.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        if (typeof window.openCalendarForInput === 'function') {
+                            window.openCalendarForInput(input);
+                        }
+                    });
+                    // Sur focus clavier aussi
+                    input.addEventListener('focus', () => {
+                        if (typeof window.openCalendarForInput === 'function') {
+                            window.openCalendarForInput(input);
+                        }
+                    });
+                });
+            };
+
             // Lier au chargement et re-navigation Livewire
-            document.addEventListener('livewire:load', () => setTimeout(window.bindRoomTypeSelectOpenCalendar, 0));
-            document.addEventListener('livewire:navigated', () => setTimeout(window.bindRoomTypeSelectOpenCalendar, 0));
+            document.addEventListener('livewire:load', () => setTimeout(() => {
+                window.bindRoomTypeSelectOpenCalendar();
+                window.bindDateInputsClickOpen();
+            }, 0));
+            document.addEventListener('livewire:navigated', () => setTimeout(() => {
+                window.bindRoomTypeSelectOpenCalendar();
+                window.bindDateInputsClickOpen();
+            }, 0));
             // Après mise à jour des dates occupées, ouvrir l'input ciblé si nécessaire
             document.addEventListener('occupied-dates-updated', () => setTimeout(() => {
-                window.refreshOccupiedDates();
-                const target = window._calendarOpenTarget || ((window.innerWidth < 768) ? document.getElementById('ReservationDateRange2') : document.getElementById('ReservationDateRange'));
-                if (target) window.openCalendarForInput(target);
-                window._calendarOpenTarget = null;
+                if (typeof window.refreshOccupiedDates === 'function') {
+                    window.refreshOccupiedDates();
+                }
+                // S'assurer que Flatpickr reste initialisé après une recherche
+                if (typeof window.ensureInitDatePickers === 'function') {
+                    window.ensureInitDatePickers();
+                }
+                // Rebinder le clic des inputs après re-render
+                if (typeof window.bindDateInputsClickOpen === 'function') {
+                    window.bindDateInputsClickOpen();
+                }
+                // Rebinder la persistance
+                if (typeof bindRangePersistenceListeners === 'function') bindRangePersistenceListeners();
+                // N'ouvrir le calendrier que si demandé explicitement (ex: changement de type de chambre)
+                if (window._calendarOpenTarget) {
+                    if (typeof window.openCalendarForInput === 'function') {
+                        window.openCalendarForInput(window._calendarOpenTarget);
+                    }
+                    window._calendarOpenTarget = null;
+                }
             }, 0));
+
+            // Toast de confirmation après recherche
+            document.addEventListener('dates-search-completed', () => {
+                try {
+                    if (window.Swal && typeof window.Swal.fire === 'function') {
+                        window.Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'success',
+                            title: 'Dates mises à jour',
+                            showConfirmButton: false,
+                            timer: 1800
+                        });
+                    } else {
+                        // Fallback
+                        console.log('Dates mises à jour');
+                    }
+                } catch (_) {}
+            });
 
             // Appel initial après ce rendu (utile lors des re-rendus Livewire)
             if (typeof window.refreshOccupiedDates === 'function') {
+                window.ensureInitDatePickers && window.ensureInitDatePickers();
                 window.refreshOccupiedDates();
             }
         </script>
     </form>
+</div>
+
+{{-- Tableau des types de chambre (Hôtel uniquement) --}}
+@if($property && $property->category && in_array($property->category->name, ['Hôtel','Hotel']) && $property->roomTypes && $property->roomTypes->count())
+<div class="container mx-auto mt-8 px-4">
+    @php
+    $user = auth()->user();
+    $userCurrency = $user && $user->currency ? $user->currency : 'XOF';
+    $rate = app('App\\Livewire\\BookingManager')->getExchangeRate('XOF', $userCurrency);
+    $displayCurrency = ($rate && $rate > 0) ? $userCurrency : 'XOF';
+    @endphp
+    <div class="overflow-x-auto bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead class="bg-gray-50 dark:bg-gray-900">
+                <tr>
+                    <th scope="col" class="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-200">Type de chambre</th>
+                    <th scope="col" class="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-200">Nombre de personnes</th>
+                    <th scope="col" class="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-200">Lits</th>
+                    <th scope="col" class="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-200">Prix</th>
+                    <th scope="col" class="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-200">Disponibilité</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                @foreach($property->roomTypes as $rt)
+                @php
+                $rtBasePrice = $rt->price_per_night;
+                $rtConverted = ($rate && $rate > 0 && $rtBasePrice !== null) ? round($rtBasePrice * $rate, 2) : $rtBasePrice;
+                // Disponibilité selon la plage de dates sélectionnée
+                $availabilityLabel = null;
+                $availableQty = null;
+                if (!empty($dateRange) && !empty($rt->inventory)) {
+                $parts = preg_split('/\s+(?:to|à|au|\-|–|—)\s+/ui', $dateRange);
+                if (is_array($parts) && count($parts) === 2) {
+                try {
+                $start = \Carbon\Carbon::parse(trim($parts[0]))->startOfDay();
+                $end = \Carbon\Carbon::parse(trim($parts[1]))->endOfDay();
+                if ($start && $end && $start->lte($end)) {
+                $booked = \App\Models\Booking::query()
+                ->where('room_type_id', $rt->id)
+                ->where('status', 'accepted')
+                ->whereDate('start_date', '<', $end->toDateString())
+                    ->whereDate('end_date', '>', $start->toDateString())
+                    ->sum('quantity');
+                    $inv = max(0, (int) $rt->inventory);
+                    $avail = max(0, $inv - (int) $booked);
+                    $availableQty = $avail;
+                    $availabilityLabel = $avail > 0 ? ($avail . ' dispo') : 'Complet';
+                    }
+                    } catch (\Throwable $e) {
+                    $availabilityLabel = '—';
+                    }
+                    }
+                    }
+                    @endphp
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer" onclick="toggleRoomTypeDetails('rt-{{ $rt->id }}')" data-rt-id="{{ $rt->id }}" data-rt-images='@json($rt->images ?? [])'>
+                        <td class="px-4 py-3 text-sm text-gray-800 dark:text-gray-200 font-medium">{{ $rt->name }}</td>
+                        <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
+                            <span class="inline-flex items-center gap-1" aria-label="{{ $rt->capacity }} personne{{ $rt->capacity > 1 ? 's' : '' }}">
+                                <i class="fas fa-user text-blue-600 dark:text-blue-400"></i>
+                                <span>{{ $rt->capacity }}</span>
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
+                            <span class="inline-flex items-center gap-1" aria-label="{{ $rt->beds }} lit{{ $rt->beds > 1 ? 's' : '' }}">
+                                <i class="fas fa-bed text-gray-700 dark:text-gray-300"></i>
+                                <span>{{ $rt->beds }}</span>
+                            </span>
+                        </td>
+
+                        <td class="px-4 py-3 text-sm text-gray-800 dark:text-gray-200">
+                            @if(!is_null($rtBasePrice))
+                            {{ number_format($rtConverted, 2) }} {{ $displayCurrency }}
+                            @else
+                            <span class="text-gray-400">N/A</span>
+                            @endif
+                        </td>
+                        <td class="px-4 py-3 text-sm text-gray-800 dark:text-gray-200">
+                            @if($availableQty === 0)
+                            <span class="inline-flex items-center gap-2 text-red-600 dark:text-red-400" title="Cette chambre n'est pas disponible pour les dates sélectionnées">
+                                <i class="fas fa-times-circle"></i>
+                                Non disponible aux dates choisies
+                            </span>
+                            @else
+                            <button type="button"
+                                wire:click.prevent="quickReserve({{ $rt->id }})"
+                                class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                                Réserver
+                            </button>
+                            @endif
+                        </td>
+                    </tr>
+                    {{-- Ligne de détails repliable pour ce type de chambre --}}
+                    <tr id="rt-{{ $rt->id }}" class="hidden bg-gray-50 dark:bg-gray-900">
+                        <td colspan="5" class="px-4 py-4">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div class="md:col-span-2">
+                                    <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2">Description</h3>
+                                    <p class="text-sm text-gray-700 dark:text-gray-300">{{ $rt->description ?? 'Aucune description fournie.' }}</p>
+                                    @if(is_array($rt->amenities) && count($rt->amenities))
+                                    <h4 class="text-sm font-semibold text-gray-800 dark:text-gray-200 mt-4 mb-2">Caractéristiques de la chambre</h4>
+                                    <ul class="flex flex-wrap gap-2">
+                                        @foreach($rt->amenities as $amenity)
+                                        <li class="px-2 py-1 rounded bg-gray-100 dark:bg-gray-800 text-xs text-gray-700 dark:text-gray-300">{{ ucfirst($amenity) }}</li>
+                                        @endforeach
+                                    </ul>
+                                    @endif
+                                </div>
+                                <div>
+                                    <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2">Images</h3>
+                                    <div class="grid grid-cols-3 gap-2">
+                                        @if(is_array($rt->images) && count($rt->images))
+                                        @foreach(array_slice($rt->images, 0, 6) as $img)
+                                        <img src="{{ asset('storage/' . ltrim($img, '/')) }}" alt="{{ $rt->name }}" class="w-full h-16 object-cover rounded border border-gray-200 dark:border-gray-700 cursor-pointer" onclick="openRoomTypeGallery({{ $rt->id }}, {{ $loop->index }})" />
+                                        @endforeach
+                                        @else
+                                        <span class="text-sm text-gray-400">Aucune image</span>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    @endforeach
+            </tbody>
+        </table>
+    </div>
+    <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">Astuce: cliquez sur une ligne pour afficher les détails du type de chambre.</p>
+    <script>
+        function toggleRoomTypeDetails(id) {
+            const row = document.getElementById(id);
+            if (!row) return;
+            row.classList.toggle('hidden');
+        }
+    </script>
+</div>
+@endif
+
+<!-- Modal galerie pour types de chambre -->
+<div id="roomTypeGalleryModal" class="fixed inset-0 z-50 hidden bg-black bg-opacity-75 flex items-center justify-center">
+    <div class="relative bg-white dark:bg-gray-900 rounded-lg shadow-lg w-11/12 lg:w-3/4 max-h-screen overflow-hidden">
+        <button class="absolute top-2 right-2 text-gray-500 hover:text-gray-700" onclick="closeRoomTypeGallery()">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+        </button>
+        <div class="p-4">
+            <div class="swiper swiper-container rtSwiper">
+                <div class="swiper-wrapper" id="rt-swiper-wrapper"></div>
+                <div class="swiper-button-prev"></div>
+                <div class="swiper-button-next"></div>
+                <div class="swiper-pagination"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    window.openRoomTypeGallery = function(roomTypeId, startIndex = 0) {
+        const modal = document.getElementById('roomTypeGalleryModal');
+        const wrapper = document.getElementById('rt-swiper-wrapper');
+        if (!modal || !wrapper) return;
+        // Trouver la ligne avec les data-attributes
+        const row = document.querySelector(`tr[data-rt-id="${roomTypeId}"]`);
+        if (!row) return;
+        let images = [];
+        try {
+            const data = row.getAttribute('data-rt-images');
+            images = data ? JSON.parse(data) : [];
+        } catch (e) {
+            images = [];
+        }
+        // Nettoyage
+        wrapper.innerHTML = '';
+        // Peupler
+        (images || []).forEach((img) => {
+            const src = (img || '').replace(/^\/+/, '');
+            const slide = document.createElement('div');
+            slide.className = 'swiper-slide flex items-center justify-center';
+            slide.innerHTML = `<img src="${window.location.origin}/storage/${src}" class="max-h-[70vh] w-auto object-contain rounded-lg" alt="RoomType Image" />`;
+            wrapper.appendChild(slide);
+        });
+        modal.classList.remove('hidden');
+        setTimeout(() => {
+            // Détruire instance précédente si besoin
+            if (window.rtSwiper && typeof window.rtSwiper.destroy === 'function') {
+                window.rtSwiper.destroy(true, true);
+                window.rtSwiper = null;
+            }
+            window.rtSwiper = new Swiper('#roomTypeGalleryModal .rtSwiper', {
+                spaceBetween: 10,
+                loop: false,
+                navigation: {
+                    nextEl: '#roomTypeGalleryModal .swiper-button-next',
+                    prevEl: '#roomTypeGalleryModal .swiper-button-prev',
+                },
+                pagination: {
+                    el: '#roomTypeGalleryModal .swiper-pagination',
+                    clickable: true,
+                },
+            });
+            if (typeof startIndex === 'number' && startIndex >= 0) {
+                try {
+                    window.rtSwiper.slideTo(startIndex, 0);
+                } catch (_) {}
+            }
+        }, 0);
+    };
+
+    window.closeRoomTypeGallery = function() {
+        const modal = document.getElementById('roomTypeGalleryModal');
+        if (!modal) return;
+        modal.classList.add('hidden');
+    };
+</script>
+
+<div id="photoGalleryModal" class="fixed inset-0 z-50 hidden bg-black bg-opacity-75 flex items-center justify-center">
+    <div class="relative bg-white dark:bg-gray-900 rounded-lg shadow-lg w-11/12 lg:w-3/4 max-h-screen overflow-hidden">
+        <button class="absolute top-2 right-2 text-gray-500 hover:text-gray-700" onclick="closeGallery()">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+        </button>
+        <div class="p-4">
+            <!-- Swiper principal -->
+            <div class="swiper swiper-container mySwiper">
+                <div class="swiper-wrapper">
+                    @foreach($property->images as $idx => $image)
+                    <div class="swiper-slide flex items-center justify-center">
+                        <img src="{{ asset('storage/' . $image->image_path) }}" alt="Image {{ $idx + 1 }} - {{ $property->name ?? 'Propriété' }}" class="max-h-[70vh] w-auto object-contain rounded-lg" />
+                    </div>
+                    @endforeach
+                </div>
+                <div class="swiper-button-prev"></div>
+                <div class="swiper-button-next"></div>
+                <div class="swiper-pagination"></div>
+            </div>
+
+            <!-- Miniatures -->
+            <div class="swiper swiper-container mySwiper2 mt-4">
+                <div class="swiper-wrapper">
+                    @foreach($property->images as $idx => $image)
+                    <div class="swiper-slide !w-auto">
+                        <img src="{{ asset('storage/' . $image->image_path) }}" alt="Miniature {{ $idx + 1 }}" class="w-20 h-20 object-cover rounded-lg border-2 border-transparent hover:border-blue-500" />
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Reviews section -->

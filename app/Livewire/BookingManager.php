@@ -552,7 +552,7 @@ class BookingManager extends Component
             }
 
             // Récupérer toutes les réservations acceptées OU payées pour ce room type
-            $bookings = \App\Models\Booking::query()
+            $bookings = Booking::query()
                 ->where('property_id', $this->property->id)
                 ->where('room_type_id', $roomType->id)
                 ->where(function ($q) {

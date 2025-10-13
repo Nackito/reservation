@@ -475,6 +475,10 @@
                 Rechercher
             </button>
         </div>
+        <div class="mt-2 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+            <span class="inline-block w-2 h-2 rounded-full bg-red-600"></span>
+            <span>Date occupée (indicatif)</span>
+        </div>
         <script id="occupied-dates" type="application/json" wire:key="occupied-{{ $property->id ?? 'p' }}-{{ $selectedRoomTypeId ?? 'none' }}">
             @json($occupiedDates ?? [])
         </script>
@@ -634,13 +638,54 @@
             }
             // (Ré)initialise Flatpickr sur les champs de date si nécessaire
             window.ensureInitDatePickers = function() {
+                function applyOccupiedDecoration(inst) {
+                    if (!inst || !inst.calendarContainer) return;
+                    const list = Array.isArray(window.occupiedDates) ? window.occupiedDates : [];
+                    const days = inst.calendarContainer.querySelectorAll('.flatpickr-day');
+                    days.forEach((day) => {
+                        // day.dateObj existe dans certaines versions, sinon lire l'aria-label si formatée
+                        try {
+                            let iso = null;
+                            if (day.dateObj instanceof Date) {
+                                iso = inst.formatDate(day.dateObj, 'Y-m-d');
+                            }
+                            if (iso && list.indexOf(iso) !== -1) {
+                                day.classList.add('is-occupied');
+                                day.setAttribute('title', 'Occupé');
+                            } else {
+                                day.classList.remove('is-occupied');
+                            }
+                        } catch (_) {}
+                    });
+                }
+                const occupiedArr = Array.isArray(window.occupiedDates) ? window.occupiedDates.slice() : [];
                 const opts = {
                     mode: 'range',
                     dateFormat: 'Y-m-d',
                     minDate: 'today',
-                    // On n'empêche plus de sélectionner des dates occupées
+                    // Ne pas désactiver: on veut grisé MAIS sélectionnable
                     disable: [],
                     allowInput: false,
+                    onDayCreate: function(dObj, dStr, fp, dayElem) {
+                        try {
+                            const iso = fp.formatDate(dObj, 'Y-m-d');
+                            const list = Array.isArray(window.occupiedDates) ? window.occupiedDates : occupiedArr;
+                            if (list && list.indexOf(iso) !== -1) {
+                                dayElem.classList.add('is-occupied');
+                                dayElem.setAttribute('title', 'Occupé');
+                            }
+                        } catch (_) {}
+                    },
+                    onReady: function(selectedDates, dateStr, inst) {
+                        setTimeout(() => applyOccupiedDecoration(inst), 0);
+                    },
+                    onOpen: function(selectedDates, dateStr, inst) {
+                        // Forcer une décoration explicite à l'ouverture
+                        setTimeout(() => applyOccupiedDecoration(inst), 0);
+                    },
+                    onMonthChange: function(selectedDates, dateStr, inst) {
+                        setTimeout(() => applyOccupiedDecoration(inst), 0);
+                    },
                     onChange: function(selectedDates, dateStr, instance) {
                         // Éviter la boucle si on vient d'appliquer programmatiquement
                         if (window._rangeUpdateLock && window._rangeUpdateLock > 0) return;
@@ -650,6 +695,8 @@
                             saveSearchDateRangeJson(norm);
                             // Synchroniser l'autre input et Livewire
                             applyRangeToInputs(norm);
+                            // Réappliquer la déco (au cas où on ait changé de mois)
+                            setTimeout(() => applyOccupiedDecoration(instance), 0);
                         }
                     }
                 };
@@ -677,6 +724,8 @@
                                 inst.setDate(arr, true);
                             } catch (_) {}
                         }
+                        // Appliquer déco initiale
+                        setTimeout(() => applyOccupiedDecoration(inst), 0);
                     } catch (_) {}
                 }
                 if (el2 && !el2._flatpickr) {
@@ -689,6 +738,7 @@
                                 inst2.setDate(arr2, true);
                             } catch (_) {}
                         }
+                        setTimeout(() => applyOccupiedDecoration(inst2), 0);
                     } catch (_) {}
                 }
                 // S'assurer que la valeur Livewire reflète la plage choisie
@@ -710,7 +760,7 @@
                     window.occupiedDates = [];
                 }
                 // Maj de Flatpickr si déjà initialisé
-                // Autoriser la sélection même des dates occupées: ne pas désactiver
+                // On n'utilise pas disable (sélection reste permise); on force juste un redraw pour réappliquer onDayCreate
                 const disable = [];
                 const el1 = document.getElementById('ReservationDateRange');
                 const el2 = document.getElementById('ReservationDateRange2');
@@ -718,12 +768,43 @@
                     try {
                         el1._flatpickr.set('disable', disable);
                         el1._flatpickr.redraw();
+                        // Déco explicite après redraw
+                        setTimeout(() => {
+                            if (el1._flatpickr) {
+                                const inst = el1._flatpickr;
+                                const days = inst.calendarContainer?.querySelectorAll('.flatpickr-day') || [];
+                                days.forEach((d) => d.classList.remove('is-occupied'));
+                                const list = Array.isArray(window.occupiedDates) ? window.occupiedDates : [];
+                                days.forEach((day) => {
+                                    try {
+                                        const dateObj = day.dateObj instanceof Date ? day.dateObj : null;
+                                        const iso = dateObj ? inst.formatDate(dateObj, 'Y-m-d') : null;
+                                        if (iso && list.indexOf(iso) !== -1) day.classList.add('is-occupied');
+                                    } catch (_) {}
+                                });
+                            }
+                        }, 0);
                     } catch (_) {}
                 }
                 if (el2 && el2._flatpickr) {
                     try {
                         el2._flatpickr.set('disable', disable);
                         el2._flatpickr.redraw();
+                        setTimeout(() => {
+                            if (el2._flatpickr) {
+                                const inst2 = el2._flatpickr;
+                                const days2 = inst2.calendarContainer?.querySelectorAll('.flatpickr-day') || [];
+                                days2.forEach((d) => d.classList.remove('is-occupied'));
+                                const list2 = Array.isArray(window.occupiedDates) ? window.occupiedDates : [];
+                                days2.forEach((day) => {
+                                    try {
+                                        const dateObj = day.dateObj instanceof Date ? day.dateObj : null;
+                                        const iso = dateObj ? inst2.formatDate(dateObj, 'Y-m-d') : null;
+                                        if (iso && list2.indexOf(iso) !== -1) day.classList.add('is-occupied');
+                                    } catch (_) {}
+                                });
+                            }
+                        }, 0);
                     } catch (_) {}
                 }
             };
@@ -891,6 +972,44 @@
 {{-- Tableau des types de chambre (Hôtel uniquement) --}}
 @if($property && $property->category && in_array($property->category->name, ['Hôtel','Hotel']) && $property->roomTypes && $property->roomTypes->count())
 <div class="container mx-auto mt-8 px-4">
+    <style>
+        /* Jours occupés: grisés mais sélectionnables */
+        .flatpickr-day.is-occupied {
+            background-color: rgba(220, 38, 38, 0.12);
+            /* rouge clair */
+            color: #991b1b;
+            /* rouge sombre */
+            position: relative;
+        }
+
+        .flatpickr-day.is-occupied::after {
+            content: '';
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-radius: 9999px;
+            background-color: #dc2626;
+            /* rouge */
+            right: 4px;
+            bottom: 4px;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .flatpickr-day.is-occupied:hover {
+            background-color: rgba(220, 38, 38, 0.2);
+        }
+
+        /* Si le jour est aussi sélectionné, garder un contraste correct */
+        .flatpickr-day.is-occupied.selected,
+        .flatpickr-day.is-occupied.startRange,
+        .flatpickr-day.is-occupied.endRange,
+        .flatpickr-day.is-occupied.inRange {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(220, 38, 38, 0.2));
+            color: #1f2937;
+            /* gris foncé */
+        }
+    </style>
     @php
     $user = auth()->user();
     $userCurrency = $user && $user->currency ? $user->currency : 'XOF';
@@ -916,7 +1035,8 @@
                 // Disponibilité selon la plage de dates sélectionnée
                 $availabilityLabel = null;
                 $availableQty = null;
-                if (!empty($dateRange) && !empty($rt->inventory)) {
+                // Calculer la dispo même si inventory = 0 ("complet")
+                if (!empty($dateRange) && $rt->inventory !== null) {
                 $parts = preg_split('/\s+(?:to|à|au|\-|–|—)\s+/ui', $dateRange);
                 if (is_array($parts) && count($parts) === 2) {
                 try {
@@ -925,7 +1045,11 @@
                 if ($start && $end && $start->lte($end)) {
                 $booked = \App\Models\Booking::query()
                 ->where('room_type_id', $rt->id)
-                ->where('status', 'accepted')
+                // Acceptées OU déjà payées comptent comme occupées pour l'inventaire
+                ->where(function($q){
+                $q->where('status','accepted')
+                ->orWhere('payment_status','paid');
+                })
                 ->whereDate('start_date', '<', $end->toDateString())
                     ->whereDate('end_date', '>', $start->toDateString())
                     ->sum('quantity');
@@ -963,18 +1087,18 @@
                             @endif
                         </td>
                         <td class="px-4 py-3 text-sm text-gray-800 dark:text-gray-200">
-                            @if($availableQty === 0)
-                            <span class="inline-flex items-center gap-2 text-red-600 dark:text-red-400" title="Cette chambre n'est pas disponible pour les dates sélectionnées">
+                            @if($availableQty !== null && $availableQty <= 0)
+                                <span class="inline-flex items-center gap-2 text-red-600 dark:text-red-400" title="Cette chambre n'est pas disponible pour les dates sélectionnées">
                                 <i class="fas fa-times-circle"></i>
                                 Non disponible aux dates choisies
-                            </span>
-                            @else
-                            <button type="button"
-                                wire:click.prevent="quickReserve({{ $rt->id }})"
-                                class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400">
-                                Réserver
-                            </button>
-                            @endif
+                                </span>
+                                @else
+                                <button type="button"
+                                    wire:click.prevent="quickReserve({{ $rt->id }})"
+                                    class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                                    Réserver
+                                </button>
+                                @endif
                         </td>
                     </tr>
                     {{-- Ligne de détails repliable pour ce type de chambre --}}
@@ -998,7 +1122,7 @@
                                     <div class="grid grid-cols-3 gap-2">
                                         @if(is_array($rt->images) && count($rt->images))
                                         @foreach(array_slice($rt->images, 0, 6) as $img)
-                                        <img src="{{ asset('storage/' . ltrim($img, '/')) }}" alt="{{ $rt->name }}" class="w-full h-16 object-cover rounded border border-gray-200 dark:border-gray-700 cursor-pointer" onclick="openRoomTypeGallery({{ $rt->id }}, {{ $loop->index }})" />
+                                        <img src="{{ asset('storage/' . ltrim($img, '/')) }}" alt="{{ $rt->name }}" class="w-full h-16 object-cover rounded border border-gray-200 dark:border-gray-700 cursor-pointer" onclick="openRoomTypeGallery({{ $rt->id }}, {{ $loop->index }})">
                                         @endforeach
                                         @else
                                         <span class="text-sm text-gray-400">Aucune image</span>

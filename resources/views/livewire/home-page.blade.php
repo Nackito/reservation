@@ -1020,12 +1020,12 @@
                                     @endif
                                 </p>
 
-                                {{-- Type de logement --}}
-                                @if($property->property_type)
+                                {{-- Type de logement (catégorie) --}}
+                                @if(optional($property->category)->name)
                                 <div class="mb-2">
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-300">
                                         <i class="fas fa-home mr-1"></i>
-                                        {{ ucfirst($property->property_type) }}
+                                        {{ $property->category->name }}
                                     </span>
                                     {{-- Nombre de chambres --}}
                                     @if($property->number_of_rooms)
@@ -1239,12 +1239,12 @@
                                     <i class="fas fa-map-marker-alt mr-1"></i>
                                     {{ $property->city }}@if($property->municipality), {{ $property->municipality }}@endif
                                 </div>
-                                @if($property->property_type || $property->number_of_rooms)
+                                @if(optional($property->category)->name || $property->number_of_rooms)
                                 <div class="mb-2 flex flex-wrap gap-2">
-                                    @if($property->property_type)
+                                    @if(optional($property->category)->name)
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                         <i class="fas fa-home mr-1"></i>
-                                        {{ ucfirst($property->property_type) }}
+                                        {{ $property->category->name }}
                                     </span>
                                     @endif
                                     @if($property->number_of_rooms)
@@ -1588,13 +1588,13 @@
                                 @endif
                             </p>
 
-                            {{-- Type de logement et nombre de chambres --}}
-                            @if($property->property_type || $property->number_of_rooms)
+                            {{-- Type de logement (catégorie) et nombre de chambres --}}
+                            @if(optional($property->category)->name || $property->number_of_rooms)
                             <div class="mb-3 flex flex-wrap gap-2">
-                                @if($property->property_type)
+                                @if(optional($property->category)->name)
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-300">
                                     <i class="fas fa-home mr-1"></i>
-                                    {{ ucfirst($property->property_type) }}
+                                    {{ $property->category->name }}
                                 </span>
                                 @endif
                                 @if($property->number_of_rooms)

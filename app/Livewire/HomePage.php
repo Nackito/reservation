@@ -5,6 +5,7 @@ namespace App\Livewire;
 use Livewire\Component;
 use Livewire\Attributes\Title;
 use App\Models\Property;
+use App\Models\Category;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 
@@ -322,7 +323,10 @@ class HomePage extends Component
 
             // Filtres avancés
             if ($this->propertyType) {
-                $query->where('property_type', $this->propertyType);
+                // Remplace l'ancien filtre sur property_type par la catégorie (par nom)
+                $query->whereHas('category', function ($q) {
+                    $q->where('name', $this->propertyType);
+                });
             }
 
             if ($this->minPrice) {
@@ -361,10 +365,12 @@ class HomePage extends Component
                 },
             ]);
 
-            $properties = $query->get();
+            // Eager-load category pour éviter N+1 dans la vue
+            $properties = $query->with('category')->get();
         } else {
             // Par défaut, charger aussi la moyenne des notes approuvées
             $properties = Property::query()
+                ->with('category')
                 ->withAvg([
                     'reviews as avg_rating' => function ($q) {
                         $q->where('approved', true);
@@ -476,12 +482,11 @@ class HomePage extends Component
             $cityRow->city_image_url = $imageUrl;
         }
 
-        // Récupérer les types de propriétés disponibles pour le filtre
-        $propertyTypes = Property::select('property_type')
-            ->whereNotNull('property_type')
-            ->where('property_type', '!=', '')
-            ->distinct()
-            ->pluck('property_type');
+        // Récupérer les catégories disponibles pour le filtre (remplace property_type)
+        $propertyTypes = Category::query()
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->pluck('name');
 
         // Récupérer toutes les commodités disponibles
         $allFeatures = Property::whereNotNull('features')

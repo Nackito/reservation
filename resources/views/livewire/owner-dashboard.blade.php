@@ -59,8 +59,15 @@
       <div class="mt-2 text-3xl font-semibold">{{ $pendingBookings }}</div>
     </div>
     <div class="rounded-lg border bg-white p-4 shadow-sm">
-      <div class="text-sm text-gray-500">Revenu ce mois</div>
-      <div class="mt-2 text-3xl font-semibold">{{ number_format($monthlyRevenue, 0, ',', ' ') }} FCFA</div>
+      <div class="text-sm text-gray-500">Revenu sur la période</div>
+      <div class="mt-2 text-3xl font-semibold">
+        {{ number_format($monthlyRevenueDisplay ?? 0, 0, ',', ' ') }} {{ $displayCurrency ?? 'XOF' }}
+      </div>
+      @if(($displayCurrency ?? 'XOF') !== 'XOF')
+      <div class="mt-1 text-xs text-gray-500">
+        Équivaut à {{ number_format($monthlyRevenue ?? 0, 0, ',', ' ') }} XOF (taux {{ $rate }})
+      </div>
+      @endif
     </div>
   </div>
 
@@ -97,7 +104,16 @@
               @endphp
               <span class="inline-flex items-center rounded px-2 py-0.5 text-xs font-medium {{ $cls }}">{{ $label }}</span>
             </td>
-            <td class="px-3 py-2 text-right text-sm text-gray-700">{{ number_format($booking->total_price ?? 0, 0, ',', ' ') }} FCFA</td>
+            @php
+            $lineBase = (float) ($booking->total_price ?? 0);
+            $lineConverted = round($lineBase * ($rate ?? 1), 2);
+            @endphp
+            <td class="px-3 py-2 text-right text-sm text-gray-700">
+              {{ number_format($lineConverted, 0, ',', ' ') }} {{ $displayCurrency ?? 'XOF' }}
+              @if(($displayCurrency ?? 'XOF') !== 'XOF')
+              <span class="ml-1 text-xs text-gray-400">({{ number_format($lineBase, 0, ',', ' ') }} XOF)</span>
+              @endif
+            </td>
           </tr>
           @empty
           <tr>

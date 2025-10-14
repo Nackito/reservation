@@ -146,16 +146,7 @@ class PropertiesResource extends Resource
                         ])
 
                         ->visible(fn($get) => optional(\App\Models\Category::find($get('category_id')))?->name === self::CATEGORY_HOTEL_FR),
-                    Select::make('property_type')
-                        ->label('Type de résidence')
-                        ->options([
-                            'house' => 'Maison',
-                            'apartment' => 'Appartement',
-                            'studio' => 'Studio',
-                            'villa' => 'Villa',
-                            'other' => 'Autre',
-                        ])
-                        ->visible(fn($get) => optional(\App\Models\Category::find($get('category_id')))?->name === self::CATEGORY_RESIDENCE_FR),
+                    // Champ property_type supprimé: remplacé par la catégorie
                 ])->columns(2),
 
             // Section inline pour gérer les types de chambre quand la catégorie est Hôtel

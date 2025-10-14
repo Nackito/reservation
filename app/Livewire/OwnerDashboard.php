@@ -71,6 +71,24 @@ class OwnerDashboard extends Component
       })
       ->sum('total_price');
 
+    // Préparer devise utilisateur et taux de conversion (base XOF -> devise utilisateur)
+    $userCurrency = $user && $user->currency ? $user->currency : 'XOF';
+    $displayCurrency = 'XOF';
+    $rate = 1.0;
+    if ($userCurrency !== 'XOF') {
+      try {
+        $rateSrv = app(\App\Livewire\BookingManager::class)->getExchangeRate('XOF', $userCurrency);
+        if (is_numeric($rateSrv) && (float) $rateSrv > 0) {
+          $rate = (float) $rateSrv;
+          $displayCurrency = $userCurrency;
+        }
+      } catch (\Throwable $e) {
+        // fallback XOF
+      }
+    }
+
+    $monthlyRevenueDisplay = round($this->monthlyRevenue * $rate, 2);
+
     $latest = Booking::with(['user', 'property'])
       ->whereIn('property_id', $filteredPropertyIds)
       ->when($rangeStart && $rangeEnd, function ($q) use ($rangeStart, $rangeEnd) {
@@ -86,6 +104,9 @@ class OwnerDashboard extends Component
       'rangeStart' => $rangeStart,
       'rangeEnd' => $rangeEnd,
       'ownerProperties' => $ownerProperties,
+      'rate' => $rate,
+      'displayCurrency' => $displayCurrency,
+      'monthlyRevenueDisplay' => $monthlyRevenueDisplay,
     ]);
   }
 

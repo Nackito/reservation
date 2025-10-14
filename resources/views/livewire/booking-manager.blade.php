@@ -632,22 +632,10 @@
                 bindFor(el1);
                 bindFor(el2);
             }
-            // (Ré)initialise Flatpickr sur les champs de date si nécessaire
-            window.ensureInitDatePickers = function() {
-                // Helper: récupère la valeur initiale de Livewire si présente
-                function getLivewireInitialRange() {
-                    try {
-                        const el1 = document.getElementById('ReservationDateRange');
-                        const el2 = document.getElementById('ReservationDateRange2');
-                        const raw = (el1 && el1.value ? el1.value : '') || (el2 && el2.value ? el2.value : '');
-                        const norm = normalizeRange(raw);
-                        const parts = parseToArray(norm);
-                        return parts ? `${parts[0]} to ${parts[1]}` : '';
-                    } catch (_) {
-                        return '';
-                    }
-                }
-                const baseOpts = {
+
+            // Options Flatpickr partagées pour garantir une configuration unique partout
+            window.getFlatpickrBaseOptions = function() {
+                return {
                     mode: 'range',
                     dateFormat: 'Y-m-d',
                     minDate: 'today',
@@ -681,6 +669,23 @@
                         }
                     }
                 };
+            };
+            // (Ré)initialise Flatpickr sur les champs de date si nécessaire
+            window.ensureInitDatePickers = function() {
+                // Helper: récupère la valeur initiale de Livewire si présente
+                function getLivewireInitialRange() {
+                    try {
+                        const el1 = document.getElementById('ReservationDateRange');
+                        const el2 = document.getElementById('ReservationDateRange2');
+                        const raw = (el1 && el1.value ? el1.value : '') || (el2 && el2.value ? el2.value : '');
+                        const norm = normalizeRange(raw);
+                        const parts = parseToArray(norm);
+                        return parts ? `${parts[0]} to ${parts[1]}` : '';
+                    } catch (_) {
+                        return '';
+                    }
+                }
+                const baseOpts = (typeof window.getFlatpickrBaseOptions === 'function') ? window.getFlatpickrBaseOptions() : {};
                 const el1 = document.getElementById('ReservationDateRange');
                 const el2 = document.getElementById('ReservationDateRange2');
                 // Priorité: Livewire (côté serveur) > URL > défaut (aujourd'hui → demain)
@@ -743,14 +748,17 @@
                 }
                 // Binder la persistance après init
                 bindRangePersistenceListeners();
-                // Écouter l'événement Livewire pour réappliquer la plage en FR dans Flatpickr
-                document.addEventListener('date-range-updated', (e) => {
-                    try {
-                        const iso = e && e.detail && e.detail.dateRange ? String(e.detail.dateRange) : '';
-                        if (!iso) return;
-                        applyRangeToInputs(iso);
-                    } catch (_) {}
-                });
+                // Écouter l'événement Livewire pour réappliquer la plage en FR dans Flatpickr (une seule fois)
+                if (!window.__dateRangeUpdatedListenerBound) {
+                    document.addEventListener('date-range-updated', (e) => {
+                        try {
+                            const iso = e && e.detail && e.detail.dateRange ? String(e.detail.dateRange) : '';
+                            if (!iso) return;
+                            applyRangeToInputs(iso);
+                        } catch (_) {}
+                    });
+                    window.__dateRangeUpdatedListenerBound = true;
+                }
             };
             // Nettoyage: suppression des fonctions de coloration des dates occupées
 
@@ -788,14 +796,18 @@
                 };
                 if (!tryOpen() && typeof window.flatpickr === 'function') {
                     try {
-                        window.flatpickr(inputEl, {
+                        const base = (typeof window.getFlatpickrBaseOptions === 'function') ? window.getFlatpickrBaseOptions() : {
                             mode: 'range',
                             dateFormat: 'Y-m-d',
                             minDate: 'today',
-                            // Autoriser la sélection des dates occupées
                             disable: [],
                             allowInput: false
+                        };
+                        const opts = Object.assign({}, base, {
+                            appendTo: inputEl.parentElement,
+                            positionElement: inputEl
                         });
+                        window.flatpickr(inputEl, opts);
                         setTimeout(() => {
                             tryOpen();
                         }, 0);

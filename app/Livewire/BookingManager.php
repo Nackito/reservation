@@ -60,10 +60,9 @@ class BookingManager extends Component
         'balcon' => 'fa-building',
         'ascenseur' => 'fa-elevator',
         'meuble' => 'fa-couch',
-        'terrasse' => 'fa-umbrella-beach',
 
         // Anciennes valeurs textuelles (compat)
-        'wifiold' => 'fa-wifi', // alias placeholder si besoin
+        'wifiold' => 'fa-wifi',
         'wifigratuit' => 'fa-wifi',
         'parkinggratuit' => 'fa-parking',
         'climatisation' => 'fa-snowflake',
@@ -73,12 +72,12 @@ class BookingManager extends Component
         'salledesport' => 'fa-dumbbell',
         'jacuzzi' => 'fa-hot-tub',
         'barbecue' => 'fa-fire',
-        'lavelinge' => 'fa-tshirt', // substitution +/-
+        'lavelinge' => 'fa-tshirt',
         'sechelange' => 'fa-tshirt',
         'sechel30' => 'fa-tshirt',
         'sechelinge' => 'fa-tshirt',
-        'sechecheveux' => 'fa-bath', // fallback plus standard
-        'ferarepasser' => 'fa-shirt', // fallback
+        'sechecheveux' => 'fa-bath',
+        'ferarepasser' => 'fa-shirt',
         'chauffage' => 'fa-thermometer-half',
         'coffrefort' => 'fa-lock',
         'reveil' => 'fa-clock',
@@ -99,27 +98,25 @@ class BookingManager extends Component
     public function iconClassForFeature($feature): string
     {
         $norm = $this->normalizeFeatureKey($feature);
-        // clés exactes (nouvelles) ou compat anciennes
         if (isset($this->featureIcons[$norm])) {
             return $this->featureIcons[$norm];
         }
-        // Tentative fallback: retirer mots courts
         $simpler = preg_replace('/(gratuit|free)$/', '', $norm);
         if ($simpler && isset($this->featureIcons[$simpler])) {
             return $this->featureIcons[$simpler];
         }
-        // Encore un fallback: si l'ancienne clé exacte existe
         if (isset($this->featureIcons[$feature])) {
             return $this->featureIcons[$feature];
         }
         return 'fa-circle';
     }
+
     public function getExchangeRate($from, $to)
     {
-        // Mémoïsation par requête pour éviter des appels HTTP répétés au sein d'un même cycle
+        // Mémoïsation par requête
         static $memo = [];
         $start = microtime(true);
-        $budget = 7.0; // secondes max pour toute la résolution du taux
+        $budget = 7.0; // secondes max
         $errors = [];
         $from = strtoupper((string)$from);
         $to = strtoupper((string)$to);
@@ -136,17 +133,15 @@ class BookingManager extends Component
         }
         // 1) Cache d'abord
         $cached = Cache::get($cacheKey);
-        // Si on a un succès en cache
         if (is_numeric($cached) && (float)$cached > 0) {
             $memo[$cacheKey] = (float) $cached;
             return $memo[$cacheKey];
         }
-        // Si on a un échec en cache (sentinelle 0)
         if ($cached === 0 || $cached === 'fail') {
             return $memo[$cacheKey] = null;
         }
 
-        // 2) Essai direct via exchangerate.host (gratuit, supporte XOF)
+        // 2) Essai direct via exchangerate.host
         try {
             $resp = Http::acceptJson()
                 ->timeout(4)
@@ -166,16 +161,14 @@ class BookingManager extends Component
             }
         } catch (\Throwable $e) {
             $errors[] = 'convert: ' . $e->getMessage();
-            // on tente un fallback ensuite
         }
 
-        // Stop si on a déjà consommé le budget
         if ((microtime(true) - $start) >= $budget) {
             Cache::put($cacheKey, 0, now()->addMinutes(10));
             return $memo[$cacheKey] = null;
         }
 
-        // 3) Fallback via EUR comme devise pivot (XOF est arrimé à l'EUR à 655.957)
+        // 3) Fallback via EUR comme devise pivot
         $EUR_XOF = 655.957; // 1 EUR = 655.957 XOF
         $getEurTo = function (string $symbol) use ($EUR_XOF, $start, $budget) {
             $symbol = strtoupper($symbol);
@@ -188,7 +181,6 @@ class BookingManager extends Component
                 $r = Http::acceptJson()
                     ->timeout(3)
                     ->connectTimeout(1)
-                    // pas de retry pour ne pas dépasser le budget
                     ->get('https://api.exchangerate.host/latest', [
                         'base' => 'EUR',
                         'symbols' => $symbol,
@@ -199,7 +191,6 @@ class BookingManager extends Component
                     return (float) $val;
                 }
             } catch (\Throwable $e) {
-                $errors[] = 'latest(EUR→' . $symbol . '): ' . $e->getMessage();
                 // ignore
             }
             return 0.0;
@@ -232,13 +223,10 @@ class BookingManager extends Component
                     }
                 }
             } catch (\Throwable $e) {
-                $errors[] = 'v6 pair ' . $from . '→' . $to . ': ' . $e->getMessage();
                 // noop
             }
 
-            // Tentative via pivot EUR (utile si la paire directe XOF/* est refusée par l'API)
             if ((microtime(true) - $start) < $budget) {
-                $EUR_XOF = 655.957;
                 $getEurToV6 = function (string $symbol) use ($apiKey, $EUR_XOF) {
                     $symbol = strtoupper($symbol);
                     if ($symbol === 'EUR') return 1.0;
@@ -252,7 +240,6 @@ class BookingManager extends Component
                             return $v;
                         }
                     } catch (\Throwable $e) {
-                        $errors[] = 'v6 pair EUR→' . $symbol . ': ' . $e->getMessage();
                         // ignore
                     }
                     return 0.0;
@@ -267,7 +254,7 @@ class BookingManager extends Component
             }
         }
 
-        // 4bis) Fallback local: fichier JSON de secours (resources/fx/rates.json)
+        // 4bis) Fallback local
         try {
             if ((microtime(true) - $start) < $budget) {
                 $path = resource_path('fx/rates.json');
@@ -283,7 +270,6 @@ class BookingManager extends Component
                             return $memo[$cacheKey] = $rate;
                         }
                     } elseif ($base === 'XOF' && $from !== 'XOF') {
-                        // Si base XOF mais on demande p.ex EUR→USD, essayer via XOF pivot
                         $toXof = isset($table[$from]) && (float)$table[$from] > 0 ? (float)$table[$from] : 0.0;
                         $xofToTo = isset($table[$to]) && (float)$table[$to] > 0 ? (float)$table[$to] : 0.0;
                         if ($toXof > 0 && $xofToTo > 0) {
@@ -296,18 +282,15 @@ class BookingManager extends Component
                 }
             }
         } catch (\Throwable $e) {
-            $errors[] = 'local rates.json: ' . $e->getMessage();
+            // ignore
         }
 
-        // 5) Échec: mémoriser un échec court et laisser les vues tomber en XOF non converti
         Cache::put($cacheKey, 0, now()->addMinutes(10));
-        // Loguer une fois toutes les 10 minutes par paire pour diagnostiquer (réseau / SSL / DNS)
         $logKey = 'fxlog:' . $from . ':' . $to;
         if (!Cache::has($logKey)) {
             Log::warning('FX conversion failed; fallback to XOF', [
                 'pair' => $from . '→' . $to,
                 'elapsed' => round(microtime(true) - $start, 3) . 's',
-                'errors' => $errors,
             ]);
             Cache::put($logKey, 1, now()->addMinutes(10));
         }
@@ -413,19 +396,8 @@ class BookingManager extends Component
 
             // Pré-sélection d'un type de chambre pour les hôtels (si disponible)
             if ($this->property && $this->property->category && ($this->property->category->name === 'Hôtel' || $this->property->category->name === 'Hotel')) {
-                $firstType = $this->property->roomTypes->first();
-                $this->selectedRoomTypeId = $firstType?->id;
-                // Ajuster à nouveau maintenant que selectedRoomTypeId est défini (dates occupées spécifiques type)
-                try {
-                    [$adjStart, $adjEnd] = $this->adjustDatesToAvailability($this->checkInDate, $this->checkOutDate);
-                    if ($adjStart && $adjEnd) {
-                        $this->checkInDate = $adjStart;
-                        $this->checkOutDate = $adjEnd;
-                        $this->dateRange = $adjStart . ' to ' . $adjEnd;
-                    }
-                } catch (\Throwable $e) {
-                    // ignore
-                }
+                // Ne pas présélectionner de type par défaut: garder la vision globale des dates occupées
+                $this->selectedRoomTypeId = null;
             }
 
             // Récupérer les avis approuvés liés à cette propriété
@@ -468,11 +440,27 @@ class BookingManager extends Component
     private function adjustDatesToAvailability(?string $start, ?string $end): array
     {
         try {
-            $occ = $this->occupiedDates; // tableau de 'Y-m-d'
+            // Construire le set des jours occupés pour la propriété (accepted OU paid)
             $occupied = [];
-            foreach ((array)$occ as $d) {
-                if ($d) {
-                    $occupied[$d] = true;
+            if ($this->property) {
+                $bookings = $this->property->bookings()
+                    ->where(function ($q) {
+                        $q->where('status', 'accepted')
+                            ->orWhere('payment_status', 'paid');
+                    })
+                    ->get(['start_date', 'end_date']);
+                foreach ($bookings as $b) {
+                    try {
+                        $period = new \DatePeriod(
+                            new \DateTime($b->start_date),
+                            new \DateInterval('P1D'),
+                            (new \DateTime($b->end_date))->modify('+1 day')
+                        );
+                        foreach ($period as $d) {
+                            $occupied[$d->format('Y-m-d')] = true;
+                        }
+                    } catch (\Throwable $e) {
+                    }
                 }
             }
             $today = Carbon::today();
@@ -532,76 +520,7 @@ class BookingManager extends Component
         $this->reset(['review', 'rating']);
     }
 
-    /**
-     * Retourne la liste des dates occupées (format YYYY-MM-DD) pour Flatpickr
-     */
-    public function getOccupiedDatesProperty()
-    {
-        if (!$this->property) {
-            return [];
-        }
-
-        $isHotel = $this->property->category && in_array($this->property->category->name, ['Hôtel', 'Hotel']);
-
-        // Si c'est un hôtel et un type de chambre est sélectionné, on grise toutes les dates
-        // couvertes par des réservations de ce type de chambre (accepted OU paid)
-        if ($isHotel && $this->selectedRoomTypeId) {
-            $roomType = $this->property->roomTypes->firstWhere('id', (int) $this->selectedRoomTypeId);
-            if (!$roomType) {
-                return [];
-            }
-
-            // Récupérer toutes les réservations acceptées OU payées pour ce room type
-            $bookings = Booking::query()
-                ->where('property_id', $this->property->id)
-                ->where('room_type_id', $roomType->id)
-                ->where(function ($q) {
-                    $q->where('status', 'accepted')
-                        ->orWhere('payment_status', 'paid');
-                })
-                ->get(['start_date', 'end_date']);
-
-            if ($bookings->isEmpty()) {
-                return [];
-            }
-
-            // Union de toutes les dates couvertes par ces réservations
-            $dates = [];
-            foreach ($bookings as $b) {
-                $period = new \DatePeriod(
-                    new \DateTime($b->start_date),
-                    new \DateInterval('P1D'),
-                    (new \DateTime($b->end_date))->modify('+1 day')
-                );
-                foreach ($period as $date) {
-                    $dates[] = $date->format('Y-m-d');
-                }
-            }
-            $dates = array_values(array_unique($dates));
-            sort($dates);
-            return $dates;
-        }
-
-        // Sinon: fallback occupation globale de la propriété (résidences meublées etc.)
-        $bookings = $this->property->bookings()
-            ->where(function ($q) {
-                $q->where('status', 'accepted')
-                    ->orWhere('payment_status', 'paid');
-            })
-            ->get(['start_date', 'end_date']);
-        $dates = [];
-        foreach ($bookings as $booking) {
-            $period = new \DatePeriod(
-                new \DateTime($booking->start_date),
-                new \DateInterval('P1D'),
-                (new \DateTime($booking->end_date))->modify('+1 day')
-            );
-            foreach ($period as $date) {
-                $dates[] = $date->format('Y-m-d');
-            }
-        }
-        return array_values(array_unique($dates));
-    }
+    // Méthode obsolète (décoration calendrier supprimée)
 
     // Rafraîchir le calendrier quand le type de chambre change
     public function updatedSelectedRoomTypeId($value = null): void
@@ -1083,8 +1002,77 @@ class BookingManager extends Component
     public function render()
     {
         $properties = Property::all();
-        $occupiedDates = $this->occupiedDates;
-        return view('livewire.booking-manager', compact('properties', 'occupiedDates'));
+        return view('livewire.booking-manager', compact('properties'));
+    }
+
+    /**
+     * Retourne un tableau associatif des dates occupées par type de chambre.
+     * Format: [ 'global' => [...], room_type_id(int) => [...dates Y-m-d...] ]
+     */
+    public function getOccupiedDatesByRoomTypeProperty(): array
+    {
+        if (!$this->property) return [];
+
+        $map = [];
+        // Global: union de toutes les réservations acceptées/payées de la propriété
+        $globalBookings = $this->property->bookings()
+            ->where(function ($q) {
+                $q->where('status', 'accepted')
+                    ->orWhere('payment_status', 'paid');
+            })
+            ->get(['start_date', 'end_date']);
+        $globalDates = [];
+        foreach ($globalBookings as $b) {
+            try {
+                $period = new \DatePeriod(
+                    new \DateTime($b->start_date),
+                    new \DateInterval('P1D'),
+                    (new \DateTime($b->end_date))->modify('+0 day')
+                );
+                foreach ($period as $d) {
+                    $globalDates[] = $d->format('Y-m-d');
+                }
+            } catch (\Throwable $e) {
+            }
+        }
+        $globalDates = array_values(array_unique($globalDates));
+        sort($globalDates);
+        $map['global'] = $globalDates;
+
+        // Par room type (hôtel)
+        $isHotel = $this->property->category && in_array($this->property->category->name, ['Hôtel', 'Hotel']);
+        if ($isHotel) {
+            $rts = $this->property->roomTypes ?? collect();
+            foreach ($rts as $rt) {
+                $rtBookings = Booking::query()
+                    ->where('property_id', $this->property->id)
+                    ->where('room_type_id', $rt->id)
+                    ->where(function ($q) {
+                        $q->where('status', 'accepted')
+                            ->orWhere('payment_status', 'paid');
+                    })
+                    ->get(['start_date', 'end_date']);
+                $dates = [];
+                foreach ($rtBookings as $b) {
+                    try {
+                        $period = new \DatePeriod(
+                            new \DateTime($b->start_date),
+                            new \DateInterval('P1D'),
+                            (new \DateTime($b->end_date))->modify('+0 day')
+                        );
+                        foreach ($period as $d) {
+                            $dates[] = $d->format('Y-m-d');
+                        }
+                    } catch (\Throwable $e) {
+                    }
+                }
+                $dates = array_values(array_unique($dates));
+                sort($dates);
+                $map[(int)$rt->id] = $dates;
+            }
+        }
+
+        return $map;
     }
 
     // Transforme le formulaire en moteur de recherche de dates
@@ -1121,8 +1109,9 @@ class BookingManager extends Component
             $this->dateRange = $this->checkInDate . ' to ' . $this->checkOutDate;
             // Rafraîchir les dates occupées côté front
             $this->dispatch('occupied-dates-updated');
-            // Événement dédié pour un retour utilisateur
+            // Événements front: retour utilisateur + synchro Flatpickr (avec détail de la plage ISO)
             $this->dispatch('dates-search-completed');
+            $this->dispatch('date-range-updated', dateRange: $this->dateRange);
         } catch (\Throwable $e) {
             $this->addError('dateRange', 'Dates invalides.');
         }

@@ -66,6 +66,9 @@
             </form>
         </div>
 
+
+
+
         <!-- NavBar -->
         <div class="relative">
             <nav id="menu" class="hidden lg:flex flex-col lg:flex-row justify-center gap-y-2 gap-x-10 bg-white dark:bg-gray-800 py-6 px-8 shadow-lg">
@@ -475,22 +478,8 @@
                 Rechercher
             </button>
         </div>
-        <div class="mt-2 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-            <span class="inline-block w-2 h-2 rounded-full bg-red-600"></span>
-            <span>Date occupée (indicatif)</span>
-        </div>
-        <script id="occupied-dates" type="application/json" wire:key="occupied-{{ $property->id ?? 'p' }}-{{ $selectedRoomTypeId ?? 'none' }}">
-            @json($occupiedDates ?? [])
-        </script>
+
         <script>
-            (function() {
-                try {
-                    const el = document.getElementById('occupied-dates');
-                    window.occupiedDates = el ? JSON.parse(el.textContent || '[]') : [];
-                } catch (e) {
-                    window.occupiedDates = [];
-                }
-            })();
             // ===== Récupération de la plage de dates depuis URL / localStorage (JSON structuré) =====
             function normalizeRange(val) {
                 if (!val) return '';
@@ -561,14 +550,21 @@
                     try {
                         // Verrou pour éviter les boucles avec onChange Flatpickr
                         window._rangeUpdateLock = (window._rangeUpdateLock || 0) + 1;
-                        el.value = isoRange;
-                        el.dispatchEvent(new Event('input', {
-                            bubbles: true
-                        }));
                         if (el._flatpickr && parts) {
                             try {
                                 el._flatpickr.setDate(parts, true);
+                                // Remplacer l’affichage "to" par " au " dans l’alt input
+                                const alt = el._flatpickr.altInput;
+                                if (alt && typeof alt.value === 'string') {
+                                    alt.value = alt.value.replace(' to ', ' au ');
+                                }
                             } catch (_) {}
+                        } else {
+                            // Fallback sans flatpickr: écrire l'ISO (Livewire gardera la valeur)
+                            el.value = isoRange;
+                            el.dispatchEvent(new Event('input', {
+                                bubbles: true
+                            }));
                         }
                     } catch (_) {} finally {
                         window._rangeUpdateLock = Math.max(0, (window._rangeUpdateLock || 1) - 1);
@@ -638,53 +634,38 @@
             }
             // (Ré)initialise Flatpickr sur les champs de date si nécessaire
             window.ensureInitDatePickers = function() {
-                function applyOccupiedDecoration(inst) {
-                    if (!inst || !inst.calendarContainer) return;
-                    const list = Array.isArray(window.occupiedDates) ? window.occupiedDates : [];
-                    const days = inst.calendarContainer.querySelectorAll('.flatpickr-day');
-                    days.forEach((day) => {
-                        // day.dateObj existe dans certaines versions, sinon lire l'aria-label si formatée
-                        try {
-                            let iso = null;
-                            if (day.dateObj instanceof Date) {
-                                iso = inst.formatDate(day.dateObj, 'Y-m-d');
-                            }
-                            if (iso && list.indexOf(iso) !== -1) {
-                                day.classList.add('is-occupied');
-                                day.setAttribute('title', 'Occupé');
-                            } else {
-                                day.classList.remove('is-occupied');
-                            }
-                        } catch (_) {}
-                    });
+                // Helper: récupère la valeur initiale de Livewire si présente
+                function getLivewireInitialRange() {
+                    try {
+                        const el1 = document.getElementById('ReservationDateRange');
+                        const el2 = document.getElementById('ReservationDateRange2');
+                        const raw = (el1 && el1.value ? el1.value : '') || (el2 && el2.value ? el2.value : '');
+                        const norm = normalizeRange(raw);
+                        const parts = parseToArray(norm);
+                        return parts ? `${parts[0]} to ${parts[1]}` : '';
+                    } catch (_) {
+                        return '';
+                    }
                 }
-                const occupiedArr = Array.isArray(window.occupiedDates) ? window.occupiedDates.slice() : [];
-                const opts = {
+                const baseOpts = {
                     mode: 'range',
                     dateFormat: 'Y-m-d',
                     minDate: 'today',
-                    // Ne pas désactiver: on veut grisé MAIS sélectionnable
+                    // Ne pas désactiver les jours: sélection toujours possible
                     disable: [],
+                    altInput: true,
+                    altFormat: 'j F Y',
+                    rangeSeparator: ' au ',
+                    locale: (window.flatpickr && window.flatpickr.l10ns && window.flatpickr.l10ns.fr) ? window.flatpickr.l10ns.fr : 'default',
                     allowInput: false,
-                    onDayCreate: function(dObj, dStr, fp, dayElem) {
-                        try {
-                            const iso = fp.formatDate(dObj, 'Y-m-d');
-                            const list = Array.isArray(window.occupiedDates) ? window.occupiedDates : occupiedArr;
-                            if (list && list.indexOf(iso) !== -1) {
-                                dayElem.classList.add('is-occupied');
-                                dayElem.setAttribute('title', 'Occupé');
-                            }
-                        } catch (_) {}
-                    },
                     onReady: function(selectedDates, dateStr, inst) {
-                        setTimeout(() => applyOccupiedDecoration(inst), 0);
+                        // Harmoniser le séparateur visuel
+                        const alt = inst && inst.altInput;
+                        if (alt && typeof alt.value === 'string') alt.value = alt.value.replace(' to ', ' au ');
                     },
                     onOpen: function(selectedDates, dateStr, inst) {
-                        // Forcer une décoration explicite à l'ouverture
-                        setTimeout(() => applyOccupiedDecoration(inst), 0);
-                    },
-                    onMonthChange: function(selectedDates, dateStr, inst) {
-                        setTimeout(() => applyOccupiedDecoration(inst), 0);
+                        const alt = inst && inst.altInput;
+                        if (alt && typeof alt.value === 'string') alt.value = alt.value.replace(' to ', ' au ');
                     },
                     onChange: function(selectedDates, dateStr, instance) {
                         // Éviter la boucle si on vient d'appliquer programmatiquement
@@ -695,14 +676,16 @@
                             saveSearchDateRangeJson(norm);
                             // Synchroniser l'autre input et Livewire
                             applyRangeToInputs(norm);
-                            // Réappliquer la déco (au cas où on ait changé de mois)
-                            setTimeout(() => applyOccupiedDecoration(instance), 0);
+                            const alt = instance && instance.altInput;
+                            if (alt && typeof alt.value === 'string') alt.value = alt.value.replace(' to ', ' au ');
                         }
                     }
                 };
                 const el1 = document.getElementById('ReservationDateRange');
                 const el2 = document.getElementById('ReservationDateRange2');
-                const initial = getUrlDateRange() || getStoredJsonRange();
+                // Priorité: Livewire (côté serveur) > URL > défaut (aujourd'hui → demain)
+                // NB: on n'utilise PAS localStorage pour l'initialisation afin d'éviter des dates obsolètes
+                let initial = getLivewireInitialRange() || getUrlDateRange() || '';
                 if (typeof window.flatpickr !== 'function') {
                     // Flatpickr non dispo: appliquer quand même la valeur pour Livewire
                     if (initial) applyRangeToInputs(initial);
@@ -716,7 +699,12 @@
                 }
                 if (el1 && !el1._flatpickr) {
                     try {
-                        const inst = window.flatpickr(el1, opts);
+                        const w1 = document.getElementById('DateRange1Wrapper') || el1.parentElement;
+                        const opts1 = Object.assign({}, baseOpts, {
+                            appendTo: w1,
+                            positionElement: el1
+                        });
+                        const inst = window.flatpickr(el1, opts1);
                         const setInit = initial || getTodayTomorrow().iso;
                         const arr = parseToArray(setInit);
                         if (arr) {
@@ -724,13 +712,18 @@
                                 inst.setDate(arr, true);
                             } catch (_) {}
                         }
-                        // Appliquer déco initiale
-                        setTimeout(() => applyOccupiedDecoration(inst), 0);
+                        const alt = inst && inst.altInput;
+                        if (alt && typeof alt.value === 'string') alt.value = alt.value.replace(' to ', ' au ');
                     } catch (_) {}
                 }
                 if (el2 && !el2._flatpickr) {
                     try {
-                        const inst2 = window.flatpickr(el2, opts);
+                        const w2 = document.getElementById('DateRange2Wrapper') || el2.parentElement;
+                        const opts2 = Object.assign({}, baseOpts, {
+                            appendTo: w2,
+                            positionElement: el2
+                        });
+                        const inst2 = window.flatpickr(el2, opts2);
                         const setInit2 = initial || getTodayTomorrow().iso;
                         const arr2 = parseToArray(setInit2);
                         if (arr2) {
@@ -738,7 +731,8 @@
                                 inst2.setDate(arr2, true);
                             } catch (_) {}
                         }
-                        setTimeout(() => applyOccupiedDecoration(inst2), 0);
+                        const alt2 = inst2 && inst2.altInput;
+                        if (alt2 && typeof alt2.value === 'string') alt2.value = alt2.value.replace(' to ', ' au ');
                     } catch (_) {}
                 }
                 // S'assurer que la valeur Livewire reflète la plage choisie
@@ -749,80 +743,29 @@
                 }
                 // Binder la persistance après init
                 bindRangePersistenceListeners();
-            };
-            // Fonction pour recharger les dates occupées et mettre à jour Flatpickr (si présent)
-            window.refreshOccupiedDates = function() {
-                try {
-                    const el = document.getElementById('occupied-dates');
-                    const parsed = el ? JSON.parse(el.textContent || '[]') : [];
-                    window.occupiedDates = Array.isArray(parsed) ? parsed : [];
-                } catch (e) {
-                    window.occupiedDates = [];
-                }
-                // Maj de Flatpickr si déjà initialisé
-                // On n'utilise pas disable (sélection reste permise); on force juste un redraw pour réappliquer onDayCreate
-                const disable = [];
-                const el1 = document.getElementById('ReservationDateRange');
-                const el2 = document.getElementById('ReservationDateRange2');
-                if (el1 && el1._flatpickr) {
+                // Écouter l'événement Livewire pour réappliquer la plage en FR dans Flatpickr
+                document.addEventListener('date-range-updated', (e) => {
                     try {
-                        el1._flatpickr.set('disable', disable);
-                        el1._flatpickr.redraw();
-                        // Déco explicite après redraw
-                        setTimeout(() => {
-                            if (el1._flatpickr) {
-                                const inst = el1._flatpickr;
-                                const days = inst.calendarContainer?.querySelectorAll('.flatpickr-day') || [];
-                                days.forEach((d) => d.classList.remove('is-occupied'));
-                                const list = Array.isArray(window.occupiedDates) ? window.occupiedDates : [];
-                                days.forEach((day) => {
-                                    try {
-                                        const dateObj = day.dateObj instanceof Date ? day.dateObj : null;
-                                        const iso = dateObj ? inst.formatDate(dateObj, 'Y-m-d') : null;
-                                        if (iso && list.indexOf(iso) !== -1) day.classList.add('is-occupied');
-                                    } catch (_) {}
-                                });
-                            }
-                        }, 0);
+                        const iso = e && e.detail && e.detail.dateRange ? String(e.detail.dateRange) : '';
+                        if (!iso) return;
+                        applyRangeToInputs(iso);
                     } catch (_) {}
-                }
-                if (el2 && el2._flatpickr) {
-                    try {
-                        el2._flatpickr.set('disable', disable);
-                        el2._flatpickr.redraw();
-                        setTimeout(() => {
-                            if (el2._flatpickr) {
-                                const inst2 = el2._flatpickr;
-                                const days2 = inst2.calendarContainer?.querySelectorAll('.flatpickr-day') || [];
-                                days2.forEach((d) => d.classList.remove('is-occupied'));
-                                const list2 = Array.isArray(window.occupiedDates) ? window.occupiedDates : [];
-                                days2.forEach((day) => {
-                                    try {
-                                        const dateObj = day.dateObj instanceof Date ? day.dateObj : null;
-                                        const iso = dateObj ? inst2.formatDate(dateObj, 'Y-m-d') : null;
-                                        if (iso && list2.indexOf(iso) !== -1) day.classList.add('is-occupied');
-                                    } catch (_) {}
-                                });
-                            }
-                        }, 0);
-                    } catch (_) {}
-                }
+                });
             };
+            // Nettoyage: suppression des fonctions de coloration des dates occupées
 
             // Rafraîchir après chargement Livewire et navigation Livewire
             document.addEventListener('livewire:load', () => setTimeout(() => {
                 window.ensureInitDatePickers();
-                window.refreshOccupiedDates();
-                // Rebind persistance si nécessaire
                 if (typeof bindRangePersistenceListeners === 'function') bindRangePersistenceListeners();
             }, 0));
             document.addEventListener('livewire:navigated', () => setTimeout(() => {
                 window.ensureInitDatePickers();
-                window.refreshOccupiedDates();
                 if (typeof bindRangePersistenceListeners === 'function') bindRangePersistenceListeners();
             }, 0));
-            // Rafraîchir quand le room type change (événement navigateur Livewire v3)
-            document.addEventListener('occupied-dates-updated', () => setTimeout(window.refreshOccupiedDates, 0));
+            // L'événement occupied-dates-updated n'a plus d'effet (coloration retirée)
+
+            // Survol des lignes: supprimé (plus de changement visuel par type)
 
             // Ouverture automatique du calendrier après changement de chambre (avec scroll)
             window._calendarOpenTarget = null;
@@ -918,28 +861,7 @@
                 window.bindDateInputsClickOpen();
             }, 0));
             // Après mise à jour des dates occupées, ouvrir l'input ciblé si nécessaire
-            document.addEventListener('occupied-dates-updated', () => setTimeout(() => {
-                if (typeof window.refreshOccupiedDates === 'function') {
-                    window.refreshOccupiedDates();
-                }
-                // S'assurer que Flatpickr reste initialisé après une recherche
-                if (typeof window.ensureInitDatePickers === 'function') {
-                    window.ensureInitDatePickers();
-                }
-                // Rebinder le clic des inputs après re-render
-                if (typeof window.bindDateInputsClickOpen === 'function') {
-                    window.bindDateInputsClickOpen();
-                }
-                // Rebinder la persistance
-                if (typeof bindRangePersistenceListeners === 'function') bindRangePersistenceListeners();
-                // N'ouvrir le calendrier que si demandé explicitement (ex: changement de type de chambre)
-                if (window._calendarOpenTarget) {
-                    if (typeof window.openCalendarForInput === 'function') {
-                        window.openCalendarForInput(window._calendarOpenTarget);
-                    }
-                    window._calendarOpenTarget = null;
-                }
-            }, 0));
+            // occupied-dates-updated: plus de traitement nécessaire
 
             // Toast de confirmation après recherche
             document.addEventListener('dates-search-completed', () => {
@@ -960,11 +882,25 @@
                 } catch (_) {}
             });
 
-            // Appel initial après ce rendu (utile lors des re-rendus Livewire)
-            if (typeof window.refreshOccupiedDates === 'function') {
-                window.ensureInitDatePickers && window.ensureInitDatePickers();
-                window.refreshOccupiedDates();
-            }
+            // Repropager l'événement Livewire 'date-range-updated' vers un CustomEvent DOM
+            document.addEventListener('livewire:load', () => {
+                try {
+                    if (window.Livewire && typeof window.Livewire.on === 'function') {
+                        window.Livewire.on('date-range-updated', (dateRange) => {
+                            try {
+                                document.dispatchEvent(new CustomEvent('date-range-updated', {
+                                    detail: {
+                                        dateRange
+                                    }
+                                }));
+                            } catch (_) {}
+                        });
+                    }
+                } catch (_) {}
+            });
+
+            // Appel initial après ce rendu
+            window.ensureInitDatePickers && window.ensureInitDatePickers();
         </script>
     </form>
 </div>
@@ -973,42 +909,7 @@
 @if($property && $property->category && in_array($property->category->name, ['Hôtel','Hotel']) && $property->roomTypes && $property->roomTypes->count())
 <div class="container mx-auto mt-8 px-4">
     <style>
-        /* Jours occupés: grisés mais sélectionnables */
-        .flatpickr-day.is-occupied {
-            background-color: rgba(220, 38, 38, 0.12);
-            /* rouge clair */
-            color: #991b1b;
-            /* rouge sombre */
-            position: relative;
-        }
-
-        .flatpickr-day.is-occupied::after {
-            content: '';
-            position: absolute;
-            width: 6px;
-            height: 6px;
-            border-radius: 9999px;
-            background-color: #dc2626;
-            /* rouge */
-            right: 4px;
-            bottom: 4px;
-            z-index: 2;
-            pointer-events: none;
-        }
-
-        .flatpickr-day.is-occupied:hover {
-            background-color: rgba(220, 38, 38, 0.2);
-        }
-
-        /* Si le jour est aussi sélectionné, garder un contraste correct */
-        .flatpickr-day.is-occupied.selected,
-        .flatpickr-day.is-occupied.startRange,
-        .flatpickr-day.is-occupied.endRange,
-        .flatpickr-day.is-occupied.inRange {
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(220, 38, 38, 0.2));
-            color: #1f2937;
-            /* gris foncé */
-        }
+        /* Décoration des jours occupés retirée à la demande */
     </style>
     @php
     $user = auth()->user();
@@ -1035,8 +936,10 @@
                 // Disponibilité selon la plage de dates sélectionnée
                 $availabilityLabel = null;
                 $availableQty = null;
-                // Calculer la dispo même si inventory = 0 ("complet")
-                if (!empty($dateRange) && $rt->inventory !== null) {
+                // Calculer la dispo pour toutes les chambres si une plage de dates est saisie
+                // - inventory = null est traité comme 1 (une chambre de ce type)
+                // - inventory = 0 => complet
+                if (!empty($dateRange)) {
                 $parts = preg_split('/\s+(?:to|à|au|\-|–|—)\s+/ui', $dateRange);
                 if (is_array($parts) && count($parts) === 2) {
                 try {
@@ -1053,7 +956,7 @@
                 ->whereDate('start_date', '<', $end->toDateString())
                     ->whereDate('end_date', '>', $start->toDateString())
                     ->sum('quantity');
-                    $inv = max(0, (int) $rt->inventory);
+                    $inv = is_null($rt->inventory) ? 1 : max(0, (int) $rt->inventory);
                     $avail = max(0, $inv - (int) $booked);
                     $availableQty = $avail;
                     $availabilityLabel = $avail > 0 ? ($avail . ' dispo') : 'Complet';

@@ -565,9 +565,9 @@ class BookingManager extends Component
             return redirect()->route('login');
         }
         $rules = $this->rules;
-        // Si hôtel, type de chambre requis et quantité valide
-        $isHotel = $this->property && $this->property->category && ($this->property->category->name === 'Hôtel' || $this->property->category->name === 'Hotel');
-        if ($isHotel) {
+        // Si des types de chambre existent, type et quantité requis (hôtel ou résidence multi-unités)
+        $hasRoomTypes = $this->property && $this->property->roomTypes && $this->property->roomTypes->count() > 0;
+        if ($hasRoomTypes) {
             $rules['selectedRoomTypeId'] = 'required|integer|exists:room_types,id';
             $rules['quantity'] = 'required|integer|min:1';
         }
@@ -600,8 +600,8 @@ class BookingManager extends Component
         // (sinon $this->totalPrice reste null et ne s'enregistre pas)
         $this->calculateTotalPrice();
 
-        // Vérifier l'inventaire/ disponibilité pour le type de chambre (si hôtel)
-        if ($isHotel && $this->selectedRoomTypeId) {
+        // Vérifier l'inventaire/ disponibilité pour le type de chambre si roomTypes
+        if ($hasRoomTypes && $this->selectedRoomTypeId) {
             $roomType = $property->roomTypes->firstWhere('id', (int) $this->selectedRoomTypeId);
             if (!$roomType) {
                 $this->addError('selectedRoomTypeId', 'Type de chambre introuvable.');
@@ -630,8 +630,8 @@ class BookingManager extends Component
                 return;
             }
         }
-        // Sinon, résidences meublées: empêcher toute réservation qui chevauche une réservation acceptée ou payée
-        if (!$isHotel) {
+        // Propriétés sans roomTypes: interdire tout chevauchement global
+        if (!$hasRoomTypes) {
             $existsOverlap = Booking::where('property_id', $property->id)
                 ->where(function ($q) {
                     $q->where('status', 'accepted')
@@ -798,11 +798,11 @@ class BookingManager extends Component
             return;
         }
 
-        // Déterminer si Hôtel
-        $isHotel = $property->category && in_array($property->category->name, ['Hôtel', 'Hotel']);
+        // Déterminer s'il y a des types de chambre
+        $hasRoomTypes = $property->roomTypes && $property->roomTypes->count() > 0;
 
-        // Forcer le type de chambre si fourni
-        if ($isHotel) {
+        // Forcer le type de chambre si la propriété a des roomTypes
+        if ($hasRoomTypes) {
             $this->selectedRoomTypeId = $roomTypeId ?? $this->selectedRoomTypeId;
             if (!$this->selectedRoomTypeId) {
                 $this->addError('selectedRoomTypeId', 'Veuillez sélectionner un type de chambre.');
@@ -818,8 +818,8 @@ class BookingManager extends Component
         $this->quantity = max(1, (int) $this->quantity);
 
         // Reprendre la logique d\'addBooking
-        // Vérifier l'inventaire/ disponibilité pour le type de chambre (si hôtel)
-        if ($isHotel && $this->selectedRoomTypeId) {
+        // Vérifier l'inventaire/ disponibilité pour le type de chambre si roomTypes
+        if ($hasRoomTypes && $this->selectedRoomTypeId) {
             $roomType = $property->roomTypes->firstWhere('id', (int) $this->selectedRoomTypeId);
             $overlap = Booking::where('property_id', $property->id)
                 ->where('room_type_id', $roomType->id)
@@ -841,8 +841,8 @@ class BookingManager extends Component
                 return;
             }
         }
-        // Résidences meublées: interdiction chevauchement
-        if (!$isHotel) {
+        // Propriétés sans roomTypes: interdiction de chevauchement global
+        if (!$hasRoomTypes) {
             $existsOverlap = Booking::where('property_id', $property->id)
                 ->where(function ($q) {
                     $q->where('status', 'accepted')
@@ -1039,37 +1039,34 @@ class BookingManager extends Component
         sort($globalDates);
         $map['global'] = $globalDates;
 
-        // Par room type (hôtel)
-        $isHotel = $this->property->category && in_array($this->property->category->name, ['Hôtel', 'Hotel']);
-        if ($isHotel) {
-            $rts = $this->property->roomTypes ?? collect();
-            foreach ($rts as $rt) {
-                $rtBookings = Booking::query()
-                    ->where('property_id', $this->property->id)
-                    ->where('room_type_id', $rt->id)
-                    ->where(function ($q) {
-                        $q->where('status', 'accepted')
-                            ->orWhere('payment_status', 'paid');
-                    })
-                    ->get(['start_date', 'end_date']);
-                $dates = [];
-                foreach ($rtBookings as $b) {
-                    try {
-                        $period = new \DatePeriod(
-                            new \DateTime($b->start_date),
-                            new \DateInterval('P1D'),
-                            (new \DateTime($b->end_date))->modify('+0 day')
-                        );
-                        foreach ($period as $d) {
-                            $dates[] = $d->format('Y-m-d');
-                        }
-                    } catch (\Throwable $e) {
+        // Par room type (toutes catégories si des roomTypes existent)
+        $rts = $this->property->roomTypes ?? collect();
+        foreach ($rts as $rt) {
+            $rtBookings = Booking::query()
+                ->where('property_id', $this->property->id)
+                ->where('room_type_id', $rt->id)
+                ->where(function ($q) {
+                    $q->where('status', 'accepted')
+                        ->orWhere('payment_status', 'paid');
+                })
+                ->get(['start_date', 'end_date']);
+            $dates = [];
+            foreach ($rtBookings as $b) {
+                try {
+                    $period = new \DatePeriod(
+                        new \DateTime($b->start_date),
+                        new \DateInterval('P1D'),
+                        (new \DateTime($b->end_date))->modify('+0 day')
+                    );
+                    foreach ($period as $d) {
+                        $dates[] = $d->format('Y-m-d');
                     }
+                } catch (\Throwable $e) {
                 }
-                $dates = array_values(array_unique($dates));
-                sort($dates);
-                $map[(int)$rt->id] = $dates;
             }
+            $dates = array_values(array_unique($dates));
+            sort($dates);
+            $map[(int)$rt->id] = $dates;
         }
 
         return $map;

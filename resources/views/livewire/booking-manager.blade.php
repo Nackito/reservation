@@ -917,8 +917,8 @@
     </form>
 </div>
 
-{{-- Tableau des types de chambre (Hôtel uniquement) --}}
-@if($property && $property->category && in_array($property->category->name, ['Hôtel','Hotel']) && $property->roomTypes && $property->roomTypes->count())
+{{-- Tableau des types de chambre (toutes catégories si roomTypes présents) --}}
+@if($property && $property->roomTypes && $property->roomTypes->count())
 <div class="container mx-auto mt-8 px-4">
     <style>
         /* Décoration des jours occupés retirée à la demande */
@@ -1059,6 +1059,80 @@
             row.classList.toggle('hidden');
         }
     </script>
+</div>
+@endif
+
+{{-- Tableau fallback pour propriétés sans roomTypes (Résidence meublée simple) --}}
+@if($property && (!$property->roomTypes || !$property->roomTypes->count()))
+<div class="container mx-auto mt-8 px-4">
+    <div class="overflow-x-auto bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead class="bg-gray-50 dark:bg-gray-900">
+                <tr>
+                    <th scope="col" class="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-200">Type</th>
+                    <th scope="col" class="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-200">Capacité</th>
+                    <th scope="col" class="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-200">Lits</th>
+                    <th scope="col" class="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-200">Prix</th>
+                    <th scope="col" class="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-200">Disponibilité</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                @php
+                $availabilityLabel = null;
+                if (!empty($dateRange)) {
+                $parts = preg_split('/\s+(?:to|à|au|\-|–|—)\s+/ui', $dateRange);
+                if (is_array($parts) && count($parts) === 2) {
+                try {
+                $start = \Carbon\Carbon::parse(trim($parts[0]))->startOfDay();
+                $end = \Carbon\Carbon::parse(trim($parts[1]))->endOfDay();
+                if ($start && $end && $start->lte($end)) {
+                $existsOverlap = \App\Models\Booking::query()
+                ->where('property_id', $property->id)
+                ->where(function($q){
+                $q->where('status','accepted')->orWhere('payment_status','paid');
+                })
+                ->whereDate('start_date', '<', $end->toDateString())
+                    ->whereDate('end_date', '>', $start->toDateString())
+                    ->exists();
+                    $availabilityLabel = $existsOverlap ? 'Non disponible aux dates choisies' : 'Disponible';
+                    }
+                    } catch (\Throwable $e) {
+                    $availabilityLabel = '—';
+                    }
+                    }
+                    }
+                    $basePrice = $property->price_per_night;
+                    $user = auth()->user();
+                    $userCurrency = $user && $user->currency ? $user->currency : 'XOF';
+                    $rate = app('App\\Livewire\\BookingManager')->getExchangeRate('XOF', $userCurrency);
+                    $displayCurrency = ($rate && $rate > 0) ? $userCurrency : 'XOF';
+                    $converted = ($rate && $rate > 0 && $basePrice !== null) ? round($basePrice * $rate, 2) : $basePrice;
+                    @endphp
+                    <tr>
+                        <td class="px-4 py-3 text-sm text-gray-800 dark:text-gray-200 font-medium">Logement complet</td>
+                        <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">—</td>
+                        <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">—</td>
+                        <td class="px-4 py-3 text-sm text-gray-800 dark:text-gray-200">
+                            @if(!is_null($basePrice))
+                            {{ number_format($converted, 2) }} {{ $displayCurrency }}
+                            @else
+                            <span class="text-gray-400">N/A</span>
+                            @endif
+                        </td>
+                        <td class="px-4 py-3 text-sm text-gray-800 dark:text-gray-200">
+                            @if($availabilityLabel === 'Non disponible aux dates choisies')
+                            <span class="inline-flex items-center gap-2 text-red-600 dark:text-red-400"><i class="fas fa-times-circle"></i>{{ $availabilityLabel }}</span>
+                            @elseif($availabilityLabel === 'Disponible')
+                            <button type="button" wire:click.prevent="addBooking" class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400">Réserver</button>
+                            @else
+                            <span class="text-gray-400">—</span>
+                            @endif
+                        </td>
+                    </tr>
+            </tbody>
+        </table>
+    </div>
+    <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">Sélectionnez vos dates ci-dessus puis cliquez sur Réserver.</p>
 </div>
 @endif
 

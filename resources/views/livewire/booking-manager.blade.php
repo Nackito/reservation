@@ -874,22 +874,47 @@
                     return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
                 }
 
-                function syncHiddenFromPickers() {
+                function syncHiddenFromPickers(formEl) {
                     try {
-                        const el1 = document.getElementById('ReservationDateRange');
-                        const el2 = document.getElementById('ReservationDateRange2');
+                        const el1 = document.getElementById('ReservationDateRange'); // desktop
+                        const el2 = document.getElementById('ReservationDateRange2'); // mobile
                         const model = document.getElementById('dateRangeModel');
                         if (!model) return;
-                        const fp = (el1 && el1._flatpickr) ? el1._flatpickr : ((el2 && el2._flatpickr) ? el2._flatpickr : null);
+                        // Déterminer l'input prioritaire en fonction du formulaire soumis
+                        let primary = null;
+                        if (formEl && typeof formEl.querySelector === 'function') {
+                            primary = formEl.querySelector('#ReservationDateRange2') || formEl.querySelector('#ReservationDateRange');
+                        }
+                        const candidates = [];
+                        if (primary) candidates.push(primary);
+                        // Ajouter l'autre input comme fallback
+                        if (primary === el2 && el1) candidates.push(el1);
+                        if (primary === el1 && el2) candidates.push(el2);
+                        if (!primary) {
+                            // Fallback: mobile d'abord si visible, sinon desktop
+                            if (el2) candidates.push(el2);
+                            if (el1) candidates.push(el1);
+                        }
                         let iso = '';
-                        if (fp && Array.isArray(fp.selectedDates) && fp.selectedDates.length === 2) {
-                            iso = toIso(fp.selectedDates[0]) + ' to ' + toIso(fp.selectedDates[1]);
-                        } else {
-                            // Fallback: lire la valeur de l'input et normaliser
-                            const raw = (el1 && el1.value ? el1.value : '') || (el2 && el2.value ? el2.value : '');
-                            const norm = normalizeRange(raw);
-                            const parts = parseToArray(norm);
-                            if (parts) iso = parts[0] + ' to ' + parts[1];
+                        // 1) Essayer de lire via Flatpickr de l'input prioritaire
+                        for (const el of candidates) {
+                            if (el && el._flatpickr && Array.isArray(el._flatpickr.selectedDates) && el._flatpickr.selectedDates.length === 2) {
+                                iso = toIso(el._flatpickr.selectedDates[0]) + ' to ' + toIso(el._flatpickr.selectedDates[1]);
+                                break;
+                            }
+                        }
+                        // 2) Fallback: valeur brute de l'input prioritaire (ou des suivants)
+                        if (!iso) {
+                            for (const el of candidates) {
+                                if (el && el.value) {
+                                    const norm = normalizeRange(el.value);
+                                    const parts = parseToArray(norm);
+                                    if (parts) {
+                                        iso = parts[0] + ' to ' + parts[1];
+                                        break;
+                                    }
+                                }
+                            }
                         }
                         if (iso) {
                             model.value = iso;
@@ -907,7 +932,7 @@
                     if (!tgt) return;
                     const isLW = tgt.matches('form[wire\\:submit\\.prevent="searchDates"], form[wire\\:submit\\.prevent="addBooking"], form[wire\\:submit\\.prevent="quickReserve"]');
                     if (isLW) {
-                        syncHiddenFromPickers();
+                        syncHiddenFromPickers(tgt);
                     }
                 }, true);
             })();

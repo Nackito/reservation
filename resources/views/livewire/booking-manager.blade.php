@@ -61,9 +61,11 @@
                     disabled:pointer-events-none dark:bg-gray-900 dark:border-blue-700 dark:text-gray-100 dark:placeholder-gray-400 dark:focus:ring-blue-400" placeholder="Choisissez vos dates (arrivée - départ)">
                     </div>
                     @error('dateRange') <span class="text-red-500">{{ $message }}</span> @enderror
-                    <button type="submit" id="confirm-booking" class="bg-blue-500 text-white py-2 px-4 rounded">
-                        Rechercher
-                    </button>
+                    <div class="flex items-center gap-2">
+                        <button type="submit" id="confirm-booking" class="bg-blue-500 text-white py-2 px-4 rounded">
+                            Rechercher
+                        </button>
+                    </div>
                 </div>
             </form>
         </div>
@@ -1019,6 +1021,17 @@
                         const iso = model && model.value ? normalizeRange(model.value) : '';
                         if (iso) applyRangeToInputs(iso);
                     } catch (_) {}
+
+                    // Faire défiler vers la section résultats (Disponibilité)
+                    try {
+                        const target = document.getElementById('availability');
+                        if (target && typeof target.scrollIntoView === 'function') {
+                            target.scrollIntoView({
+                                behavior: 'smooth',
+                                block: 'center'
+                            });
+                        }
+                    } catch (_) {}
                 } catch (_) {}
             });
 
@@ -1065,7 +1078,7 @@
                     <th scope="col" class="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-200">Nombre de personnes</th>
                     <th scope="col" class="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-200">Lits</th>
                     <th scope="col" class="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-200">Prix</th>
-                    <th scope="col" class="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-200">Disponibilité</th>
+                    <th id="availability" scope="col" class="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-200">Disponibilité</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
@@ -1216,7 +1229,7 @@
                     <th scope="col" class="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-200">Capacité</th>
                     <th scope="col" class="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-200">Lits</th>
                     <th scope="col" class="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-200">Prix</th>
-                    <th scope="col" class="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-200">Disponibilité</th>
+                    <th id="availability" scope="col" class="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-200">Disponibilité</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">

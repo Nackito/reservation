@@ -1165,7 +1165,7 @@
     </div>
     @else
     <button type="button"
-        wire:click.prevent="quickReserve({{ $rt->id }})"
+        wire:click.prevent="openSummary({{ $rt->id }})"
         class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400">
         Réserver
     </button>
@@ -1295,7 +1295,7 @@
                                 </button>
                             </div>
                             @elseif(!isset($isAvailable) || $isAvailable === true)
-                            <button type="button" wire:click.prevent="addBooking" class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400">Réserver</button>
+                            <button type="button" wire:click.prevent="openSummary" class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400">Réserver</button>
                             @else
                             <span class="text-gray-400">—</span>
                             @endif
@@ -1309,6 +1309,149 @@
 @endif
 
 <!-- Modal galerie pour types de chambre -->
+@if(isset($showSummaryModal) && $showSummaryModal)
+<div class="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" wire:key="summary-modal">
+    <div class="relative w-full max-w-3xl">
+        <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden ring-1 ring-gray-100 dark:ring-gray-800">
+            <!-- Header -->
+            <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/40 flex items-center justify-center text-blue-600 dark:text-blue-300">
+                        <i class="fas fa-receipt"></i>
+                    </div>
+                    <h3 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-50">Récapitulatif de la réservation</h3>
+                </div>
+                <button type="button" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500" wire:click="closeSummary" aria-label="Fermer">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- Body -->
+            <div class="px-6 py-5 grid grid-cols-1 gap-5">
+                @php
+                $isHotel = $property && $property->category && in_array($property->category->name, ['Hôtel','Hotel']);
+                $roomType = null;
+                if ($isHotel && $selectedRoomTypeId && $property && $property->roomTypes) {
+                $roomType = $property->roomTypes->firstWhere('id', (int) $selectedRoomTypeId);
+                }
+                @endphp
+                <!-- établissement -->
+                <div class="flex items-start gap-3">
+                    <div class="shrink-0 w-9 h-9 rounded-lg bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-300 flex items-center justify-center">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <div class="text-xs uppercase tracking-wide text-gray-400">Établissement</div>
+                        <div class="text-base font-semibold text-gray-900 dark:text-gray-100 break-words">{{ $property->name ?? '—' }}</div>
+                    </div>
+                </div>
+
+                @if($roomType)
+                <div class="flex items-start gap-3">
+                    <div class="shrink-0 w-9 h-9 rounded-lg bg-emerald-50 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-300 flex items-center justify-center">
+                        <i class="fas fa-bed"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <div class="text-xs uppercase tracking-wide text-gray-400">Type de chambre</div>
+                        <div class="text-base font-medium text-gray-900 dark:text-gray-100">{{ $roomType->name }}</div>
+                    </div>
+                </div>
+                @endif
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="flex items-start gap-3">
+                        <div class="shrink-0 w-9 h-9 rounded-lg bg-amber-50 dark:bg-amber-900/40 text-amber-600 dark:text-amber-300 flex items-center justify-center">
+                            <i class="fas fa-calendar-day"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs uppercase tracking-wide text-gray-400">Arrivée</div>
+                            <div class="text-base font-medium text-gray-900 dark:text-gray-100">
+                                @php
+                                try {
+                                $ciFr = \Illuminate\Support\Str::title(\Carbon\Carbon::parse($checkInDate)->locale('fr')->translatedFormat('l d F Y'));
+                                } catch (\Throwable $e) { $ciFr = $checkInDate; }
+                                @endphp
+                                {{ $ciFr }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <div class="shrink-0 w-9 h-9 rounded-lg bg-rose-50 dark:bg-rose-900/40 text-rose-600 dark:text-rose-300 flex items-center justify-center">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs uppercase tracking-wide text-gray-400">Départ</div>
+                            <div class="text-base font-medium text-gray-900 dark:text-gray-100">
+                                @php
+                                try {
+                                $coFr = \Illuminate\Support\Str::title(\Carbon\Carbon::parse($checkOutDate)->locale('fr')->translatedFormat('l d F Y'));
+                                } catch (\Throwable $e) { $coFr = $checkOutDate; }
+                                @endphp
+                                {{ $coFr }}
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="flex items-start gap-3">
+                        <div class="shrink-0 w-9 h-9 rounded-lg bg-sky-50 dark:bg-sky-900/40 text-sky-600 dark:text-sky-300 flex items-center justify-center">
+                            <i class="fas fa-layer-group"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs uppercase tracking-wide text-gray-400">Quantité</div>
+                            <div class="text-base font-medium text-gray-900 dark:text-gray-100">{{ max(1,(int)$quantity) }}</div>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <div class="shrink-0 w-9 h-9 rounded-lg bg-teal-50 dark:bg-teal-900/40 text-teal-600 dark:text-teal-300 flex items-center justify-center">
+                            <i class="fas fa-tag"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs uppercase tracking-wide text-gray-400">Prix unitaire</div>
+                            <div class="text-base font-medium text-gray-900 dark:text-gray-100">
+                                {{ number_format((float)($unitPrice ?? 0), 2) }} XOF
+                                <span class="text-gray-500">(≈ {{ number_format((float)($unitPriceConverted ?? 0), 2) }} {{ $convertedCurrency ?? 'XOF' }})</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between p-4 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
+                    <div class="flex items-center gap-3 text-gray-600 dark:text-gray-300">
+                        <i class="fas fa-receipt text-lg text-blue-500"></i>
+                        <span class="text-sm">Total estimé (hors taxes/conditions particulières):</span>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-xl font-extrabold text-gray-900 dark:text-gray-50">{{ number_format((float)($totalPrice ?? 0), 2) }} XOF</div>
+                        <div class="text-xs text-gray-500">≈ {{ number_format((float)($convertedPrice ?? 0), 2) }} {{ $convertedCurrency ?? 'XOF' }}</div>
+                    </div>
+                </div>
+
+                <div class="flex items-start gap-3 p-3 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200">
+                    <i class="fas fa-envelope-open-text mt-0.5"></i>
+                    <p class="text-sm leading-5">
+                        Après validation, vous recevrez un email récapitulatif de votre demande. Notre équipe vous contactera rapidement pour confirmer la disponibilité et finaliser la réservation.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="px-6 py-4 bg-gray-50 dark:bg-gray-900/40 border-t border-gray-100 dark:border-gray-800 flex items-center justify-end gap-3">
+                <button type="button" wire:click="closeSummary" class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">
+                    Annuler
+                </button>
+                <button type="button" wire:click="confirmReservation" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white inline-flex items-center gap-2">
+                    <i class="fas fa-paper-plane"></i>
+                    Soumettre la demande
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
+
 <div id="roomTypeGalleryModal" class="fixed inset-0 z-50 hidden bg-black bg-opacity-75 flex items-center justify-center">
     <div class="relative bg-white dark:bg-gray-900 rounded-lg shadow-lg w-11/12 lg:w-3/4 max-h-screen overflow-hidden">
         <button class="absolute top-2 right-2 text-gray-500 hover:text-gray-700" onclick="closeRoomTypeGallery()">

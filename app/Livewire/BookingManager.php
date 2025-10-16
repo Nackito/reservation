@@ -117,35 +117,25 @@ class BookingManager extends Component
 
     public function getExchangeRate($from, $to)
     {
-        // Mémoïsation par requête
+        // Mémoïsation simple pour la requête courante
         static $memo = [];
-        $start = microtime(true);
-        $budget = 7.0; // secondes max
-        $errors = [];
-        $from = strtoupper((string)$from);
-        $to = strtoupper((string)$to);
-        if (!$from || !$to) {
-            return null;
-        }
-        if ($from === $to) {
-            return 1.0;
-        }
+        $from = strtoupper((string) $from);
+        $to = strtoupper((string) $to);
+        if (!$from || !$to) return null;
+        if ($from === $to) return 1.0;
 
         $cacheKey = "fx:{$from}:{$to}";
         if (array_key_exists($cacheKey, $memo)) {
             return $memo[$cacheKey];
         }
-        // 1) Cache d'abord
+
+        // 1) Cache
         $cached = Cache::get($cacheKey);
-        if (is_numeric($cached) && (float)$cached > 0) {
-            $memo[$cacheKey] = (float) $cached;
-            return $memo[$cacheKey];
-        }
-        if ($cached === 0 || $cached === 'fail') {
-            return $memo[$cacheKey] = null;
+        if (is_numeric($cached) && (float) $cached > 0) {
+            return $memo[$cacheKey] = (float) $cached;
         }
 
-        // 2) Essai direct via exchangerate.host
+        // 2) API directe: exchangerate.host/convert
         try {
             $resp = Http::acceptJson()
                 ->timeout(4)
@@ -164,124 +154,55 @@ class BookingManager extends Component
                 }
             }
         } catch (\Throwable $e) {
-            $errors[] = 'convert: ' . $e->getMessage();
+            // ignore
         }
 
-        if ((microtime(true) - $start) >= $budget) {
-            Cache::put($cacheKey, 0, now()->addMinutes(10));
-            return $memo[$cacheKey] = null;
-        }
-
-        // 3) Fallback via EUR comme devise pivot
-        $EUR_XOF = 655.957; // 1 EUR = 655.957 XOF
-        $getEurTo = function (string $symbol) use ($EUR_XOF, $start, $budget) {
-            $symbol = strtoupper($symbol);
-            if ($symbol === 'EUR') return 1.0;
-            if ($symbol === 'XOF') return $EUR_XOF;
-            if ((microtime(true) - $start) >= $budget) {
-                return 0.0;
-            }
-            try {
-                $r = Http::acceptJson()
-                    ->timeout(3)
-                    ->connectTimeout(1)
-                    ->get('https://api.exchangerate.host/latest', [
-                        'base' => 'EUR',
-                        'symbols' => $symbol,
-                    ]);
-                if ($r->successful()) {
-                    $j = $r->json();
-                    $val = $j['rates'][$symbol] ?? 0.0;
-                    return (float) $val;
-                }
-            } catch (\Throwable $e) {
-                // ignore
-            }
-            return 0.0;
-        };
-
-        $eurToTo = $getEurTo($to);
-        $eurToFrom = $getEurTo($from);
-        if ($eurToTo > 0 && $eurToFrom > 0) {
-            $rate = $eurToTo / $eurToFrom;
-            Cache::put($cacheKey, $rate, now()->addHours(6));
-            return $memo[$cacheKey] = $rate;
-        }
-
-        // 4) Dernier recours: ancienne API si une clé est fournie
-        $apiKey = config('services.exchangerate.key');
-        if ((microtime(true) - $start) >= $budget) {
-            Cache::put($cacheKey, 0, now()->addMinutes(10));
-            return $memo[$cacheKey] = null;
-        }
-        if ($apiKey && $apiKey !== 'YOUR_API_KEY') {
-            $url = "https://v6.exchangerate-api.com/v6/{$apiKey}/pair/{$from}/{$to}";
-            try {
-                $resp = Http::acceptJson()->timeout(3)->connectTimeout(1)->retry(0, 0)->get($url);
-                if ($resp->successful()) {
-                    $data = $resp->json();
-                    $rate = isset($data['conversion_rate']) ? (float) $data['conversion_rate'] : 0.0;
-                    if ($rate > 0) {
-                        Cache::put($cacheKey, $rate, now()->addHours(6));
-                        return $memo[$cacheKey] = $rate;
-                    }
-                }
-            } catch (\Throwable $e) {
-                // noop
-            }
-
-            if ((microtime(true) - $start) < $budget) {
-                $getEurToV6 = function (string $symbol) use ($apiKey, $EUR_XOF) {
-                    $symbol = strtoupper($symbol);
-                    if ($symbol === 'EUR') return 1.0;
-                    if ($symbol === 'XOF') return $EUR_XOF;
-                    try {
-                        $u = "https://v6.exchangerate-api.com/v6/{$apiKey}/pair/EUR/{$symbol}";
-                        $r = Http::acceptJson()->timeout(3)->connectTimeout(1)->retry(0, 0)->get($u);
-                        if ($r->successful()) {
-                            $j = $r->json();
-                            $v = isset($j['conversion_rate']) ? (float) $j['conversion_rate'] : 0.0;
-                            return $v;
-                        }
-                    } catch (\Throwable $e) {
-                        // ignore
-                    }
-                    return 0.0;
-                };
-                $eurToTo = $getEurToV6($to);
-                $eurToFrom = $getEurToV6($from);
-                if ($eurToTo > 0 && $eurToFrom > 0) {
+        // 3) Pivot via EUR: rate(from->to) = rate(EUR->to) / rate(EUR->from)
+        try {
+            $resp = Http::acceptJson()
+                ->timeout(4)
+                ->connectTimeout(2)
+                ->retry(1, 200)
+                ->get('https://api.exchangerate.host/latest', [
+                    'base' => 'EUR',
+                    'symbols' => $from . ',' . $to,
+                ]);
+            if ($resp->successful()) {
+                $j = $resp->json();
+                $rates = $j['rates'] ?? [];
+                $eurToFrom = (float) ($rates[$from] ?? 0);
+                $eurToTo = (float) ($rates[$to] ?? 0);
+                if ($from === 'EUR') $eurToFrom = 1.0;
+                if ($to === 'EUR') $eurToTo = 1.0;
+                if ($eurToFrom > 0 && $eurToTo > 0) {
                     $rate = $eurToTo / $eurToFrom;
                     Cache::put($cacheKey, $rate, now()->addHours(6));
                     return $memo[$cacheKey] = $rate;
                 }
             }
+        } catch (\Throwable $e) {
+            // ignore
         }
 
-        // 4bis) Fallback local
+        // 4) Fallback local: resources/fx/rates.json (optionnel)
         try {
-            if ((microtime(true) - $start) < $budget) {
-                $path = resource_path('fx/rates.json');
-                if (is_file($path)) {
-                    $json = json_decode(file_get_contents($path), true);
-                    $base = strtoupper($json['base'] ?? 'XOF');
-                    $table = $json['rates'] ?? [];
-                    if ($base === $from && isset($table[$to]) && is_numeric($table[$to])) {
-                        $rate = (float) $table[$to];
-                        if ($rate > 0) {
-                            Cache::put($cacheKey, $rate, now()->addHours(6));
-                            Log::info('FX local fallback used', ['pair' => $from . '→' . $to, 'rate' => $rate]);
-                            return $memo[$cacheKey] = $rate;
-                        }
-                    } elseif ($base === 'XOF' && $from !== 'XOF') {
-                        $toXof = isset($table[$from]) && (float)$table[$from] > 0 ? (float)$table[$from] : 0.0;
-                        $xofToTo = isset($table[$to]) && (float)$table[$to] > 0 ? (float)$table[$to] : 0.0;
-                        if ($toXof > 0 && $xofToTo > 0) {
-                            $rate = $xofToTo / $toXof;
-                            Cache::put($cacheKey, $rate, now()->addHours(6));
-                            Log::info('FX local fallback via pivot', ['pair' => $from . '→' . $to, 'rate' => $rate]);
-                            return $memo[$cacheKey] = $rate;
-                        }
+            $path = resource_path('fx/rates.json');
+            if (is_file($path)) {
+                $json = json_decode(file_get_contents($path), true);
+                $base = strtoupper($json['base'] ?? 'XOF');
+                $table = $json['rates'] ?? [];
+                if ($base === $from && isset($table[$to]) && is_numeric($table[$to])) {
+                    $rate = (float) $table[$to];
+                    if ($rate > 0) {
+                        Cache::put($cacheKey, $rate, now()->addHours(6));
+                        return $memo[$cacheKey] = $rate;
+                    }
+                } elseif (isset($table[$from]) && isset($table[$to]) && (float)$table[$from] > 0) {
+                    // Si le fichier a un autre base, tenter un pivot simple
+                    $rate = ((float)$table[$to]) / ((float)$table[$from]);
+                    if ($rate > 0) {
+                        Cache::put($cacheKey, $rate, now()->addHours(6));
+                        return $memo[$cacheKey] = $rate;
                     }
                 }
             }
@@ -289,15 +210,8 @@ class BookingManager extends Component
             // ignore
         }
 
+        // Échec: mettre un échec court en cache pour éviter le spam
         Cache::put($cacheKey, 0, now()->addMinutes(10));
-        $logKey = 'fxlog:' . $from . ':' . $to;
-        if (!Cache::has($logKey)) {
-            Log::warning('FX conversion failed; fallback to XOF', [
-                'pair' => $from . '→' . $to,
-                'elapsed' => round(microtime(true) - $start, 3) . 's',
-            ]);
-            Cache::put($logKey, 1, now()->addMinutes(10));
-        }
         return $memo[$cacheKey] = null;
     }
 
@@ -614,58 +528,137 @@ class BookingManager extends Component
     // Ajoute ces propriétés publiques pour l'affichage dans la vue
     public $convertedPrice;
     public $convertedCurrency;
+    // Récapitulatif de réservation (modal de confirmation)
+    public $showSummaryModal = false;
+    public $unitPrice = null; // en XOF
+    public $unitPriceConverted = null; // dans la devise utilisateur si dispo
+    public $unitCurrency = 'XOF';
 
+    // computeNights supprimée à la demande: on n'affiche plus le nombre de nuits
 
-    public function addBooking()
+    // Méthode addBooking obsolète et non utilisée supprimée (flux remplacé par openSummary/confirmReservation)
+
+    /**
+     * Ouvre le récapitulatif avant soumission définitive.
+     * Si roomTypeId est fourni (cas hôtel), on le sélectionne.
+     */
+    public function openSummary(int $roomTypeId = null)
     {
         if (!Auth::check()) {
             return redirect()->route('login');
         }
-        $rules = $this->rules;
-        // Si des types de chambre existent, type et quantité requis (hôtel ou résidence multi-unités)
-        $hasRoomTypes = $this->property && $this->property->roomTypes && $this->property->roomTypes->count() > 0;
-        if ($hasRoomTypes) {
-            $rules['selectedRoomTypeId'] = 'required|integer|exists:room_types,id';
-            $rules['quantity'] = 'required|integer|min:1';
-        }
-        $this->validate($rules);
 
-        // Découper la plage de dates (tous séparateurs courants FR/EN, nettoyage des espaces insécables)
-        if ($this->dateRange) {
-            $dates = preg_split('/\\s+(?:to|à|au|\\-|–|—)\\s+/ui', $this->dateRange);
-            if (count($dates) === 2) {
-                $this->checkInDate = trim($dates[0]);
-                $this->checkOutDate = trim($dates[1]);
-            } else {
-                $this->addError('dateRange', 'Format de plage de dates invalide.');
-                return;
-            }
-        } else {
+        // Exiger une plage de dates valide
+        if (!$this->dateRange) {
             $this->addError('dateRange', 'Veuillez sélectionner une plage de dates.');
             return;
         }
-
-        // Validation supplémentaire : checkIn < checkOut
+        $dates = preg_split('/\s+(?:to|à|au|\-|–|—)\s+/ui', (string)$this->dateRange);
+        if (!is_array($dates) || count($dates) !== 2) {
+            $this->addError('dateRange', 'Format de plage de dates invalide.');
+            return;
+        }
+        $this->checkInDate = trim($dates[0]);
+        $this->checkOutDate = trim($dates[1]);
         if (!$this->checkInDate || !$this->checkOutDate || $this->checkInDate >= $this->checkOutDate) {
             $this->addError('dateRange', 'La date de départ doit être postérieure à la date d\'arrivée.');
             return;
         }
 
         $property = $this->property ?? Property::with('roomTypes')->find($this->propertyId);
+        if (!$property) {
+            $this->addError('dateRange', 'Propriété introuvable.');
+            return;
+        }
 
-        // Calculer et stocker le prix total avant la création de la réservation
-        // (sinon $this->totalPrice reste null et ne s'enregistre pas)
-        $this->calculateTotalPrice();
-
-        // Vérifier l'inventaire/ disponibilité pour le type de chambre si roomTypes
-        if ($hasRoomTypes && $this->selectedRoomTypeId) {
-            $roomType = $property->roomTypes->firstWhere('id', (int) $this->selectedRoomTypeId);
-            if (!$roomType) {
-                $this->addError('selectedRoomTypeId', 'Type de chambre introuvable.');
+        $hasRoomTypes = $property->roomTypes && $property->roomTypes->count() > 0;
+        if ($hasRoomTypes) {
+            if ($roomTypeId !== null) {
+                $this->selectedRoomTypeId = (int) $roomTypeId;
+            }
+            if (!$this->selectedRoomTypeId || !$property->roomTypes->firstWhere('id', (int)$this->selectedRoomTypeId)) {
+                $this->addError('selectedRoomTypeId', 'Veuillez sélectionner un type de chambre.');
                 return;
             }
-            // Somme des quantités réservées qui se chevauchent sur la période,
-            // soit déjà acceptées, soit déjà payées
+        } else {
+            $this->selectedRoomTypeId = null; // Non applicable
+        }
+
+        // Quantité par défaut
+        $this->quantity = max(1, (int)($this->quantity ?: 1));
+
+        // Calculs: prix unitaire, total et conversions
+
+        // Prix unitaire (XOF) selon type si applicable
+        $this->unitPrice = (float) ($property->price_per_night ?? 0);
+        if ($this->selectedRoomTypeId) {
+            $rt = $property->roomTypes->firstWhere('id', (int) $this->selectedRoomTypeId);
+            if ($rt && $rt->price_per_night !== null) {
+                $this->unitPrice = (float)$rt->price_per_night;
+            }
+        }
+        $this->unitCurrency = 'XOF';
+        $c = $this->getConvertedPrice($this->unitPrice);
+        $this->unitPriceConverted = $c['amount'];
+        // Calcul du total
+        $this->calculateTotalPrice();
+
+        // Ouvrir le modal
+        $this->showSummaryModal = true;
+    }
+
+    /** Ferme le récapitulatif sans soumettre */
+    public function closeSummary(): void
+    {
+        $this->showSummaryModal = false;
+    }
+
+    /**
+     * Confirme la réservation après récapitulatif et envoie les notifications.
+     */
+    public function confirmReservation()
+    {
+        if (!Auth::check()) {
+            return redirect()->route('login');
+        }
+
+        // Valider dates
+        if (!$this->dateRange) {
+            $this->addError('dateRange', 'Veuillez sélectionner une plage de dates.');
+            return;
+        }
+        $dates = preg_split('/\s+(?:to|à|au|\-|–|—)\s+/ui', (string)$this->dateRange);
+        if (!is_array($dates) || count($dates) !== 2) {
+            $this->addError('dateRange', 'Format de plage de dates invalide.');
+            return;
+        }
+        $this->checkInDate = trim($dates[0]);
+        $this->checkOutDate = trim($dates[1]);
+        if (!$this->checkInDate || !$this->checkOutDate || $this->checkInDate >= $this->checkOutDate) {
+            $this->addError('dateRange', 'La date de départ doit être postérieure à la date d\'arrivée.');
+            return;
+        }
+
+        $property = $this->property ?? Property::with('roomTypes')->find($this->propertyId);
+        if (!$property) {
+            $this->addError('dateRange', 'Propriété introuvable.');
+            return;
+        }
+        $hasRoomTypes = $property->roomTypes && $property->roomTypes->count() > 0;
+
+        // Room type requis si applicable (le user peut avoir modifié la quantité dans le modal)
+        if ($hasRoomTypes) {
+            if (!$this->selectedRoomTypeId || !$property->roomTypes->firstWhere('id', (int)$this->selectedRoomTypeId)) {
+                $this->addError('selectedRoomTypeId', 'Veuillez sélectionner un type de chambre.');
+                return;
+            }
+        }
+
+        $this->quantity = max(1, (int)$this->quantity);
+
+        // Disponibilités
+        if ($hasRoomTypes && $this->selectedRoomTypeId) {
+            $roomType = $property->roomTypes->firstWhere('id', (int) $this->selectedRoomTypeId);
             $overlap = Booking::where('property_id', $property->id)
                 ->where('room_type_id', $roomType->id)
                 ->where(function ($q) {
@@ -681,14 +674,12 @@ class BookingManager extends Component
                         });
                 })
                 ->sum('quantity');
-            $requested = max(1, (int) $this->quantity);
-            if (($overlap + $requested) > (int) $roomType->inventory) {
+            if (($overlap + $this->quantity) > (int) $roomType->inventory) {
                 $this->addError('quantity', 'La quantité demandée dépasse la disponibilité pour ces dates.');
                 return;
             }
-        }
-        // Propriétés sans roomTypes: interdire tout chevauchement global
-        if (!$hasRoomTypes) {
+        } else {
+            // propriétés sans roomTypes: pas de chevauchement global
             $existsOverlap = Booking::where('property_id', $property->id)
                 ->where(function ($q) {
                     $q->where('status', 'accepted')
@@ -704,25 +695,29 @@ class BookingManager extends Component
                 })
                 ->exists();
             if ($existsOverlap) {
-                // Ancienne méthode supprimée: ne plus afficher d'erreur inline sur le champ 'dateRange'.
-                // L'UI masque désormais le bouton "Réserver" et affiche un message d'indisponibilité.
+                // UI gère déjà l'indisponibilité
                 return;
             }
         }
 
-        // Vérifier si l'utilisateur essaie de réserver sa propre propriété
+        // Propriétaire ne peut pas réserver
         if ($property->user_id == Auth::id()) {
             LivewireAlert::title('Vous ne pouvez pas réserver une de vos propriétés')->error()->show();
             return;
         }
 
-        // Vérifier si la date d'entrée est inférieure à la date du jour
-        $today = Carbon::today()->toDateString();
-        if ($this->checkInDate < $today) {
+        // Date d'entrée >= aujourd'hui
+        if ($this->checkInDate < Carbon::today()->toDateString()) {
             LivewireAlert::title('La date d\'entrée ne peut pas être inférieure à la date du jour')->error()->show();
             return;
         }
 
+        // Recalculer total (au cas où la quantité a changé dans le modal)
+        $this->calculateTotalPrice();
+
+        // Rien à faire pour les nuits: on ne l'affiche plus
+
+        // Créer la réservation
         $booking = Booking::create([
             'property_id' => $this->propertyId,
             'room_type_id' => $this->selectedRoomTypeId,
@@ -731,96 +726,102 @@ class BookingManager extends Component
             'start_date' => $this->checkInDate,
             'end_date' => $this->checkOutDate,
             'total_price' => $this->totalPrice,
-            'status' => 'pending', // Statut en attente pour Filament/Admin
+            'status' => 'pending',
         ]);
 
-        // Canal admin groupé : conversation unique pour tous les admins
-        $property = Property::find($this->propertyId);
-        // Créer un canal admin groupé unique pour chaque réservation
+        // Conversation admin groupée (comme dans quickReserve)
         $adminGroupConversation = \App\Models\Conversation::create([
             'is_admin_channel' => true,
             'user_id' => Auth::id(),
-            'owner_id' => 5, // ou null si pas utile
+            'owner_id' => 5,
             'booking_id' => $booking->id
         ]);
+        // Construire un récapitulatif riche
+        $rtName = null;
+        if ($this->selectedRoomTypeId) {
+            $rt = $property->roomTypes->firstWhere('id', (int)$this->selectedRoomTypeId);
+            $rtName = $rt?->name;
+        }
+        // Dates FR (ex: Mercredi 20 Octobre 2025)
+        try {
+            $ciFr = Str::title(Carbon::parse($this->checkInDate)->locale('fr')->translatedFormat('l d F Y'));
+            $coFr = Str::title(Carbon::parse($this->checkOutDate)->locale('fr')->translatedFormat('l d F Y'));
+        } catch (\Throwable $e) {
+            $ciFr = $this->checkInDate;
+            $coFr = $this->checkOutDate;
+        }
+
+        $summaryLines = [];
+        $summaryLines[] = 'Nouvelle demande de réservation';
+        $summaryLines[] = '• Établissement: ' . ($property->name ?? '—');
+        if ($rtName) {
+            $summaryLines[] = '• Type de chambre: ' . $rtName;
+        }
+        $summaryLines[] = '• Quantité: ' . max(1, (int)$this->quantity);
+        $summaryLines[] = '• Séjour: ' . $ciFr . ' → ' . $coFr;
+        // Prix unitaire + total: XOF et devise utilisateur
+        $unitConv = $this->getConvertedPrice($this->unitPrice ?? 0);
+        $summaryLines[] = '• Prix unitaire: ' . number_format((float)($this->unitPrice ?? 0), 2) . ' XOF' . ' (' . number_format((float)$unitConv['amount'], 2) . ' ' . $unitConv['currency'] . ')';
+        $summaryLines[] = '• Total: ' . number_format((float)$this->totalPrice, 2) . ' XOF' . ' (' . number_format((float)$this->convertedPrice, 2) . ' ' . $this->convertedCurrency . ')';
+        $summaryText = implode("\n", $summaryLines);
 
         $userName = Auth::user()->name ?? 'Utilisateur';
         $userMessage = Message::create([
             'conversation_id' => $adminGroupConversation->id,
             'sender_id' => Auth::id(),
-            'receiver_id' => 5, // ID d'un admin pour la contrainte SQL
-            'content' => 'Bonjour, je suis Mr/Mme ' . $userName . ', je souhaite réserver ' . ($property ? $property->name : '') . ' du ' . $this->checkInDate . ' au ' . $this->checkOutDate . '. Merci de confirmer la disponibilité.',
+            'receiver_id' => 5,
+            'content' => $summaryText,
         ]);
-
-        // Diffuser le message initial pour mise à jour temps réel côté admin
         try {
             broadcast(new MessageSent($userMessage));
         } catch (\Throwable $e) {
-            // Silencieux en cas d'absence de broadcasting configuré
         }
 
-        // Réponse automatique de l'admin dans le même canal (anti-doublon simple)
+        // Auto-réponse admin
         try {
             $alreadyAutoReplied = Message::where('conversation_id', $adminGroupConversation->id)
                 ->where('sender_id', 5)
                 ->where('created_at', '>=', now()->subMinutes(10))
                 ->exists();
-
             if (!$alreadyAutoReplied) {
                 $firstName = trim(Str::of($userName)->before(' '));
                 $autoContent = 'Bonjour ' . ($firstName !== '' ? $firstName : $userName) . ", votre demande de réservation a bien été reçue, nous vérifions la disponibilité et reviendrons vers vous dans un instant.";
-
                 $autoMessage = Message::create([
                     'conversation_id' => $adminGroupConversation->id,
                     'sender_id' => 5,
                     'receiver_id' => Auth::id(),
                     'content' => $autoContent,
                 ]);
-
-                // Diffuser la réponse automatique pour l'utilisateur
                 try {
                     broadcast(new MessageSent($autoMessage));
                 } catch (\Throwable $e) {
-                    // Ignorer si broadcasting non configuré
                 }
             }
         } catch (\Throwable $e) {
-            // Ignorer discrètement si problème lors de l'auto-réponse
         }
 
-        // Envoi d'un mail à l'utilisateur
+        // Emails enrichis
         try {
-            \Illuminate\Support\Facades\Mail::raw(
-                "Votre demande de reservation à bien été soumise, nous vérifions la disponibilité...",
-                function ($message) {
-                    $message->to(Auth::user()->email)
-                        ->subject('Demande de réservation soumise');
-                }
-            );
+            $body = $summaryText . "\n\nMerci de votre demande. Nous revenons vers vous rapidement.";
+            \Illuminate\Support\Facades\Mail::raw($body, function ($message) {
+                $message->to(Auth::user()->email)->subject('Demande de réservation soumise');
+            });
         } catch (\Exception $e) {
-            // Optionnel : log ou alerte
         }
-
-        // Envoi d'un mail à l'admin (id 5 ou tous les admins si besoin)
         try {
-            $admin = User::find(5); // Adapter si plusieurs admins
+            $admin = User::find(5);
             if ($admin) {
-                \Illuminate\Support\Facades\Mail::raw(
-                    "Vous avez une demande de reservation en attente.",
-                    function ($message) use ($admin) {
-                        $message->to($admin->email)
-                            ->subject('Nouvelle demande de réservation');
-                    }
-                );
-                // Notification Laravel (canal database)
+                $body = $summaryText . "\n\nVeuillez vérifier la disponibilité et répondre au client.";
+                \Illuminate\Support\Facades\Mail::raw($body, function ($message) use ($admin) {
+                    $message->to($admin->email)->subject('Nouvelle demande de réservation');
+                });
                 $admin->notify(new \App\Notifications\BookingRequestNotification($booking));
             }
         } catch (\Exception $e) {
-            // Optionnel : log ou alerte
         }
 
-        $this->bookings = Booking::where('property_id', $this->propertyId)->get();
-        // Redirection directe vers la page de chat générale
+        // Fermer le modal et rediriger vers le chat
+        $this->showSummaryModal = false;
         return redirect('/chat');
     }
 
@@ -959,11 +960,19 @@ class BookingManager extends Component
         ]);
 
         $userName = Auth::user()->name ?? 'Utilisateur';
+        // Dates FR pour le message utilisateur
+        try {
+            $ciFr = Str::title(Carbon::parse($this->checkInDate)->locale('fr')->translatedFormat('l d F Y'));
+            $coFr = Str::title(Carbon::parse($this->checkOutDate)->locale('fr')->translatedFormat('l d F Y'));
+        } catch (\Throwable $e) {
+            $ciFr = $this->checkInDate;
+            $coFr = $this->checkOutDate;
+        }
         $userMessage = Message::create([
             'conversation_id' => $adminGroupConversation->id,
             'sender_id' => Auth::id(),
             'receiver_id' => 5,
-            'content' => 'Bonjour, je suis Mr/Mme ' . $userName . ', je souhaite réserver ' . ($property ? $property->name : '') . ' du ' . $this->checkInDate . ' au ' . $this->checkOutDate . '. Merci de confirmer la disponibilité.',
+            'content' => 'Bonjour, je suis Mr/Mme ' . $userName . ', je souhaite réserver ' . ($property ? $property->name : '') . ' du ' . $ciFr . ' au ' . $coFr . '. Merci de confirmer la disponibilité.',
         ]);
         try {
             broadcast(new MessageSent($userMessage));
@@ -1021,42 +1030,7 @@ class BookingManager extends Component
         return redirect('/chat');
     }
 
-    public function toggleWishlist()
-    {
-        if (!Auth::check()) {
-            return redirect()->route('login');
-        }
-
-        $user = Auth::user();
-        $property = Property::find($this->propertyId);
-
-        if (!$property) {
-            LivewireAlert::title('Propriété introuvable')->error()->show();
-            return;
-        }
-
-        if (!method_exists($user, 'wishlists')) {
-            LivewireAlert::title('Relation wishlists manquante sur User')->error()->show();
-            return;
-        }
-
-        $wishlist = $user->wishlists()->where('property_id', $property->id)->first();
-        if ($wishlist) {
-            // Retirer de la wishlist
-            $wishlist->delete();
-            LivewireAlert::title('Retiré de votre liste de souhaits')->info()->show();
-        } else {
-            // Ajouter à la wishlist
-            try {
-                $user->wishlists()->create([
-                    'property_id' => $property->id,
-                ]);
-                LivewireAlert::title('Ajouté à votre liste de souhaits !')->success()->show();
-            } catch (\Exception $e) {
-                LivewireAlert::title('Erreur lors de la modification de la wishlist')->error()->show();
-            }
-        }
-    }
+    // toggleWishlist supprimée: non utilisée dans cette vue et relation User::wishlists absente
 
     public function render()
     {

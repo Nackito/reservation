@@ -31,6 +31,8 @@
         @endif
         <!-- Début du composant Livewire : tout est enveloppé dans ce div racine -->
         <div class="container mx-auto py-8">
+            {{-- Modèle Livewire caché pour la plage de dates (protège Flatpickr des morph Livewire) --}}
+            <input type="hidden" id="dateRangeModel" wire:model.defer="dateRange" />
             {{-- Statut de la propriété (affiché uniquement pour Résidence meublée) --}}
             {{-- $isOccupied et $isResidenceMeublee sont définis en haut du fichier --}}
             @if($isResidenceMeublee)
@@ -53,12 +55,12 @@
                     </div>
 
                     {{-- Champ type de chambre supprimé: le choix se fait via le bouton Réserver du tableau --}}
-                    <div class="w-full">
-                        <input type="text" wire:model.defer="dateRange" id="ReservationDateRange" class="py-3 px-4 block w-full border border-blue-400 bg-white text-gray-900 placeholder-gray-500 rounded-lg text-sm
+                    <div class="w-full" id="DateRange1Wrapper" wire:ignore>
+                        <input type="text" id="ReservationDateRange" class="py-3 px-4 block w-full border border-blue-400 bg-white text-gray-900 placeholder-gray-500 rounded-lg text-sm
                     focus:border-blue-600 focus:ring-blue-500 disabled:opacity-50
                     disabled:pointer-events-none dark:bg-gray-900 dark:border-blue-700 dark:text-gray-100 dark:placeholder-gray-400 dark:focus:ring-blue-400" placeholder="Choisissez vos dates (arrivée - départ)">
-                        @error('dateRange') <span class="text-red-500">{{ $message }}</span> @enderror
                     </div>
+                    @error('dateRange') <span class="text-red-500">{{ $message }}</span> @enderror
                     <button type="submit" id="confirm-booking" class="bg-blue-500 text-white py-2 px-4 rounded">
                         Rechercher
                     </button>
@@ -455,6 +457,8 @@
 <div class="container mx-auto mt-8">
     <h1 class="block text-3xl font-bold text-gray-800 dark:text-gray-100 sm:text-4xl lg:text-2xl lg:leading-tight mt-6 mb-4 sm:mt-0 sm:mb-6 px-4 sm:px-0">Entrez vos dates</h1>
 
+    {{-- Champ caché déplacé plus haut pour couvrir les 2 formulaires --}}
+
     <form wire:submit.prevent="searchDates" class="mb-4" id="Reservation">
         <div class="flex mt-4 flex-col sm:flex-row gap-2 sm:gap-3 items-center bg-white rounded-lg p-2 dark:bg-gray-800 custom-mobile-reservation-form">
 
@@ -467,12 +471,12 @@
             </div>
 
             {{-- Champ type de chambre supprimé: le choix se fait via le bouton Réserver du tableau --}}
-            <div class="w-full">
-                <input type="text" wire:model.defer="dateRange" id="ReservationDateRange2" class="py-3 px-4 block w-full border border-blue-400 bg-white text-gray-900 placeholder-gray-500 rounded-lg text-sm cursor-pointer
+            <div class="w-full" id="DateRange2Wrapper" wire:ignore>
+                <input type="text" id="ReservationDateRange2" class="py-3 px-4 block w-full border border-blue-400 bg-white text-gray-900 placeholder-gray-500 rounded-lg text-sm cursor-pointer
                     focus:border-blue-600 focus:ring-blue-500 disabled:opacity-50
                     disabled:pointer-events-none dark:bg-gray-900 dark:border-blue-700 dark:text-gray-100 dark:placeholder-gray-400 dark:focus:ring-blue-400" placeholder="Choisissez vos dates (arrivée - départ)">
-                @error('dateRange') <span class="text-red-500">{{ $message }}</span> @enderror
             </div>
+            @error('dateRange') <span class="text-red-500">{{ $message }}</span> @enderror
 
             <button type="submit" id="confirm-booking" class="bg-blue-500 text-white py-2 px-4 rounded">
                 Rechercher
@@ -480,7 +484,14 @@
         </div>
 
         <script>
-            // ===== Récupération de la plage de dates depuis URL / localStorage (JSON structuré) =====
+            // ===== Paramètres Flatpickr injectés depuis la config (base de données / config/app.php) =====
+            window.FP_CONFIG = {
+                dateFormat: @json(config('app.flatpickr_date_format', 'Y-m-d')),
+                altFormat: @json(config('app.flatpickr_alt_format', 'j F Y')),
+                rangeSeparator: @json(config('app.flatpickr_range_separator', ' au ')),
+                locale: @json(config('app.flatpickr_locale', 'fr'))
+            };
+            // ===== Récupération de la plage depuis Livewire/DB uniquement (pas d'URL par défaut) =====
             function normalizeRange(val) {
                 if (!val) return '';
                 return String(val)
@@ -500,49 +511,20 @@
             }
 
             function getUrlDateRange() {
-                try {
-                    const url = new URL(window.location.href);
-                    const p = url.searchParams.get('dateRange');
-                    return p ? normalizeRange(p) : '';
-                } catch (_) {
-                    return '';
-                }
+                return '';
             }
 
             function getStoredJsonRange() {
-                try {
-                    const j = localStorage.getItem('search.dateRange.json');
-                    if (j) {
-                        const obj = JSON.parse(j);
-                        if (obj && obj.start && obj.end) return `${obj.start} to ${obj.end}`;
-                    }
-                } catch (_) {}
-                // Fallback legacy
-                try {
-                    const legacy = localStorage.getItem('booking.dateRange');
-                    return legacy ? normalizeRange(legacy) : '';
-                } catch (_) {
-                    return '';
-                }
+                return '';
             }
 
-            function getTodayTomorrow() {
-                const d = new Date();
-                const pad = (n) => String(n).padStart(2, '0');
-                const fmt = (dt) => `${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())}`;
-                const today = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-                const tomorrow = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
-                return {
-                    today,
-                    tomorrow,
-                    iso: `${fmt(today)} to ${fmt(tomorrow)}`
-                };
-            }
+            // getTodayTomorrow supprimé: plus de valeur par défaut auto
 
             function applyRangeToInputs(isoRange) {
                 if (!isoRange) return;
                 const el1 = document.getElementById('ReservationDateRange');
                 const el2 = document.getElementById('ReservationDateRange2');
+                const model = document.getElementById('dateRangeModel');
                 const parts = parseToArray(isoRange);
                 // Mettre la valeur dans les inputs visibles et déclencher un événement input pour Livewire
                 [el1, el2].forEach((el) => {
@@ -556,7 +538,8 @@
                                 // Remplacer l’affichage "to" par " au " dans l’alt input
                                 const alt = el._flatpickr.altInput;
                                 if (alt && typeof alt.value === 'string') {
-                                    alt.value = alt.value.replace(' to ', ' au ');
+                                    const sep = (window.FP_CONFIG && window.FP_CONFIG.rangeSeparator) || ' au ';
+                                    alt.value = alt.value.replace(' to ', sep);
                                 }
                             } catch (_) {}
                         } else {
@@ -570,6 +553,16 @@
                         window._rangeUpdateLock = Math.max(0, (window._rangeUpdateLock || 1) - 1);
                     }
                 });
+                // Mettre à jour le modèle Livewire caché
+                if (model) {
+                    model.value = isoRange;
+                    model.dispatchEvent(new Event('input', {
+                        bubbles: true
+                    }));
+                    model.dispatchEvent(new Event('change', {
+                        bubbles: true
+                    }));
+                }
             }
 
             // ===== Helpers d'enregistrement JSON (persistance inverse) =====
@@ -633,40 +626,81 @@
                 bindFor(el2);
             }
 
+            // Indicateur global d'authentification pour choisir la persistance côté serveur
+            window.IS_AUTH = !!(@json(Auth::check()));
+
             // Options Flatpickr partagées pour garantir une configuration unique partout
             window.getFlatpickrBaseOptions = function() {
                 return {
                     mode: 'range',
-                    dateFormat: 'Y-m-d',
+                    dateFormat: (window.FP_CONFIG && window.FP_CONFIG.dateFormat) || 'Y-m-d',
                     minDate: 'today',
                     // Ne pas désactiver les jours: sélection toujours possible
                     disable: [],
                     altInput: true,
-                    altFormat: 'j F Y',
-                    rangeSeparator: ' au ',
-                    locale: (window.flatpickr && window.flatpickr.l10ns && window.flatpickr.l10ns.fr) ? window.flatpickr.l10ns.fr : 'default',
+                    altFormat: (window.FP_CONFIG && window.FP_CONFIG.altFormat) || 'j F Y',
+                    rangeSeparator: (window.FP_CONFIG && window.FP_CONFIG.rangeSeparator) || ' au ',
+                    locale: (function() {
+                        const pref = (window.FP_CONFIG && window.FP_CONFIG.locale) || 'fr';
+                        if (window.flatpickr && window.flatpickr.l10ns && window.flatpickr.l10ns[pref]) return window.flatpickr.l10ns[pref];
+                        return 'default';
+                    })(),
                     allowInput: false,
                     onReady: function(selectedDates, dateStr, inst) {
                         // Harmoniser le séparateur visuel
                         const alt = inst && inst.altInput;
-                        if (alt && typeof alt.value === 'string') alt.value = alt.value.replace(' to ', ' au ');
+                        if (alt && typeof alt.value === 'string') alt.value = alt.value.replace(' to ', ((window.FP_CONFIG && window.FP_CONFIG.rangeSeparator) || ' au '));
                     },
                     onOpen: function(selectedDates, dateStr, inst) {
                         const alt = inst && inst.altInput;
-                        if (alt && typeof alt.value === 'string') alt.value = alt.value.replace(' to ', ' au ');
+                        if (alt && typeof alt.value === 'string') alt.value = alt.value.replace(' to ', ((window.FP_CONFIG && window.FP_CONFIG.rangeSeparator) || ' au '));
                     },
                     onChange: function(selectedDates, dateStr, instance) {
-                        // Éviter la boucle si on vient d'appliquer programmatiquement
-                        if (window._rangeUpdateLock && window._rangeUpdateLock > 0) return;
-                        const norm = normalizeRange(dateStr);
-                        const parts = parseToArray(norm);
-                        if (parts) {
-                            saveSearchDateRangeJson(norm);
-                            // Synchroniser l'autre input et Livewire
-                            applyRangeToInputs(norm);
+                        try {
+                            // Normaliser la chaîne retournée par Flatpickr (format ISO attendu)
+                            const norm = normalizeRange(dateStr || '');
+                            const parts = parseToArray(norm);
+                            if (!parts) return;
+
+                            const iso = `${parts[0]} to ${parts[1]}`;
+
+                            // Mettre à jour les inputs visibles et le modèle Livewire caché
+                            applyRangeToInputs(iso);
+
+                            // Harmoniser le séparateur visuel (altInput)
                             const alt = instance && instance.altInput;
-                            if (alt && typeof alt.value === 'string') alt.value = alt.value.replace(' to ', ' au ');
-                        }
+                            if (alt && typeof alt.value === 'string') {
+                                alt.value = alt.value.replace(' to ', ((window.FP_CONFIG && window.FP_CONFIG.rangeSeparator) || ' au '));
+                            }
+
+                            // Persister immédiatement côté serveur via Livewire
+                            function getComponentId() {
+                                try {
+                                    const model = document.getElementById('dateRangeModel');
+                                    if (model) {
+                                        const root = model.closest('[wire\\:id]');
+                                        if (root) return root.getAttribute('wire:id');
+                                    }
+                                } catch (_) {}
+                                const anyRoot = document.querySelector('[wire\\:id]');
+                                return anyRoot ? anyRoot.getAttribute('wire:id') : null;
+                            }
+                            if (window.Livewire && typeof window.Livewire.find === 'function') {
+                                const id = getComponentId();
+                                const cmp = id ? window.Livewire.find(id) : null;
+                                if (cmp) {
+                                    if (typeof cmp.set === 'function') cmp.set('dateRange', iso);
+                                    if (typeof cmp.call === 'function') {
+                                        // Invoker session-only si non authentifié; sinon, upsert standard
+                                        if (window.IS_AUTH === false) {
+                                            cmp.call('persistDateRangeBySession', iso);
+                                        } else {
+                                            cmp.call('persistDateRange', iso);
+                                        }
+                                    }
+                                }
+                            }
+                        } catch (_) {}
                     }
                 };
             };
@@ -675,6 +709,14 @@
                 // Helper: récupère la valeur initiale de Livewire si présente
                 function getLivewireInitialRange() {
                     try {
+                        // Priorité: modèle caché Livewire
+                        const model = document.getElementById('dateRangeModel');
+                        if (model && model.value) {
+                            const v = normalizeRange(model.value);
+                            const p = parseToArray(v);
+                            if (p) return `${p[0]} to ${p[1]}`;
+                        }
+                        // Sinon inputs visibles
                         const el1 = document.getElementById('ReservationDateRange');
                         const el2 = document.getElementById('ReservationDateRange2');
                         const raw = (el1 && el1.value ? el1.value : '') || (el2 && el2.value ? el2.value : '');
@@ -692,12 +734,8 @@
                 // NB: on n'utilise PAS localStorage pour l'initialisation afin d'éviter des dates obsolètes
                 let initial = getLivewireInitialRange() || getUrlDateRange() || '';
                 if (typeof window.flatpickr !== 'function') {
-                    // Flatpickr non dispo: appliquer quand même la valeur pour Livewire
+                    // Flatpickr non dispo: n'applique rien si aucune valeur initiale
                     if (initial) applyRangeToInputs(initial);
-                    else {
-                        const def = getTodayTomorrow();
-                        applyRangeToInputs(def.iso);
-                    }
                     // Binder la persistance sur saisie classique
                     bindRangePersistenceListeners();
                     return;
@@ -710,7 +748,7 @@
                             positionElement: el1
                         });
                         const inst = window.flatpickr(el1, opts1);
-                        const setInit = initial || getTodayTomorrow().iso;
+                        const setInit = initial; // pas de défaut auto
                         const arr = parseToArray(setInit);
                         if (arr) {
                             try {
@@ -718,7 +756,7 @@
                             } catch (_) {}
                         }
                         const alt = inst && inst.altInput;
-                        if (alt && typeof alt.value === 'string') alt.value = alt.value.replace(' to ', ' au ');
+                        if (alt && typeof alt.value === 'string') alt.value = alt.value.replace(' to ', ((window.FP_CONFIG && window.FP_CONFIG.rangeSeparator) || ' au '));
                     } catch (_) {}
                 }
                 if (el2 && !el2._flatpickr) {
@@ -729,7 +767,7 @@
                             positionElement: el2
                         });
                         const inst2 = window.flatpickr(el2, opts2);
-                        const setInit2 = initial || getTodayTomorrow().iso;
+                        const setInit2 = initial; // pas de défaut auto
                         const arr2 = parseToArray(setInit2);
                         if (arr2) {
                             try {
@@ -737,15 +775,11 @@
                             } catch (_) {}
                         }
                         const alt2 = inst2 && inst2.altInput;
-                        if (alt2 && typeof alt2.value === 'string') alt2.value = alt2.value.replace(' to ', ' au ');
+                        if (alt2 && typeof alt2.value === 'string') alt2.value = alt2.value.replace(' to ', ((window.FP_CONFIG && window.FP_CONFIG.rangeSeparator) || ' au '));
                     } catch (_) {}
                 }
                 // S'assurer que la valeur Livewire reflète la plage choisie
                 if (initial) applyRangeToInputs(initial);
-                else {
-                    const def = getTodayTomorrow();
-                    applyRangeToInputs(def.iso);
-                }
                 // Binder la persistance après init
                 bindRangePersistenceListeners();
                 // Écouter l'événement Livewire pour réappliquer la plage en FR dans Flatpickr (une seule fois)
@@ -759,6 +793,20 @@
                     });
                     window.__dateRangeUpdatedListenerBound = true;
                 }
+                // Re-application après chaque mise à jour Livewire: recharger depuis le modèle caché
+                try {
+                    if (window.Livewire && typeof window.Livewire.hook === 'function') {
+                        window.Livewire.hook('message.processed', () => {
+                            setTimeout(() => {
+                                try {
+                                    const model = document.getElementById('dateRangeModel');
+                                    const iso = model && model.value ? normalizeRange(model.value) : '';
+                                    if (iso) applyRangeToInputs(iso); // sinon, ne réinjecte rien
+                                } catch (_) {}
+                            }, 0);
+                        });
+                    }
+                } catch (_) {}
             };
             // Nettoyage: suppression des fonctions de coloration des dates occupées
 
@@ -798,7 +846,7 @@
                     try {
                         const base = (typeof window.getFlatpickrBaseOptions === 'function') ? window.getFlatpickrBaseOptions() : {
                             mode: 'range',
-                            dateFormat: 'Y-m-d',
+                            dateFormat: (window.FP_CONFIG && window.FP_CONFIG.dateFormat) || 'Y-m-d',
                             minDate: 'today',
                             disable: [],
                             allowInput: false
@@ -814,6 +862,54 @@
                     } catch (_) {}
                 }
             };
+
+            // Synchroniser le champ caché avant chaque soumission Livewire
+            (function() {
+                function pad(n) {
+                    return String(n).padStart(2, '0');
+                }
+
+                function toIso(d) {
+                    return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+                }
+
+                function syncHiddenFromPickers() {
+                    try {
+                        const el1 = document.getElementById('ReservationDateRange');
+                        const el2 = document.getElementById('ReservationDateRange2');
+                        const model = document.getElementById('dateRangeModel');
+                        if (!model) return;
+                        const fp = (el1 && el1._flatpickr) ? el1._flatpickr : ((el2 && el2._flatpickr) ? el2._flatpickr : null);
+                        let iso = '';
+                        if (fp && Array.isArray(fp.selectedDates) && fp.selectedDates.length === 2) {
+                            iso = toIso(fp.selectedDates[0]) + ' to ' + toIso(fp.selectedDates[1]);
+                        } else {
+                            // Fallback: lire la valeur de l'input et normaliser
+                            const raw = (el1 && el1.value ? el1.value : '') || (el2 && el2.value ? el2.value : '');
+                            const norm = normalizeRange(raw);
+                            const parts = parseToArray(norm);
+                            if (parts) iso = parts[0] + ' to ' + parts[1];
+                        }
+                        if (iso) {
+                            model.value = iso;
+                            model.dispatchEvent(new Event('input', {
+                                bubbles: true
+                            }));
+                            model.dispatchEvent(new Event('change', {
+                                bubbles: true
+                            }));
+                        }
+                    } catch (_) {}
+                }
+                document.addEventListener('submit', function(e) {
+                    const tgt = e.target;
+                    if (!tgt) return;
+                    const isLW = tgt.matches('form[wire\\:submit\\.prevent="searchDates"], form[wire\\:submit\\.prevent="addBooking"], form[wire\\:submit\\.prevent="quickReserve"]');
+                    if (isLW) {
+                        syncHiddenFromPickers();
+                    }
+                }, true);
+            })();
 
             window.bindRoomTypeSelectOpenCalendar = function() {
                 const selects = document.querySelectorAll('select[wire\\:model="selectedRoomTypeId"]');
@@ -891,6 +987,12 @@
                         // Fallback
                         console.log('Dates mises à jour');
                     }
+                    // Réappliquer immédiatement la plage depuis le modèle caché
+                    try {
+                        const model = document.getElementById('dateRangeModel');
+                        const iso = model && model.value ? normalizeRange(model.value) : '';
+                        if (iso) applyRangeToInputs(iso);
+                    } catch (_) {}
                 } catch (_) {}
             });
 

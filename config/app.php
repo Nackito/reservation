@@ -123,5 +123,24 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Flatpickr Defaults (UI Date Picker)
+    |--------------------------------------------------------------------------
+    |
+    | These values drive the default behavior of the date pickers in the UI.
+    | You can override them via environment variables or publish them to a
+    | settings system if you prefer dynamic admin control later.
+    |
+    */
+
+    'flatpickr_date_format' => env('FLATPICKR_DATE_FORMAT', 'Y-m-d'),
+    'flatpickr_alt_format' => env('FLATPICKR_ALT_FORMAT', 'j F Y'),
+    'flatpickr_range_separator' => env('FLATPICKR_RANGE_SEPARATOR', ' au '),
+    'flatpickr_locale' => env('FLATPICKR_LOCALE', 'fr'),
+
+    // Ne pas ajuster automatiquement l'affichage des dates selon la disponibilité
+    'auto_adjust_dates' => env('AUTO_ADJUST_DATES', false),
+
 
 ];

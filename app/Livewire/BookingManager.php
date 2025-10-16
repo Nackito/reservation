@@ -9,6 +9,7 @@ use App\Models\Booking;
 use App\Models\Message;
 use App\Models\Reviews;
 use App\Models\User;
+use App\Models\SearchState;
 use Illuminate\Support\Facades\Auth;
 use Jantinnerezo\LivewireAlert\Facades\LivewireAlert;
 use Carbon\Carbon;
@@ -26,6 +27,9 @@ use Illuminate\Support\Facades\Log;
 
 class BookingManager extends Component
 {
+    protected $listeners = [
+        'persist-date-range' => 'persistDateRange',
+    ];
     // Règles de validation Livewire
     public $rules = [
         'dateRange' => 'required|string',
@@ -328,62 +332,115 @@ class BookingManager extends Component
         // Recupérer la propriété
         $this->property = Property::with(['images', 'category', 'roomTypes'])->find($this->propertyId);
 
-        // Pré-remplissage des dates depuis la query string
-        // 1) dateRange, ex: ?dateRange=2025-10-15 to 2025-10-18
-        $queryDateRange = request()->query('dateRange');
-        if ($queryDateRange && is_string($queryDateRange)) {
-            $this->dateRange = trim($queryDateRange);
-            // parser pour remplir checkIn/checkOut
-            $dates = preg_split('/\s+(?:to|à|au|\-|–|—)\s+/ui', $this->dateRange);
-            if (is_array($dates) && count($dates) === 2) {
-                $ci = trim($dates[0]);
-                $co = trim($dates[1]);
-                // Validation simple
-                if ($ci && $co && $ci < $co) {
-                    $this->checkInDate = $ci;
-                    $this->checkOutDate = $co;
-                }
-            }
-        }
-
-        // 2) Fallback: paramètres distincts start/end (ex: ?start=2025-10-15&end=2025-10-18)
-        if (!$this->checkInDate || !$this->checkOutDate) {
-            $start = request()->query('start');
-            $end = request()->query('end');
-            if (is_string($start) && is_string($end)) {
-                try {
-                    $ci = \Carbon\Carbon::parse($start)->toDateString();
-                    $co = \Carbon\Carbon::parse($end)->toDateString();
-                    if ($ci < $co) {
-                        $this->checkInDate = $ci;
-                        $this->checkOutDate = $co;
-                        $this->dateRange = $ci . ' to ' . $co;
-                    }
-                } catch (\Throwable $e) {
-                    // ignore si parse invalide
-                }
-            }
-        }
-
-        // 3) Défaut: aujourd'hui → demain si rien de valide trouvé
-        if (!$this->checkInDate || !$this->checkOutDate) {
-            $today = \Carbon\Carbon::today();
-            $tomorrow = (clone $today)->addDay();
-            $this->checkInDate = $today->toDateString();
-            $this->checkOutDate = $tomorrow->toDateString();
-            $this->dateRange = $this->checkInDate . ' to ' . $this->checkOutDate;
-        }
-
-        // 4) Ajuster vers la prochaine période disponible si la sélection chevauche des dates occupées
+        // Source de vérité: la DB uniquement
         try {
-            [$adjStart, $adjEnd] = $this->adjustDatesToAvailability($this->checkInDate, $this->checkOutDate);
-            if ($adjStart && $adjEnd) {
-                $this->checkInDate = $adjStart;
-                $this->checkOutDate = $adjEnd;
-                $this->dateRange = $adjStart . ' to ' . $adjEnd;
+            $sessionId = session()->getId();
+            $propertyId = $this->propertyId;
+
+            if (Auth::check()) {
+                // Migration session -> user si besoin
+                $sessionState = SearchState::query()
+                    ->whereNull('user_id')
+                    ->where('session_id', $sessionId)
+                    ->when($propertyId, fn($q) => $q->where('property_id', $propertyId))
+                    ->orderByDesc('updated_at')
+                    ->first();
+                $userState = SearchState::query()
+                    ->where('user_id', Auth::id())
+                    ->when($propertyId, fn($q) => $q->where('property_id', $propertyId))
+                    ->orderByDesc('updated_at')
+                    ->first();
+
+                if ($sessionState) {
+                    if (!$userState) {
+                        // Réattribuer la ligne session au user connecté
+                        $sessionState->user_id = Auth::id();
+                        $sessionState->session_id = null;
+                        $sessionState->save();
+                        $userState = $sessionState;
+                    } elseif ($sessionState->updated_at > $userState->updated_at) {
+                        // Mettre à jour la ligne user avec la plus récente
+                        $userState->fill([
+                            'date_range' => $sessionState->date_range,
+                            'check_in'   => $sessionState->check_in,
+                            'check_out'  => $sessionState->check_out,
+                        ])->save();
+                        // Nettoyer l'ancienne session
+                        try {
+                            $sessionState->delete();
+                        } catch (\Throwable $e) {
+                        }
+                    } else {
+                        // Session plus ancienne: on peut la supprimer
+                        try {
+                            $sessionState->delete();
+                        } catch (\Throwable $e) {
+                        }
+                    }
+                }
+
+                // Si aucun état user: initialiser aujourd'hui→demain en DB (exigence "après login")
+                if (!$userState) {
+                    $today = Carbon::today()->toDateString();
+                    $tomorrow = Carbon::tomorrow()->toDateString();
+                    $userState = SearchState::create([
+                        'user_id'    => Auth::id(),
+                        'session_id' => null,
+                        'property_id' => $propertyId,
+                        'date_range' => $today . ' to ' . $tomorrow,
+                        'check_in'   => $today,
+                        'check_out'  => $tomorrow,
+                    ]);
+                }
+
+                // Appliquer l'état user dans le composant
+                if ($userState && $userState->check_in && $userState->check_out && $userState->check_in < $userState->check_out) {
+                    $this->checkInDate = (string) $userState->check_in;
+                    $this->checkOutDate = (string) $userState->check_out;
+                    $this->dateRange = $this->checkInDate . ' to ' . $this->checkOutDate;
+                }
+            } else {
+                // Invité: lire seulement l'état session si présent (pas de défaut)
+                $last = SearchState::query()
+                    ->whereNull('user_id')
+                    ->where('session_id', $sessionId)
+                    ->when($propertyId, fn($q) => $q->where('property_id', $propertyId))
+                    ->orderByDesc('updated_at')
+                    ->first();
+                if ($last && $last->check_in && $last->check_out && $last->check_in < $last->check_out) {
+                    $this->checkInDate = (string) $last->check_in;
+                    $this->checkOutDate = (string) $last->check_out;
+                    $this->dateRange = $this->checkInDate . ' to ' . $this->checkOutDate;
+                } elseif ($last && $last->date_range) {
+                    $parts = preg_split('/\s+(?:to|à|au|\-|–|—)\s+/ui', (string) $last->date_range);
+                    if (is_array($parts) && count($parts) === 2) {
+                        $ci = trim($parts[0]);
+                        $co = trim($parts[1]);
+                        if ($ci && $co && $ci < $co) {
+                            $this->checkInDate = $ci;
+                            $this->checkOutDate = $co;
+                            $this->dateRange = $ci . ' to ' . $co;
+                        }
+                    }
+                }
             }
         } catch (\Throwable $e) {
-            // silencieux si calcul impossible
+            // silencieux
+        }
+
+        // 4) (Optionnel) Ajustement auto vers la prochaine plage disponible — désactivé par défaut
+        // Le souhait: l'affichage ne doit pas tenir compte des disponibilités, seule la recherche le fait.
+        if (config('app.auto_adjust_dates', false) && $this->checkInDate && $this->checkOutDate) {
+            try {
+                [$adjStart, $adjEnd] = $this->adjustDatesToAvailability($this->checkInDate, $this->checkOutDate);
+                if ($adjStart && $adjEnd) {
+                    $this->checkInDate = $adjStart;
+                    $this->checkOutDate = $adjEnd;
+                    $this->dateRange = $adjStart . ' to ' . $adjEnd;
+                }
+            } catch (\Throwable $e) {
+                // silencieux si calcul impossible
+            }
         }
 
         // Convertir la description Markdown en HTML
@@ -1075,11 +1132,10 @@ class BookingManager extends Component
     // Transforme le formulaire en moteur de recherche de dates
     public function searchDates()
     {
-        // Si vide: défaut aujourd'hui -> demain
+        // Si vide: exiger une sélection plutôt que de forcer un défaut
         if (!$this->dateRange || !is_string($this->dateRange)) {
-            $today = Carbon::today()->toDateString();
-            $tomorrow = Carbon::tomorrow()->toDateString();
-            $this->dateRange = $today . ' to ' . $tomorrow;
+            $this->addError('dateRange', 'Veuillez sélectionner une plage de dates.');
+            return;
         }
         // Normalisation & validation
         $parts = preg_split('/\s+(?:to|à|au|\-|–|—)\s+/ui', (string) $this->dateRange);
@@ -1104,6 +1160,43 @@ class BookingManager extends Component
             $this->checkOutDate = $end;
             // Conserver la plage choisie par l'utilisateur sans auto-ajustement
             $this->dateRange = $this->checkInDate . ' to ' . $this->checkOutDate;
+
+            // Persistance DB de l'état de recherche (user_id ou session_id + property)
+            try {
+                $pid = (int) ($this->propertyId ?? ($this->property->id ?? 0));
+                if ($pid <= 0) {
+                    Log::warning('SearchState upsert skipped: missing property_id');
+                } else {
+                    $isAuth = Auth::check();
+                    $conditions = $isAuth
+                        ? ['user_id' => Auth::id(), 'property_id' => $pid]
+                        : ['user_id' => null, 'session_id' => session()->getId(), 'property_id' => $pid];
+                    $values = [
+                        'date_range' => $this->dateRange,
+                        'check_in'   => $this->checkInDate,
+                        'check_out'  => $this->checkOutDate,
+                    ];
+                    // Pour être sûr que toutes les colonnes sont correctement remplies
+                    if (!$isAuth) {
+                        $values['session_id'] = $conditions['session_id'];
+                    }
+                    if ($isAuth) {
+                        $values['user_id'] = $conditions['user_id'];
+                    }
+                    $values['property_id'] = $pid;
+
+                    $state = SearchState::updateOrCreate($conditions, $values);
+                    Log::debug('SearchState upserted', [
+                        'conditions' => $conditions,
+                        'values' => $values,
+                        'id' => $state->id ?? null,
+                    ]);
+                }
+            } catch (\Throwable $e) {
+                Log::error('SearchState upsert failed', [
+                    'error' => $e->getMessage(),
+                ]);
+            }
             // Rafraîchir les dates occupées côté front
             $this->dispatch('occupied-dates-updated');
             // Événements front: retour utilisateur + synchro Flatpickr (avec détail de la plage ISO)
@@ -1111,6 +1204,99 @@ class BookingManager extends Component
             $this->dispatch('date-range-updated', dateRange: $this->dateRange);
         } catch (\Throwable $e) {
             $this->addError('dateRange', 'Dates invalides.');
+        }
+    }
+
+    /**
+     * Persiste immédiatement la plage transmise par le front (Flatpickr) en DB.
+     * Utilisé pour que la DB reflète le dernier choix avant même le clic sur Rechercher.
+     */
+    public function persistDateRange(string $isoRange = null): void
+    {
+        try {
+            $isoRange = trim((string)$isoRange);
+            if ($isoRange === '') return;
+            $parts = preg_split('/\s+(?:to|à|au|\-|–|—)\s+/ui', $isoRange);
+            if (!is_array($parts) || count($parts) !== 2) return;
+            $ci = Carbon::parse(trim($parts[0]))->toDateString();
+            $co = Carbon::parse(trim($parts[1]))->toDateString();
+            if ($ci >= $co) return;
+
+            $this->checkInDate = $ci;
+            $this->checkOutDate = $co;
+            $this->dateRange = $ci . ' to ' . $co;
+
+            // upsert DB
+            $pid = (int) ($this->propertyId ?? ($this->property->id ?? 0));
+            if ($pid <= 0) {
+                Log::warning('persistDateRange skipped: missing property_id');
+                return;
+            }
+            $isAuth = Auth::check();
+            $conditions = $isAuth
+                ? ['user_id' => Auth::id(), 'property_id' => $pid]
+                : ['user_id' => null, 'session_id' => session()->getId(), 'property_id' => $pid];
+            $values = [
+                'date_range' => $this->dateRange,
+                'check_in'   => $this->checkInDate,
+                'check_out'  => $this->checkOutDate,
+                'property_id' => $pid,
+            ];
+            if (!$isAuth) {
+                $values['session_id'] = $conditions['session_id'];
+            }
+            if ($isAuth) {
+                $values['user_id'] = $conditions['user_id'];
+            }
+            $state = SearchState::updateOrCreate($conditions, $values);
+            Log::debug('SearchState persisted (live change)', ['id' => $state->id ?? null]);
+        } catch (\Throwable $e) {
+            Log::error('persistDateRange failed', ['m' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Persiste la plage de dates en se basant UNIQUEMENT sur la session courante (session_id),
+     * sans tenir compte de l'état d'authentification. Utile en fallback côté client.
+     */
+    public function persistDateRangeBySession(string $isoRange = null): void
+    {
+        try {
+            $isoRange = trim((string)$isoRange);
+            if ($isoRange === '') return;
+            $parts = preg_split('/\s+(?:to|à|au|\-|–|—)\s+/ui', $isoRange);
+            if (!is_array($parts) || count($parts) !== 2) return;
+            $ci = Carbon::parse(trim($parts[0]))->toDateString();
+            $co = Carbon::parse(trim($parts[1]))->toDateString();
+            if ($ci >= $co) return;
+
+            // Mettre à jour l'état local pour cohérence UI
+            $this->checkInDate = $ci;
+            $this->checkOutDate = $co;
+            $this->dateRange = $ci . ' to ' . $co;
+
+            $pid = (int) ($this->propertyId ?? ($this->property->id ?? 0));
+            if ($pid <= 0) {
+                Log::warning('persistDateRangeBySession skipped: missing property_id');
+                return;
+            }
+            $sessId = session()->getId();
+            $conditions = [
+                'user_id' => null,
+                'session_id' => $sessId,
+                'property_id' => $pid,
+            ];
+            $values = [
+                'date_range' => $this->dateRange,
+                'check_in'   => $this->checkInDate,
+                'check_out'  => $this->checkOutDate,
+                'session_id' => $sessId,
+                'property_id' => $pid,
+            ];
+            $state = SearchState::updateOrCreate($conditions, $values);
+            Log::debug('SearchState persisted by session', ['id' => $state->id ?? null]);
+        } catch (\Throwable $e) {
+            Log::error('persistDateRangeBySession failed', ['m' => $e->getMessage()]);
         }
     }
 }

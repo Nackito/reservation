@@ -298,6 +298,7 @@
                             }
                         </script>
                     </div>
+
                 </div>
             </div>
 
@@ -1067,8 +1068,14 @@
                 $q->where('status','accepted')
                 ->orWhere('payment_status','paid');
                 })
-                ->whereDate('start_date', '<', $end->toDateString())
-                    ->whereDate('end_date', '>', $start->toDateString())
+                ->where(function($q) use ($start, $end) {
+                $q->whereBetween('start_date', [$start->toDateString(), $end->toDateString()])
+                ->orWhereBetween('end_date', [$start->toDateString(), $end->toDateString()])
+                ->orWhere(function($q2) use ($start, $end) {
+                $q2->where('start_date', '<=', $start->toDateString())
+                    ->where('end_date', '>=', $end->toDateString());
+                    });
+                    })
                     ->sum('quantity');
                     $inv = is_null($rt->inventory) ? 1 : max(0, (int) $rt->inventory);
                     $avail = max(0, $inv - (int) $booked);
@@ -1105,62 +1112,71 @@
                         </td>
                         <td class="px-4 py-3 text-sm text-gray-800 dark:text-gray-200">
                             @if($availableQty !== null && $availableQty <= 0)
-                                <span class="inline-flex items-center gap-2 text-red-600 dark:text-red-400" title="Cette chambre n'est pas disponible pour les dates sélectionnées">
-                                <i class="fas fa-times-circle"></i>
-                                Non disponible aux dates choisies
+                                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-1 text-red-600 dark:text-red-400" title="Cette chambre n'est pas disponible pour les dates sélectionnées">
+                                <span class="inline-flex items-center gap-2">
+                                    <i class="fas fa-times-circle"></i>
+                                    Indisponible à ces dates
                                 </span>
-                                @else
-                                <button type="button"
-                                    wire:click.prevent="quickReserve({{ $rt->id }})"
-                                    class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400">
-                                    Réserver
+                                <button type="button" class="text-blue-600 dark:text-blue-400 hover:underline sm:ml-2"
+                                    onclick="(function(){
+                                            var input = (window.innerWidth < 768) ? document.getElementById('ReservationDateRange2') : document.getElementById('ReservationDateRange');
+                                            if (input && typeof window.openCalendarForInput === 'function') { window.openCalendarForInput(input); }
+                                        })()">
+                                    Changer de dates
                                 </button>
-                                @endif
-                        </td>
-                    </tr>
-                    {{-- Ligne de détails repliable pour ce type de chambre --}}
-                    <tr id="rt-{{ $rt->id }}" class="hidden bg-gray-50 dark:bg-gray-900">
-                        <td colspan="5" class="px-4 py-4">
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div class="md:col-span-2">
-                                    <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2">Description</h3>
-                                    <p class="text-sm text-gray-700 dark:text-gray-300">{{ $rt->description ?? 'Aucune description fournie.' }}</p>
-                                    @if(is_array($rt->amenities) && count($rt->amenities))
-                                    <h4 class="text-sm font-semibold text-gray-800 dark:text-gray-200 mt-4 mb-2">Caractéristiques de la chambre</h4>
-                                    <ul class="flex flex-wrap gap-2">
-                                        @foreach($rt->amenities as $amenity)
-                                        <li class="px-2 py-1 rounded bg-gray-100 dark:bg-gray-800 text-xs text-gray-700 dark:text-gray-300">{{ ucfirst($amenity) }}</li>
-                                        @endforeach
-                                    </ul>
-                                    @endif
-                                </div>
-                                <div>
-                                    <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2">Images</h3>
-                                    <div class="grid grid-cols-3 gap-2">
-                                        @if(is_array($rt->images) && count($rt->images))
-                                        @foreach(array_slice($rt->images, 0, 6) as $img)
-                                        <img src="{{ asset('storage/' . ltrim($img, '/')) }}" alt="{{ $rt->name }}" class="w-full h-16 object-cover rounded border border-gray-200 dark:border-gray-700 cursor-pointer" onclick="openRoomTypeGallery({{ $rt->id }}, {{ $loop->index }})">
-                                        @endforeach
-                                        @else
-                                        <span class="text-sm text-gray-400">Aucune image</span>
-                                        @endif
-                                    </div>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                    @endforeach
-            </tbody>
-        </table>
     </div>
-    <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">Astuce: cliquez sur une ligne pour afficher les détails du type de chambre.</p>
-    <script>
-        function toggleRoomTypeDetails(id) {
-            const row = document.getElementById(id);
-            if (!row) return;
-            row.classList.toggle('hidden');
-        }
-    </script>
+    @else
+    <button type="button"
+        wire:click.prevent="quickReserve({{ $rt->id }})"
+        class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400">
+        Réserver
+    </button>
+    @endif
+    </td>
+    </tr>
+    {{-- Ligne de détails repliable pour ce type de chambre --}}
+    <tr id="rt-{{ $rt->id }}" class="hidden bg-gray-50 dark:bg-gray-900">
+        <td colspan="5" class="px-4 py-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="md:col-span-2">
+                    <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2">Description</h3>
+                    <p class="text-sm text-gray-700 dark:text-gray-300">{{ $rt->description ?? 'Aucune description fournie.' }}</p>
+                    @if(is_array($rt->amenities) && count($rt->amenities))
+                    <h4 class="text-sm font-semibold text-gray-800 dark:text-gray-200 mt-4 mb-2">Caractéristiques de la chambre</h4>
+                    <ul class="flex flex-wrap gap-2">
+                        @foreach($rt->amenities as $amenity)
+                        <li class="px-2 py-1 rounded bg-gray-100 dark:bg-gray-800 text-xs text-gray-700 dark:text-gray-300">{{ ucfirst($amenity) }}</li>
+                        @endforeach
+                    </ul>
+                    @endif
+                </div>
+                <div>
+                    <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2">Images</h3>
+                    <div class="grid grid-cols-3 gap-2">
+                        @if(is_array($rt->images) && count($rt->images))
+                        @foreach(array_slice($rt->images, 0, 6) as $img)
+                        <img src="{{ asset('storage/' . ltrim($img, '/')) }}" alt="{{ $rt->name }}" class="w-full h-16 object-cover rounded border border-gray-200 dark:border-gray-700 cursor-pointer" onclick="openRoomTypeGallery({{ $rt->id }}, {{ $loop->index }})">
+                        @endforeach
+                        @else
+                        <span class="text-sm text-gray-400">Aucune image</span>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </td>
+    </tr>
+    @endforeach
+    </tbody>
+    </table>
+</div>
+<p class="mt-2 text-xs text-gray-500 dark:text-gray-400">Astuce: cliquez sur une ligne pour afficher les détails du type de chambre.</p>
+<script>
+    function toggleRoomTypeDetails(id) {
+        const row = document.getElementById(id);
+        if (!row) return;
+        row.classList.toggle('hidden');
+    }
+</script>
 </div>
 @endif
 
@@ -1193,10 +1209,17 @@
                 ->where(function($q){
                 $q->where('status','accepted')->orWhere('payment_status','paid');
                 })
-                ->whereDate('start_date', '<', $end->toDateString())
-                    ->whereDate('end_date', '>', $start->toDateString())
+                ->where(function($q) use ($start, $end) {
+                $q->whereBetween('start_date', [$start->toDateString(), $end->toDateString()])
+                ->orWhereBetween('end_date', [$start->toDateString(), $end->toDateString()])
+                ->orWhere(function($q2) use ($start, $end) {
+                $q2->where('start_date', '<=', $start->toDateString())
+                    ->where('end_date', '>=', $end->toDateString());
+                    });
+                    })
                     ->exists();
                     $availabilityLabel = $existsOverlap ? 'Non disponible aux dates choisies' : 'Disponible';
+                    $isAvailable = !$existsOverlap;
                     }
                     } catch (\Throwable $e) {
                     $availabilityLabel = '—';
@@ -1222,9 +1245,18 @@
                             @endif
                         </td>
                         <td class="px-4 py-3 text-sm text-gray-800 dark:text-gray-200">
-                            @if($availabilityLabel === 'Non disponible aux dates choisies')
-                            <span class="inline-flex items-center gap-2 text-red-600 dark:text-red-400"><i class="fas fa-times-circle"></i>{{ $availabilityLabel }}</span>
-                            @elseif($availabilityLabel === 'Disponible')
+                            @if(isset($isAvailable) && $isAvailable === false)
+                            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-1 text-red-600 dark:text-red-400">
+                                <span class="inline-flex items-center gap-2"><i class="fas fa-times-circle"></i>Résidence indisponible à ces dates</span>
+                                <button type="button" class="text-blue-600 dark:text-blue-400 hover:underline sm:ml-2"
+                                    onclick="(function(){
+                                            var input = (window.innerWidth < 768) ? document.getElementById('ReservationDateRange2') : document.getElementById('ReservationDateRange');
+                                            if (input && typeof window.openCalendarForInput === 'function') { window.openCalendarForInput(input); }
+                                        })()">
+                                    Changer de dates
+                                </button>
+                            </div>
+                            @elseif(!isset($isAvailable) || $isAvailable === true)
                             <button type="button" wire:click.prevent="addBooking" class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400">Réserver</button>
                             @else
                             <span class="text-gray-400">—</span>

@@ -704,7 +704,8 @@ class BookingManager extends Component
                 })
                 ->exists();
             if ($existsOverlap) {
-                $this->addError('dateRange', 'Ces dates sont déjà réservées. Veuillez choisir une autre période.');
+                // Ancienne méthode supprimée: ne plus afficher d'erreur inline sur le champ 'dateRange'.
+                // L'UI masque désormais le bouton "Réserver" et affiche un message d'indisponibilité.
                 return;
             }
         }
@@ -915,7 +916,8 @@ class BookingManager extends Component
                 })
                 ->exists();
             if ($existsOverlap) {
-                $this->addError('dateRange', 'Ces dates sont déjà réservées. Veuillez choisir une autre période.');
+                // Ancienne méthode supprimée: plus d'erreur inline côté formulaire.
+                // L'UI masque le bouton et affiche un message d'indisponibilité.
                 return;
             }
         }

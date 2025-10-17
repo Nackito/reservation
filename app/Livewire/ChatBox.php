@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Message;
+use App\Models\Booking;
 use App\Models\Conversation;
 use App\Models\User;
 use App\Events\MessageSent;
@@ -22,6 +23,8 @@ class ChatBox extends Component
   public $loginID;
   public $showChat = false;
   public $lastSeen = [];
+  // Réservation liée à la conversation admin sélectionnée (si applicable)
+  public $currentBooking = null;
 
   /**
    * Initialise l'état du composant utilisateur:
@@ -131,6 +134,7 @@ class ChatBox extends Component
         // Sous-libellé côté utilisateur: "Afridayz" quand pas de réservation, sinon "Canal de réservation"
         'email' => $booking ? 'Canal de réservation' : 'Afridayz',
         'conversation_id' => $channel->id,
+        'booking_id' => $channel->booking_id,
         'last_preview' => $preview,
         'last_at' => $lastAt,
         'last_at_sort' => $lastAtSort,
@@ -186,7 +190,14 @@ class ChatBox extends Component
       $conversationId = $this->selectedUser['conversation_id'] ?? null;
       $this->messages = Message::where('conversation_id', $conversationId)
         ->orderBy('created_at')
-        ->get();
+        ->get()
+        // Masquer côté utilisateur le message de récapitulatif initial, la carte le remplace
+        ->reject(function ($m) {
+          return \Illuminate\Support\Str::startsWith((string) ($m->content ?? ''), 'Nouvelle demande de réservation');
+        });
+      // Charger la réservation liée pour affichage de la carte
+      $conv = $conversationId ? \App\Models\Conversation::find($conversationId) : null;
+      $this->currentBooking = ($conv && $conv->booking_id) ? Booking::with('property.images')->find($conv->booking_id) : null;
     } else {
       $peerId = (int)$this->selectedUser['id'];
       $this->messages = Message::query()
@@ -227,6 +238,50 @@ class ChatBox extends Component
     $this->dispatch('scrollToBottom');
     // Ouvrir une conversation signifie qu'on consulte: remettre le badge global à zéro
     $this->dispatch('resetNavChatUnseen');
+  }
+
+  /**
+   * Annule la réservation liée au canal admin sélectionné (ou à l'id fourni) et notifie le canal.
+   */
+  public function cancelBookingFromChat($conversationId)
+  {
+    $conv = \App\Models\Conversation::find((int) $conversationId);
+    if (!$conv || !$conv->is_admin_channel || (int) $conv->user_id !== (int) Auth::id()) {
+      return; // sécurité
+    }
+    if (!$conv->booking_id) {
+      return;
+    }
+    $booking = Booking::find($conv->booking_id);
+    if (!$booking || (int) $booking->user_id !== (int) Auth::id()) {
+      return;
+    }
+    if ($booking->status === 'canceled') {
+      return;
+    }
+    $booking->status = 'canceled';
+    $booking->save();
+    // Conserver dans l'état pour rafraîchir la carte
+    $this->currentBooking = $booking->fresh('property.images');
+
+    // Envoyer un message d'information dans le canal
+    $msg = Message::create([
+      'conversation_id' => $conv->id,
+      'sender_id' => Auth::id(),
+      // receiver admin-id placeholder (5), utilisé dans le flux existant
+      'receiver_id' => 5,
+      'content' => "⚠️ L'utilisateur a annulé sa réservation.",
+    ]);
+    try {
+      broadcast(new \App\Events\MessageSent($msg));
+    } catch (\Throwable $e) {
+      // ignorer les erreurs de diffusion
+    }
+    // Mettre à jour la liste et l'aperçu
+    $this->bumpConversationMeta('admin_channel_' . $conv->id, $msg);
+    // Recharger les messages pour afficher celui d'annulation
+    $this->loadMessages();
+    $this->dispatch('scrollToBottom');
   }
 
   /**

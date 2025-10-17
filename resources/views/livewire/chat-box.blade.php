@@ -23,6 +23,62 @@
 
       <!-- Messages -->
       <div id="messages" class="flex-1 max-h-[60vh] overflow-y-auto p-4 bg-gray-50 dark:bg-gray-950 space-y-3">
+        @if($selectedUser && str_starts_with($selectedUser['id'] ?? '', 'admin_channel_'))
+        @php
+        $bk = $this->currentBooking ?? null;
+        $isPending = $bk && ($bk->status === 'pending');
+        $isAccepted = $bk && ($bk->status === 'accepted');
+        $isCanceled = $bk && ($bk->status === 'canceled');
+        $badgeClass = $isPending ? 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-200 dark:border-yellow-800'
+        : ($isAccepted ? 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-200 dark:border-green-800'
+        : 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-200 dark:border-red-800');
+        $statusLabel = $isPending ? 'En attente de confirmation' : ($isAccepted ? 'Confirmée' : 'Annulée');
+        @endphp
+        <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 shadow-sm">
+          <div class="flex items-start gap-3">
+            <div class="shrink-0 w-12 h-12 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700">
+              @if($bk && $bk->property && $bk->property->images && $bk->property->images->isNotEmpty())
+              <img src="{{ asset('storage/' . $bk->property->images->first()->image_path) }}" alt="" class="w-full h-full object-cover" />
+              @else
+              <div class="w-full h-full flex items-center justify-center text-gray-400">🏨</div>
+              @endif
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="flex flex-wrap items-center gap-2">
+                <div class="text-base font-semibold text-gray-900 dark:text-gray-100">
+                  {{ $bk && $bk->property ? $bk->property->name : 'Réservation' }}
+                </div>
+                @if($bk)
+                <span class="inline-block text-[11px] px-2 py-0.5 rounded border {{ $badgeClass }}">{{ $statusLabel }}</span>
+                @endif
+              </div>
+              @if($bk)
+              <div class="mt-1 text-sm text-gray-600 dark:text-gray-300">
+                @php
+                try {
+                $ciFr = \Illuminate\Support\Str::title(\Carbon\Carbon::parse($bk->start_date)->locale('fr')->translatedFormat('l d F Y'));
+                $coFr = \Illuminate\Support\Str::title(\Carbon\Carbon::parse($bk->end_date)->locale('fr')->translatedFormat('l d F Y'));
+                } catch (\Throwable $e) { $ciFr = $bk->start_date; $coFr = $bk->end_date; }
+                @endphp
+                <span class="font-medium">Séjour:</span> {{ $ciFr }} → {{ $coFr }}
+                @if(!is_null($bk->total_price))
+                <span class="ml-3 font-medium">Total:</span> {{ number_format($bk->total_price, 2) }} XOF
+                @endif
+              </div>
+              @endif
+
+              <div class="mt-3 flex items-center gap-2">
+                @if($bk && $bk->status !== 'canceled')
+                <button type="button" class="px-3 py-1.5 rounded bg-red-600 hover:bg-red-700 text-white text-sm"
+                  wire:click="cancelBookingFromChat({{ $selectedUser['conversation_id'] ?? 'null' }})">
+                  Annuler
+                </button>
+                @endif
+              </div>
+            </div>
+          </div>
+        </div>
+        @endif
         @php $currentDate = null; @endphp
         @forelse ($messages as $message)
         @php

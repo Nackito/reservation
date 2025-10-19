@@ -15,67 +15,10 @@
     <!-- Reservations en cours -->
 
 
-    <!-- Réservations acceptées (à venir) -->
-    @if ($ongoingBookings && $ongoingBookings->isNotEmpty())
-    <div class="container mx-auto p-4">
-        <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-3">Réservations à venir</h3>
-        @foreach($ongoingBookings as $booking)
-        <div class="flex bg-white dark:bg-gray-800 rounded-lg overflow-hidden mb-2 max-w-sm transition-shadow duration-200 hover:shadow-md">
-            <div class="flex-shrink-0 w-24 h-24">
-                @if($booking->property && $booking->property->images && $booking->property->images->isNotEmpty())
-                <img src="{{ asset('storage/' . $booking->property->images->first()->image_path) }}" alt="Propriété" class="object-cover w-full h-full rounded-lg bg-gray-100 dark:bg-gray-700">
-                @else
-                <img src="{{ asset('images/default-property.jpg') }}" alt="Par défaut" class="object-cover w-full h-full rounded-lg bg-gray-100 dark:bg-gray-700">
-                @endif
-            </div>
-            <div class="flex flex-col justify-between p-3 flex-1">
-                <h5 class="text-base font-bold text-gray-800 dark:text-gray-100">{{ $booking->property->name ?? 'Nom non disponible' }}</h5>
-                <p class="text-gray-700 dark:text-gray-300 text-sm">{{ $booking->start_date }} - {{ $booking->end_date }}</p>
-
-                @php
-                $paid = ($booking->payment_status ?? null) === 'paid';
-                $badgeClasses = $paid
-                ? 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-200 dark:border-green-800'
-                : 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-200 dark:border-yellow-800';
-                @endphp
-                <span class="inline-block w-fit text-[11px] px-2 py-0.5 rounded border {{ $badgeClasses }}">
-                    {{ $paid ? 'Payée' : 'En attente de paiement' }}
-                    @if($paid && $booking->paid_at)
-                    • {{ optional($booking->paid_at)->format('d/m/Y H:i') }}
-                    @endif
-                </span>
-
-                @php
-                $user = auth()->user();
-                $userCurrency = $user && $user->currency ? $user->currency : 'XOF';
-                $rate = app('App\\Livewire\\BookingManager')->getExchangeRate('XOF', $userCurrency);
-                $displayCurrency = ($rate && $rate > 0) ? $userCurrency : 'XOF';
-                $converted = ($rate && $rate > 0 && $booking->total_price !== null) ? round($booking->total_price * $rate, 2) : $booking->total_price;
-                @endphp
-                <p class="text-gray-500 dark:text-gray-200 text-xs">
-                    {{ number_format($converted, 2) }} {{ $displayCurrency }}
-                </p>
-                <p class="text-gray-400 dark:text-gray-400 text-xs">Confirmée le : {{ $booking->updated_at }}</p>
-
-                <div class="mt-2 flex items-center gap-2">
-                    @if(!$paid && $booking->status !== 'canceled')
-                    <a href="{{ route('payment.checkout', $booking) }}" class="bg-emerald-600 hover:bg-emerald-700 text-white py-1 px-3 rounded text-xs transition">
-                        Paiement
-                    </a>
-                    <button wire:click="deleteBooking({{ $booking->id }})" type="button" class="bg-red-500 hover:bg-red-600 text-white py-1 px-3 rounded text-xs transition">
-                        Annuler
-                    </button>
-                    @endif
-                </div>
-            </div>
-        </div>
-        @endforeach
-    </div>
-    @endif
 
 
     <div class="container mx-auto p-4">
-        @if ($pendingBookings->isEmpty())
+        @if ($ongoingBookings->isEmpty())
         <div class="flex flex-col md:flex-row items-center">
             <div class="w-full md:w-1/3 flex justify-center mb-6 md:mb-0">
                 <img src="{{ asset('images/photo5.jpg') }}" alt="Par défaut" class="rounded-full w-60 h-60 md:w-96 md:h-96 object-cover bg-gray-100 dark:bg-gray-700">
@@ -86,6 +29,64 @@
             </div>
         </div>
         @else
+        <!-- Réservations acceptées (à venir) -->
+        @if ($ongoingBookings && $ongoingBookings->isNotEmpty())
+        <div class="container mx-auto p-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                @foreach($ongoingBookings as $booking)
+                <div class="flex bg-white dark:bg-gray-800 rounded-lg overflow-hidden transition-shadow duration-200 hover:shadow-md">
+                    <div class="flex-shrink-0 w-24 h-24">
+                        @if($booking->property && $booking->property->images && $booking->property->images->isNotEmpty())
+                        <img src="{{ asset('storage/' . $booking->property->images->first()->image_path) }}" alt="Propriété" class="object-cover w-full h-full rounded-lg bg-gray-100 dark:bg-gray-700">
+                        @else
+                        <img src="{{ asset('images/default-property.jpg') }}" alt="Par défaut" class="object-cover w-full h-full rounded-lg bg-gray-100 dark:bg-gray-700">
+                        @endif
+                    </div>
+                    <div class="flex flex-col justify-between p-3 flex-1">
+                        <h5 class="text-base font-bold text-gray-800 dark:text-gray-100">{{ $booking->property->name ?? 'Nom non disponible' }}</h5>
+                        <p class="text-gray-700 dark:text-gray-300 text-sm">{{ $booking->start_date }} - {{ $booking->end_date }}</p>
+
+                        @php
+                        $paid = ($booking->payment_status ?? null) === 'paid';
+                        $badgeClasses = $paid
+                        ? 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-200 dark:border-green-800'
+                        : 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-200 dark:border-yellow-800';
+                        @endphp
+                        <span class="inline-block w-fit text-[11px] px-2 py-0.5 rounded border {{ $badgeClasses }}">
+                            {{ $paid ? 'Payée' : 'En attente de paiement' }}
+                            @if($paid && $booking->paid_at)
+                            • {{ optional($booking->paid_at)->format('d/m/Y H:i') }}
+                            @endif
+                        </span>
+
+                        @php
+                        $user = auth()->user();
+                        $userCurrency = $user && $user->currency ? $user->currency : 'XOF';
+                        $rate = app('App\\Livewire\\BookingManager')->getExchangeRate('XOF', $userCurrency);
+                        $displayCurrency = ($rate && $rate > 0) ? $userCurrency : 'XOF';
+                        $converted = ($rate && $rate > 0 && $booking->total_price !== null) ? round($booking->total_price * $rate, 2) : $booking->total_price;
+                        @endphp
+                        <p class="text-gray-500 dark:text-gray-200 text-xs">
+                            {{ number_format($converted, 2) }} {{ $displayCurrency }}
+                        </p>
+                        <p class="text-gray-400 dark:text-gray-400 text-xs">Confirmée le : {{ $booking->updated_at }}</p>
+
+                        <div class="mt-2 flex items-center gap-2">
+                            @if(!$paid && $booking->status !== 'canceled')
+                            <a href="{{ route('payment.checkout', $booking) }}" class="bg-emerald-600 hover:bg-emerald-700 text-white py-1 px-3 rounded text-xs transition">
+                                Paiement
+                            </a>
+                            <button wire:click="deleteBooking({{ $booking->id }})" type="button" class="bg-red-500 hover:bg-red-600 text-white py-1 px-3 rounded text-xs transition">
+                                Annuler
+                            </button>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+        </div>
+        @endif
 
         @foreach($pendingBookings as $booking)
         <div class="flex bg-white dark:bg-gray-800 rounded-lg overflow-hidden mb-2 max-w-sm transition-shadow duration-200 hover:shadow-md">

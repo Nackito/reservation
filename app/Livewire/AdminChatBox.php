@@ -17,6 +17,7 @@ use App\Models\Conversation;
 class AdminChatBox extends Component
 {
   private const DATE_BADGE_FORMAT = 'D MMM YY';
+  private const FALLBACK_USER_NAME = 'Utilisateur';
   // Listes d'utilisateurs et canaux sous forme d'array sérialisable
   public $users; // array<array{id:string,name:string,email:string,conversation_id?:int,last_preview?:string,last_at?:string,last_at_sort?:int}>
   // Listes partitionnées pour l'onglet « Archivées » (seulement canaux de réservation)
@@ -155,7 +156,7 @@ class AdminChatBox extends Component
       $conv = $convId > 0 ? Conversation::find($convId) : null;
       if ($conv) {
         $booking = $conv->booking_id ? \App\Models\Booking::find($conv->booking_id) : null;
-        $baseUserName = $conv->user?->name ?? 'Utilisateur';
+        $baseUserName = $this->fullName($conv->user) ?: self::FALLBACK_USER_NAME;
         $propertyName = $baseUserName;
         if ($booking && $booking->property && !empty($booking->property->name)) {
           $propertyName = $booking->property->name . ' - ' . $baseUserName;
@@ -168,7 +169,9 @@ class AdminChatBox extends Component
           'id' => 'admin_channel_' . $conv->id,
           'name' => $propertyName,
           // Si aucune réservation n'est liée, il s'agit d'un canal admin générique
-          'email' => $booking ? 'Canal de réservation' : 'Canal admin',
+          // Email réel de l'utilisateur + label de canal à part
+          'email' => $conv->user?->email ?? '',
+          'channel_label' => $booking ? 'Canal de réservation' : 'Canal admin',
           'conversation_id' => $conv->id,
           'last_preview' => $preview,
           'last_at' => $lastAt,
@@ -189,7 +192,7 @@ class AdminChatBox extends Component
         $conv = $this->findPreferredAdminConversationForUser((int) $user->id);
         if ($conv) {
           $booking = $conv->booking_id ? \App\Models\Booking::find($conv->booking_id) : null;
-          $baseUserName = $conv->user?->name ?? $user->name;
+          $baseUserName = $this->fullName($conv->user) ?: ($this->fullName($user) ?: self::FALLBACK_USER_NAME);
           $propertyName = $baseUserName;
           if ($booking && $booking->property && !empty($booking->property->name)) {
             $propertyName = $booking->property->name . ' - ' . $baseUserName;
@@ -201,7 +204,9 @@ class AdminChatBox extends Component
           $entry = [
             'id' => 'admin_channel_' . $conv->id,
             'name' => $propertyName,
-            'email' => $booking ? 'Canal de réservation' : 'Canal admin',
+            // Email réel de l'utilisateur et libellé de canal séparé
+            'email' => $conv->user?->email ?? '',
+            'channel_label' => $booking ? 'Canal de réservation' : 'Canal admin',
             'conversation_id' => $conv->id,
             'last_preview' => $preview,
             'last_at' => $lastAt,
@@ -223,7 +228,7 @@ class AdminChatBox extends Component
           // Aucun canal admin: rester en DM (numérique)
           $this->selectedUser = [
             'id' => (string) $user->id,
-            'name' => $user->name,
+            'name' => ($this->fullName($user) ?: self::FALLBACK_USER_NAME),
             'email' => $user->email,
           ];
         }
@@ -312,9 +317,11 @@ class AdminChatBox extends Component
         $entry = [
           'id' => $adminId,
           'name' => ($preferred->booking && $preferred->booking->property && $preferred->booking->property->name)
-            ? ($preferred->booking->property->name . ' - ' . ($preferred->user?->name ?? 'Utilisateur'))
-            : ($preferred->user?->name ?? 'Utilisateur'),
-          'email' => $preferred->booking ? 'Canal de réservation' : 'Canal admin',
+            ? ($preferred->booking->property->name . ' - ' . ($this->fullName($preferred->user) ?: self::FALLBACK_USER_NAME))
+            : ($this->fullName($preferred->user) ?: self::FALLBACK_USER_NAME),
+          'firstname' => ($preferred->user?->firstname ?? ''),
+          'email' => $preferred->user?->email ?? '',
+          'channel_label' => $preferred->booking ? 'Canal de réservation' : 'Canal admin',
           'conversation_id' => $preferred->id,
           'last_preview' => Str::limit($message->content, 55),
           'last_at' => $message->created_at ? $message->created_at->locale('fr')->isoFormat(self::DATE_BADGE_FORMAT) : '',
@@ -417,6 +424,28 @@ class AdminChatBox extends Component
         event(new \App\Events\UserTyping(Auth::id(), $receiverId, Auth::user()->name));
       }
     }
+  }
+
+  /**
+   * Construit le nom complet: "Prénom Nom" si disponibles, sinon fallback sur name puis email.
+   */
+  private function fullName(?User $u): string
+  {
+    if (!$u) {
+      return '';
+    }
+    $first = trim((string) ($u->firstname ?? ''));
+    $last = trim((string) ($u->name ?? ''));
+    if ($first !== '' && $last !== '') {
+      return $first . ' ' . $last;
+    }
+    if ($first !== '') {
+      return $first;
+    }
+    if ($last !== '') {
+      return $last;
+    }
+    return (string) ($u->email ?? '');
   }
 
   /**
@@ -750,13 +779,13 @@ class AdminChatBox extends Component
           return null; // aucun DM pur: ne pas créer d'entrée directe
         }
 
-        $preview = $last?->content ? \Illuminate\Support\Str::limit($last->content, 55) : '';
+        $preview = $last?->content ? Str::limit($last->content, 55) : '';
         $lastAt = $last?->created_at ? $last->created_at->locale('fr')->isoFormat(self::DATE_BADGE_FORMAT) : '';
         $lastAtSort = $last?->created_at ? $last->created_at->getTimestamp() : 0;
 
         return [
           'id' => (string) $u->id,
-          'name' => $u->name,
+          'name' => ($this->fullName($u) ?: self::FALLBACK_USER_NAME),
           'email' => $u->email,
           'last_preview' => $preview,
           'last_at' => $lastAt,
@@ -775,7 +804,7 @@ class AdminChatBox extends Component
    */
   private function buildAdminChannelItems(): array
   {
-    $adminChannels = \App\Models\Conversation::where('is_admin_channel', true)
+    $adminChannels = Conversation::where('is_admin_channel', true)
       ->orderByDesc('created_at')
       ->get();
 
@@ -783,7 +812,7 @@ class AdminChatBox extends Component
     foreach ($adminChannels as $adminChannel) {
       $booking = $adminChannel->booking_id ? \App\Models\Booking::find($adminChannel->booking_id) : null;
       // Nom côté admin: si réservation -> "Résidence - Prénom Nom", sinon nom de l'utilisateur
-      $baseUserName = $adminChannel->user?->name ?? 'Utilisateur';
+      $baseUserName = $this->fullName($adminChannel->user) ?: self::FALLBACK_USER_NAME;
       $adminDisplayName = $baseUserName;
       if ($booking && $booking->property && !empty($booking->property->name)) {
         $adminDisplayName = $booking->property->name . ' - ' . $baseUserName;
@@ -800,14 +829,15 @@ class AdminChatBox extends Component
         }
       }
       $last = Message::where('conversation_id', $adminChannel->id)->latest('created_at')->first();
-      $preview = $last?->content ? \Illuminate\Support\Str::limit($last->content, 55) : '';
+      $preview = $last?->content ? Str::limit($last->content, 55) : '';
       $lastAt = $last?->created_at ? $last->created_at->locale('fr')->isoFormat(self::DATE_BADGE_FORMAT) : '';
       $lastAtSort = $last?->created_at ? $last->created_at->getTimestamp() : 0;
       $items[] = [
         'id' => 'admin_channel_' . $adminChannel->id,
         'name' => $adminDisplayName,
-        // Afficher "Canal de réservation" si une réservation est rattachée, sinon "Canal admin"
-        'email' => $booking ? 'Canal de réservation' : 'Canal admin',
+        // Email réel + label de canal séparé
+        'email' => $adminChannel->user?->email ?? '',
+        'channel_label' => $booking ? 'Canal de réservation' : 'Canal admin',
         'conversation_id' => $adminChannel->id,
         'last_preview' => $preview,
         'last_at' => $lastAt,

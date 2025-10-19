@@ -13,7 +13,8 @@
           </button>
           <div class="min-w-0">
             <div class="text-base font-semibold text-gray-900 dark:text-gray-100 truncate">{{ data_get($selectedUser, 'name', 'Sélectionnez une conversation') }}</div>
-            <div class="text-xs text-gray-500 dark:text-gray-400 truncate">{{ data_get($selectedUser, 'email', '') }}</div>
+            @php $email = data_get($selectedUser, 'email', ''); $label = data_get($selectedUser, 'channel_label', ''); @endphp
+            <div class="text-xs text-gray-500 dark:text-gray-400 truncate">{{ $email !== '' ? $email : $label }}</div>
           </div>
 
           <div class="ml-auto">
@@ -123,7 +124,8 @@
                 <span class="truncate min-w-0 text-gray-900 dark:text-gray-100 font-medium {{ $isActive ? 'font-semibold' : '' }}">{{ $user['name'] }}</span>
                 <span class="ml-auto shrink-0 whitespace-nowrap text-[11px] text-gray-500 dark:text-gray-400">{{ $user['last_at'] ?? '' }}</span>
               </div>
-              <div class="truncate text-gray-500 dark:text-gray-400 text-xs">{{ $user['last_preview'] ?? $user['email'] }}</div>
+              @php $email = $user['email'] ?? ''; $label = $user['channel_label'] ?? ''; @endphp
+              <div class="truncate text-gray-500 dark:text-gray-400 text-xs">{{ ($user['last_preview'] ?? '') !== '' ? $user['last_preview'] : ($email !== '' ? $email : $label) }}</div>
             </div>
             <span class="ml-2 flex items-center gap-2 shrink-0">
               @php

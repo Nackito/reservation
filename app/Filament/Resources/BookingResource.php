@@ -101,6 +101,9 @@ class BookingResource extends Resource
             Tables\Columns\TextColumn::make('property.name')
                 ->label('Property')
                 ->sortable(),
+            Tables\Columns\TextColumn::make('roomType.name')
+                ->label('Room Type')
+                ->sortable(),
             Tables\Columns\TextColumn::make('user.name')
                 ->label('Requested by')
                 ->sortable(),

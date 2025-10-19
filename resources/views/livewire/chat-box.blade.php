@@ -118,6 +118,11 @@
       </div>
 
       <!-- Input -->
+      @php
+      $isAdminConv = $selectedUser && str_starts_with(($selectedUser['id'] ?? ''), 'admin_channel_');
+      $bookingCanceled = $isAdminConv && ($this->currentBooking?->status === 'canceled');
+      @endphp
+      @unless($bookingCanceled)
       <form wire:submit.prevent="submit" class="p-3 border-t bg-white dark:bg-gray-900 dark:border-gray-800 flex items-center gap-2">
         <input
           id="message-input"
@@ -131,6 +136,7 @@
           Envoyer
         </button>
       </form>
+      @endunless
     </div>
     @else
 

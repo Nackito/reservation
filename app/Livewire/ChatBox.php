@@ -299,15 +299,16 @@ class ChatBox extends Component
       'content' => "⚠️ L'utilisateur a annulé sa réservation.",
     ]);
     try {
-      broadcast(new \App\Events\MessageSent($msg));
+      broadcast(new MessageSent($msg));
     } catch (\Throwable $e) {
       // ignorer les erreurs de diffusion
     }
     // Mettre à jour la liste et l'aperçu
     $this->bumpConversationMeta('admin_channel_' . $conv->id, $msg);
-    // Recharger les messages pour afficher celui d'annulation
-    $this->loadMessages();
-    $this->dispatch('scrollToBottom');
+    // Fermer le fil côté utilisateur après annulation
+    $this->selectedUser = null;
+    $this->messages = collect();
+    $this->showChat = false;
   }
 
   /**

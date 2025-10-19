@@ -77,6 +77,8 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::get('/messagerie', App\Livewire\Messaging::class)->name('messaging');
     Route::get('/mon-espace', App\Livewire\UserMenu::class)->name('user.menu');
+    // Checkout de paiement pour une réservation
+    Route::get('/paiement/reservation/{booking}', App\Livewire\PaymentCheckout::class)->name('payment.checkout');
     // Ajout d'un lien vers la messagerie dans la vue du profil
 });
 

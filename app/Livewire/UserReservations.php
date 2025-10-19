@@ -13,6 +13,8 @@ use Jantinnerezo\LivewireAlert\Facades\LivewireAlert;
 
 class UserReservations extends Component
 {
+    private const MSG_BOOKING_CANCELED = 'Réservation annulée avec succès.';
+    private const ERR_BOOKING_ALREADY_PAID = "Impossible d'annuler une réservation déjà payée.";
     public $openedCity = null;
     public $cityResidences = [];
 
@@ -61,8 +63,12 @@ class UserReservations extends Component
     {
         $userId = Auth::id();
         $this->rating = 0;
-        // Recupérer les réservations en cours
-        $this->ongoingBookings = Booking::with('property')->where('user_id', $userId)->where('status', 'accepted')->where('end_date', '>=', Carbon::now())->get();
+        // Recupérer les réservations en cours (avec images pour éviter N+1)
+        $this->ongoingBookings = Booking::with('property.images')
+            ->where('user_id', $userId)
+            ->where('status', 'accepted')
+            ->where('end_date', '>=', Carbon::now())
+            ->get();
         // Récupérer les réservations acceptées
         $this->acceptedBookings = Booking::with('property')->where('user_id', $userId)->where('status', 'accepted')->get();
         // Vérifiez si l'utilisateur peut laisser un avis
@@ -146,6 +152,22 @@ class UserReservations extends Component
         $booking = Booking::find($id);
 
         if ($booking) {
+            // Gardes: ne pas annuler si déjà payée ou déjà annulée
+            if (($booking->payment_status ?? null) === 'paid') {
+                if (method_exists($this, 'alert')) {
+                    $this->alert('error', self::ERR_BOOKING_ALREADY_PAID);
+                } elseif (class_exists('Jantinnerezo\\LivewireAlert\\LivewireAlert')) {
+                    LivewireAlert::title(self::ERR_BOOKING_ALREADY_PAID)->error()->show();
+                } else {
+                    session()->flash('error', self::ERR_BOOKING_ALREADY_PAID);
+                }
+                return;
+            }
+
+            if ($booking->status === 'canceled') {
+                return; // rien à faire
+            }
+
             // Mettre à jour le statut de la réservation à "canceled"
             $booking->status = 'canceled';
             $booking->save();
@@ -164,11 +186,11 @@ class UserReservations extends Component
 
             // Afficher une alerte Livewire
             if (method_exists($this, 'alert')) {
-                $this->alert('success', 'Réservation annulée avec succès.');
-            } else if (class_exists('Jantinnerezo\LivewireAlert\LivewireAlert')) {
-                LivewireAlert::title('Réservation annulée avec succès.')->success()->show();
+                $this->alert('success', self::MSG_BOOKING_CANCELED);
+            } elseif (class_exists('Jantinnerezo\LivewireAlert\LivewireAlert')) {
+                LivewireAlert::title(self::MSG_BOOKING_CANCELED)->success()->show();
             } else {
-                session()->flash('message', 'Réservation annulée avec succès.');
+                session()->flash('message', self::MSG_BOOKING_CANCELED);
             }
         }
     }

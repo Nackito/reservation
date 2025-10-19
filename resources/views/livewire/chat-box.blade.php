@@ -75,7 +75,11 @@
               @endif
 
               <div class="mt-3 flex items-center gap-2">
-                @if($bk && $bk->status !== 'canceled' && ($bk->payment_status ?? null) !== 'paid')
+                @php $isConfirmed = $bk && $bk->status === 'accepted'; @endphp
+                @if($bk && !$isPaid && !$isCanceled)
+                @if($isConfirmed)
+                <a href="{{ route('payment.checkout', ['booking' => $bk->id]) }}" class="px-3 py-1.5 rounded bg-blue-600 hover:bg-blue-700 text-white text-sm">Paiement</a>
+                @endif
                 <button type="button" class="px-3 py-1.5 rounded bg-red-600 hover:bg-red-700 text-white text-sm"
                   wire:click="cancelBookingFromChat({{ $selectedUser['conversation_id'] ?? 'null' }})">
                   Annuler

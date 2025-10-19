@@ -19,7 +19,13 @@ class BookingActionHelper
     $user = $record->user;
     $admin = Auth::user();
     $amount = self::computeAmount($record);
-    $paymentUrl = self::initCinetPayForBooking($record, $amount, $user);
+    // Ne pas démarrer CinetPay ici: rediriger vers une page de paiement dédiée
+    // Mettre le statut de paiement en attente si non défini
+    if (empty($record->payment_status) || $record->payment_status !== 'paid') {
+      $record->payment_status = 'pending';
+      $record->save();
+    }
+    $paymentUrl = route('payment.checkout', ['booking' => $record->id]);
     if ($user) {
       self::notifyUserBookingAccepted($user, $record, $paymentUrl, $amount);
     }
@@ -50,38 +56,7 @@ class BookingActionHelper
     return is_numeric($amount) ? number_format($amount, 0, ',', ' ') : (string) $amount;
   }
 
-  private static function initCinetPayForBooking(Booking $record, $amount, $user): string
-  {
-    $paymentUrl = null;
-    try {
-      /** @var CinetPayService $cinetpay */
-      $cinetpay = app(CinetPayService::class);
-      $txId = 'BK-' . $record->id . '-' . time();
-      $record->payment_transaction_id = $txId;
-      $record->payment_status = 'pending';
-      $record->save();
-      $desc = 'Paiement réservation #' . $record->id;
-      $resp = $cinetpay->initPayment(
-        $txId,
-        $amount,
-        $desc,
-        $user?->name,
-        $user?->email,
-        $user?->phone ?? null
-      );
-      if (!empty($resp['success'])) {
-        $paymentUrl = $resp['url'] ?? null;
-      } else {
-        Log::warning('CinetPay init échouée', ['resp' => $resp]);
-      }
-    } catch (\Throwable $e) {
-      Log::warning('Erreur CinetPay: ' . $e->getMessage());
-    }
-    if (!$paymentUrl) {
-      $paymentUrl = route('user-reservations');
-    }
-    return $paymentUrl;
-  }
+  // initCinetPayForBooking supprimé: l'init se fera depuis la page de paiement
 
   private static function notifyUserBookingAccepted($user, Booking $record, string $paymentUrl, $amount): void
   {
@@ -91,9 +66,9 @@ class BookingActionHelper
       Log::warning('Notification acceptation non envoyée: ' . $e->getMessage());
     }
     try {
-      $mailContent = "Votre réservation a été acceptée, vous pouvez procéder au paiement en cliquant sur le lien ci-dessous.\n\n" .
+      $mailContent = "Votre réservation a été acceptée.\n\n" .
         "Montant à payer : $amount FrCFA\n" .
-        "Lien de paiement : $paymentUrl\n\n" .
+        "Accédez à votre page de paiement : $paymentUrl\n\n" .
         "Sans paiement, nous ne pourrons vous garantir la disponibilité le jour-j.";
       Mail::raw(
         $mailContent,
@@ -150,7 +125,7 @@ class BookingActionHelper
     $amountFmt = self::formatAmountFrCfa($amount);
     $msgContent = "Votre réservation pour {$propertyName} du {$start} au {$end} a été acceptée.\n" .
       "Montant à régler : {$amountFmt} FrCFA.\n" .
-      "Veuillez procéder au paiement via ce lien sécurisé :\n{$paymentUrl}\n" .
+      "Pour régler, utilisez le bouton Paiement dans ce fil de discussion, ou rendez-vous sur votre page de paiement depuis vos réservations.\n" .
       "Sans règlement sous 24h, la disponibilité ne peut être garantie.";
     $message = \App\Models\Message::create([
       'conversation_id' => $conversation->id,

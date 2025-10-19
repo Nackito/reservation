@@ -12,6 +12,8 @@ class PaymentCheckout extends Component
 {
   public Booking $booking;
   public $amount;
+  public string $activeTab = 'methods'; // 'history' | 'methods'
+  public $payments = [];
 
   public function mount(Booking $booking)
   {
@@ -26,6 +28,18 @@ class PaymentCheckout extends Component
     }
     $this->booking = $booking->load(['property.images', 'roomType']);
     $this->amount = method_exists($booking, 'calculateTotalPrice') ? $booking->calculateTotalPrice() : $booking->total_price;
+    // Charger historique des paiements de cette réservation
+    $this->payments = \App\Models\Payment::with([])
+      ->where('booking_id', $this->booking->id)
+      ->latest()
+      ->get();
+  }
+
+  public function switchTab(string $tab)
+  {
+    if (in_array($tab, ['history', 'methods'])) {
+      $this->activeTab = $tab;
+    }
   }
 
   public function payWithCinetPay()

@@ -77,6 +77,24 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::get('/messagerie', App\Livewire\Messaging::class)->name('messaging');
     Route::get('/mon-espace', App\Livewire\UserMenu::class)->name('user.menu');
+    // Entrée Paiements: redirige vers le checkout de la réservation acceptée et non payée la plus récente,
+    // sinon vers l'historique global
+    Route::get('/mes-paiements', function () {
+        $userId = Auth::id();
+        $booking = \App\Models\Booking::where('user_id', $userId)
+            ->where('status', 'accepted')
+            ->where(function ($q) {
+                $q->whereNull('payment_status')->orWhere('payment_status', '!=', 'paid');
+            })
+            ->orderByDesc('updated_at')
+            ->first();
+        if ($booking) {
+            return redirect()->route('payment.checkout', ['booking' => $booking->id]);
+        }
+        return redirect()->route('payments.history');
+    })->name('payments.index');
+    // Historique global des paiements
+    Route::get('/mes-paiements/historique', App\Livewire\PaymentHistory::class)->name('payments.history');
     // Checkout de paiement pour une réservation
     Route::get('/paiement/reservation/{booking}', App\Livewire\PaymentCheckout::class)->name('payment.checkout');
     // Ajout d'un lien vers la messagerie dans la vue du profil

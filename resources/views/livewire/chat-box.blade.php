@@ -13,7 +13,10 @@
           </button>
           <div class="min-w-0">
             <div class="text-base font-semibold text-gray-900 dark:text-gray-100 truncate">{{ data_get($selectedUser, 'name', 'Sélectionnez une conversation') }}</div>
-            <div class="text-xs text-gray-500 dark:text-gray-400 truncate">{{ data_get($selectedUser, 'email', '') }}</div>
+            @php $subtitle = data_get($selectedUser, 'email', ''); @endphp
+            @if (!empty($subtitle))
+            <div class="text-xs text-gray-500 dark:text-gray-400 truncate">{{ $subtitle }}</div>
+            @endif
           </div>
           <div class="ml-auto">
             <div id="typing-indicator" class="text-xs text-gray-400 dark:text-gray-500 italic"></div>
@@ -29,10 +32,14 @@
         $isPending = $bk && ($bk->status === 'pending');
         $isAccepted = $bk && ($bk->status === 'accepted');
         $isCanceled = $bk && ($bk->status === 'canceled');
-        $badgeClass = $isPending ? 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-200 dark:border-yellow-800'
+        $isPaid = $bk && ($bk->payment_status === 'paid');
+        // Priorité d'affichage: Annulée > Payée > Confirmée > En attente
+        $badgeClass = $isCanceled ? 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-200 dark:border-red-800'
+        : ($isPaid ? 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-200 dark:border-green-800'
         : ($isAccepted ? 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-200 dark:border-green-800'
-        : 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-200 dark:border-red-800');
-        $statusLabel = $isPending ? 'En attente de confirmation' : ($isAccepted ? 'Confirmée' : 'Annulée');
+        : ($isPending ? 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-200 dark:border-yellow-800'
+        : 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900/30 dark:text-gray-200 dark:border-gray-800')));
+        $statusLabel = $isCanceled ? 'Annulée' : ($isPaid ? 'Payée' : ($isAccepted ? 'Confirmée' : 'En attente de confirmation'));
         @endphp
         <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 shadow-sm">
           <div class="flex items-start gap-3">
@@ -68,7 +75,7 @@
               @endif
 
               <div class="mt-3 flex items-center gap-2">
-                @if($bk && $bk->status !== 'canceled')
+                @if($bk && $bk->status !== 'canceled' && ($bk->payment_status ?? null) !== 'paid')
                 <button type="button" class="px-3 py-1.5 rounded bg-red-600 hover:bg-red-700 text-white text-sm"
                   wire:click="cancelBookingFromChat({{ $selectedUser['conversation_id'] ?? 'null' }})">
                   Annuler

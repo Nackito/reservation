@@ -146,11 +146,19 @@ class ChatBox extends Component
       $displayName = $this->userDisplayNameForAdminChannel($booking);
       [$preview, $lastAt, $lastAtSort, $lastSenderId] = $this->lastMessageMetaForChannel($channel->id);
 
+      // Sous-titre: nom du type de chambre si lié, sinon chaîne vide
+      $roomTypeName = '';
+      try {
+        $roomTypeName = $booking && $booking->roomType ? (string) ($booking->roomType->name ?? '') : '';
+      } catch (\Throwable $e) {
+        $roomTypeName = '';
+      }
+
       $items[] = [
         'id' => 'admin_channel_' . $channel->id,
         'name' => $displayName,
-        // Sous-libellé côté utilisateur: "Afridayz" quand pas de réservation, sinon "Canal de réservation"
-        'email' => $booking ? 'Canal de réservation' : 'Afridayz',
+        // Sous-libellé côté utilisateur: type de chambre si dispo, sinon vide
+        'email' => $roomTypeName,
         'conversation_id' => $channel->id,
         'booking_id' => $channel->booking_id,
         'last_preview' => $preview,
@@ -263,19 +271,19 @@ class ChatBox extends Component
    */
   public function cancelBookingFromChat($conversationId)
   {
-    $conv = \App\Models\Conversation::find((int) $conversationId);
-    if (!$conv || !$conv->is_admin_channel || (int) $conv->user_id !== (int) Auth::id()) {
-      return; // sécurité
-    }
-    if (!$conv->booking_id) {
-      return;
-    }
-    $booking = Booking::find($conv->booking_id);
-    if (!$booking || (int) $booking->user_id !== (int) Auth::id()) {
-      return;
-    }
-    if ($booking->status === 'canceled') {
-      return;
+    $conv = Conversation::find((int) $conversationId);
+    $invalid = (
+      !$conv ||
+      !$conv->is_admin_channel ||
+      (int) $conv->user_id !== (int) Auth::id() ||
+      !$conv->booking_id
+    );
+    $booking = $invalid ? null : Booking::find($conv->booking_id);
+    $invalid = $invalid || !$booking || (int) $booking->user_id !== (int) Auth::id();
+    // Interdire si déjà annulée ou payée (paiement validé via payment_status)
+    $invalid = $invalid || ($booking?->status === 'canceled') || (($booking?->payment_status ?? null) === 'paid');
+    if ($invalid) {
+      return; // garde unique pour limiter les returns multiples
     }
     $booking->status = 'canceled';
     $booking->save();

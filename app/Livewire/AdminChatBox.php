@@ -152,7 +152,7 @@ class AdminChatBox extends Component
     } elseif (str_starts_with((string) $id, 'admin_channel_')) {
       // Fallback: id correspond à un canal admin fraîchement créé mais non présent en mémoire
       $convId = (int) str_replace('admin_channel_', '', (string) $id);
-      $conv = $convId > 0 ? \App\Models\Conversation::find($convId) : null;
+      $conv = $convId > 0 ? Conversation::find($convId) : null;
       if ($conv) {
         $booking = $conv->booking_id ? \App\Models\Booking::find($conv->booking_id) : null;
         $baseUserName = $conv->user?->name ?? 'Utilisateur';
@@ -718,19 +718,37 @@ class AdminChatBox extends Component
    */
   private function buildPrivateUserItems(): array
   {
+    // 1) Exclure les utilisateurs qui ont déjà un canal admin (évite le doublon avec "Demandes de réservation")
+    $userIdsWithAdminChannel = Conversation::where('is_admin_channel', true)
+      ->whereHas('messages')
+      ->pluck('user_id')
+      ->unique()
+      ->filter()
+      ->values()
+      ->all();
+
     return User::whereNot('id', Auth::id())
+      ->whereNotIn('id', $userIdsWithAdminChannel)
       ->latest()
       ->get()
       ->map(function (User $u) {
+        // 2) Ne prendre en compte que les DMs "pures" (messages sans conversation_id)
         $last = Message::query()
+          ->whereNull('conversation_id')
           ->where(function ($q) use ($u) {
             $q->where('sender_id', Auth::id())->where('receiver_id', $u->id);
           })
           ->orWhere(function ($q) use ($u) {
-            $q->where('sender_id', $u->id)->where('receiver_id', Auth::id());
+            $q->whereNull('conversation_id')
+              ->where('sender_id', $u->id)
+              ->where('receiver_id', Auth::id());
           })
           ->latest('created_at')
           ->first();
+
+        if (!$last) {
+          return null; // aucun DM pur: ne pas créer d'entrée directe
+        }
 
         $preview = $last?->content ? \Illuminate\Support\Str::limit($last->content, 55) : '';
         $lastAt = $last?->created_at ? $last->created_at->locale('fr')->isoFormat(self::DATE_BADGE_FORMAT) : '';
@@ -746,6 +764,7 @@ class AdminChatBox extends Component
           'last_sender_id' => $last?->sender_id,
         ];
       })
+      ->filter() // supprime les null
       ->values()
       ->all();
   }

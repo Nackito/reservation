@@ -45,6 +45,24 @@ class ChatBox extends Component
     $this->messages = collect();
     $this->newMessage = '';
     $this->loginID = Auth::id();
+    // Si un conversation_id est passé en query, ouvrir directement ce canal admin
+    try {
+      $cid = request()->query('conversation_id');
+      if ($cid) {
+        $targetId = 'admin_channel_' . (int) $cid;
+        $item = collect($this->users)->firstWhere('id', $targetId);
+        if ($item) {
+          $this->selectedUser = $item;
+          $this->loadMessages();
+          $this->showChat = true;
+          $this->lastSeen[$targetId] = time();
+          $this->dispatch('focusMessageInput');
+          $this->dispatch('scrollToBottom');
+        }
+      }
+    } catch (\Throwable $e) {
+      // ignorer toute erreur de requête
+    }
     // Quand on arrive sur la page chat, on peut remettre le compteur global à zéro
     $this->dispatch('resetNavChatUnseen');
   }

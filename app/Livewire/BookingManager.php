@@ -820,9 +820,9 @@ class BookingManager extends Component
         } catch (\Exception $e) {
         }
 
-        // Fermer le modal et rediriger vers le chat
-        $this->showSummaryModal = false;
-        return redirect('/chat');
+    // Fermer le modal et rediriger vers la conversation créée
+    $this->showSummaryModal = false;
+    return redirect()->route('user.chat', ['conversation_id' => $adminGroupConversation->id]);
     }
 
     // Réservation rapide depuis la ligne du tableau (bouton "Réserver")
@@ -1026,8 +1026,8 @@ class BookingManager extends Component
         } catch (\Exception $e) {
         }
 
-        // Rediriger vers le chat comme addBooking
-        return redirect('/chat');
+    // Rediriger vers la conversation créée
+    return redirect()->route('user.chat', ['conversation_id' => $adminGroupConversation->id]);
     }
 
     // toggleWishlist supprimée: non utilisée dans cette vue et relation User::wishlists absente

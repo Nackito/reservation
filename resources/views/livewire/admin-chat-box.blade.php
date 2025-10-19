@@ -88,7 +88,7 @@
     <div class="text-sm border rounded-xl shadow overflow-hidden bg-white dark:bg-gray-900 dark:border-gray-800">
       <div class="p-4 border-b">
         <div class="flex items-center justify-between">
-          <div class="text-sm font-semibold text-gray-800 dark:text-gray-100">Conversations</div>
+          <div class="text-sm font-semibold text-gray-800 dark:text-gray-100">Messages</div>
           <div class="text-xs text-gray-500 dark:text-gray-400">{{ is_countable($users) ? count($users) : 0 }} au total</div>
         </div>
         <!-- Tabs: Actives / Archivées (uniquement côté admin) -->
@@ -106,19 +106,16 @@
         </div>
       </div>
       <div class="bg-gray-50 dark:bg-gray-950">
-        <div class="p-4 text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
-          {{ $activeTab === 'archived' ? 'Demandes archivées' : 'Demandes de réservation' }}
-        </div>
         <div class="divide-y">
           @foreach ($users as $user)
-          @if (str_starts_with($user['id'], 'admin_channel_'))
           @php
           $isActive = isset($selectedUser['id']) && $selectedUser['id'] === $user['id'];
           $initial = trim($user['name']) !== '' ? strtoupper(mb_substr($user['name'], 0, 1)) : '?';
+          $isAdminChannel = str_starts_with($user['id'], 'admin_channel_');
           @endphp
           <button type="button" wire:key="user-{{ $user['id'] }}" wire:click.prevent="selectUser('{{ $user['id'] }}')"
             class="w-full text-left p-3 flex items-center gap-3 transition {{ $isActive ? 'bg-blue-50 dark:bg-gray-800 ring-1 ring-inset ring-blue-200 dark:ring-gray-700' : 'hover:bg-blue-50 dark:hover:bg-gray-800' }}">
-            <span class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-white text-sm font-semibold shrink-0">{{ $initial }}</span>
+            <span class="inline-flex h-10 w-10 items-center justify-center rounded-full {{ $isAdminChannel ? 'bg-blue-600' : 'bg-gray-900' }} text-white text-sm font-semibold shrink-0">{{ $initial }}</span>
             <div class="flex-1 min-w-0 overflow-hidden">
               <div class="flex items-baseline gap-2">
                 <span class="truncate min-w-0 text-gray-900 dark:text-gray-100 font-medium {{ $isActive ? 'font-semibold' : '' }}">{{ $user['name'] }}</span>
@@ -139,67 +136,8 @@
               @endif
             </span>
           </button>
-          @endif
           @endforeach
         </div>
-        @if ($activeTab === 'active')
-        <div class="p-4 text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Discussions directes</div>
-        <div class="divide-y">
-          @foreach ($users as $user)
-          @if (!str_starts_with($user['id'], 'admin_channel_'))
-          @php
-          $isActive = isset($selectedUser['id']) && $selectedUser['id'] === $user['id'];
-          $initial = trim($user['name']) !== '' ? strtoupper(mb_substr($user['name'], 0, 1)) : '?';
-          @endphp
-          <button type="button" wire:key="user-{{ $user['id'] }}" wire:click.prevent="selectUser('{{ $user['id'] }}')"
-            class="w-full text-left p-3 flex items-center gap-3 transition {{ $isActive ? 'bg-blue-50 dark:bg-gray-800 ring-1 ring-inset ring-blue-200 dark:ring-gray-700' : 'hover:bg-blue-50 dark:hover:bg-gray-800' }}">
-            <span class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-gray-900 text-white text-sm font-semibold shrink-0">{{ $initial }}</span>
-            <div class="flex-1 min-w-0 overflow-hidden">
-              <div class="flex items-baseline gap-2">
-                <span class="truncate min-w-0 text-gray-900 dark:text-gray-100 font-medium {{ $isActive ? 'font-semibold' : '' }}">{{ $user['name'] }}</span>
-                <span class="ml-auto shrink-0 whitespace-nowrap text-[11px] text-gray-500 dark:text-gray-400">{{ $user['last_at'] ?? '' }}</span>
-              </div>
-              <div class="truncate text-gray-500 dark:text-gray-400 text-xs">{{ $user['last_preview'] ?? $user['email'] }}</div>
-            </div>
-            <span class="ml-2 flex items-center gap-2 shrink-0">
-              @php
-              $lastSeen = $lastSeen[$user['id']] ?? 0;
-              $hasUnread = isset($user['last_at_sort'], $user['last_sender_id'])
-              && $user['last_sender_id'] !== auth()->id()
-              && $user['last_at_sort'] > $lastSeen;
-              @endphp
-              @if ($hasUnread)
-              <span class="h-2.5 w-2.5 rounded-full bg-blue-500 inline-block"></span>
-              @endif
-            </span>
-          </button>
-          @endif
-          @endforeach
-        </div>
-        @else
-        <div class="p-4 text-xs uppercase tracking-wide text-gray-500">Discussions directes archivées</div>
-        <div class="divide-y">
-          @foreach ($users as $user)
-          @if (!str_starts_with($user['id'], 'admin_channel_'))
-          @php
-          $isActive = isset($selectedUser['id']) && $selectedUser['id'] === $user['id'];
-          $initial = trim($user['name']) !== '' ? strtoupper(mb_substr($user['name'], 0, 1)) : '?';
-          @endphp
-          <button type="button" wire:key="user-{{ $user['id'] }}" wire:click.prevent="selectUser('{{ $user['id'] }}')"
-            class="w-full text-left p-3 flex items-center gap-3 transition {{ $isActive ? 'bg-blue-50 ring-1 ring-inset ring-blue-200' : 'hover:bg-blue-50' }}">
-            <span class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-gray-900 text-white text-sm font-semibold shrink-0">{{ $initial }}</span>
-            <div class="flex-1 min-w-0 overflow-hidden">
-              <div class="flex items-baseline gap-2">
-                <span class="truncate min-w-0 text-gray-900 font-medium {{ $isActive ? 'font-semibold' : '' }}">{{ $user['name'] }}</span>
-                <span class="ml-auto shrink-0 whitespace-nowrap text-[11px] text-gray-500">{{ $user['last_at'] ?? '' }}</span>
-              </div>
-              <div class="truncate text-gray-500 text-xs">{{ $user['last_preview'] ?? $user['email'] }}</div>
-            </div>
-          </button>
-          @endif
-          @endforeach
-        </div>
-        @endif
       </div>
     </div>
     @endif

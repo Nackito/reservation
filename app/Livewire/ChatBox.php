@@ -122,7 +122,7 @@ class ChatBox extends Component
 
       return [
         'id' => (string)$u->id,
-        'name' => $u->name,
+        'name' => ($this->fullName($u) ?: ($u->name ?? ($u->email ?? 'Utilisateur'))),
         'email' => $u->email,
         'last_preview' => $preview,
         'last_at' => $lastAt,
@@ -265,7 +265,7 @@ class ChatBox extends Component
       if ($u) {
         $this->selectedUser = [
           'id' => (string)$u->id,
-          'name' => $u->name,
+          'name' => ($this->fullName($u) ?: ($u->name ?? ($u->email ?? 'Utilisateur'))),
           'email' => $u->email,
         ];
       }
@@ -278,6 +278,28 @@ class ChatBox extends Component
     $this->dispatch('scrollToBottom');
     // Ouvrir une conversation signifie qu'on consulte: remettre le badge global à zéro
     $this->dispatch('resetNavChatUnseen');
+  }
+
+  /**
+   * Construit le nom complet: "Prénom Nom" si disponibles, sinon fallback sur name puis email.
+   */
+  private function fullName(?User $u): string
+  {
+    if (!$u) {
+      return '';
+    }
+    $first = trim((string) ($u->firstname ?? ''));
+    $last = trim((string) ($u->name ?? ''));
+    if ($first !== '' && $last !== '') {
+      return $first . ' ' . $last;
+    }
+    if ($first !== '') {
+      return $first;
+    }
+    if ($last !== '') {
+      return $last;
+    }
+    return (string) ($u->email ?? '');
   }
 
   /**

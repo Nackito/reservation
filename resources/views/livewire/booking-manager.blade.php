@@ -260,7 +260,7 @@
                         <!-- Bouton de contact Afridayz (connexion requise) -->
                         @if($property)
                         @if(Auth::check())
-                        <button onclick="openContactModal()" class="flex items-center justify-center px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg shadow transition" title="Contacter un employé de la plateforme">
+                        <button type="button" wire:click.prevent="contactAfridayz" class="flex items-center justify-center px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg shadow transition" title="Contacter un employé de la plateforme">
                             <i class="fas fa-headset text-lg"></i>
                             <span class="hidden sm:inline ml-1">Contacter Afridayz</span>
                         </button>

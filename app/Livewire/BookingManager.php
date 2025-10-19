@@ -7,6 +7,7 @@ use Illuminate\Support\Str;
 use App\Models\Property;
 use App\Models\Booking;
 use App\Models\Message;
+use App\Models\Conversation;
 use App\Models\Reviews;
 use App\Models\User;
 use App\Models\SearchState;
@@ -113,6 +114,57 @@ class BookingManager extends Component
             return $this->featureIcons[$feature];
         }
         return 'fa-circle';
+    }
+
+    /**
+     * Ouvre (ou crée) un canal admin de discussion pour l'utilisateur connecté
+     * puis redirige vers le chat en ciblant cette conversation.
+     */
+    public function contactAfridayz()
+    {
+        if (!Auth::check()) {
+            return redirect()->route('login');
+        }
+
+        $userId = (int) Auth::id();
+        $adminId = (int) config('chat.admin_user_id', 5);
+        // Récupérer ou créer un canal admin générique (non lié à une réservation)
+        $conv = Conversation::query()
+            ->where('is_admin_channel', true)
+            ->where('user_id', $userId)
+            ->whereNull('booking_id')
+            ->latest('created_at')
+            ->first();
+
+        if (!$conv) {
+            $conv = Conversation::create([
+                'user_id' => $userId,
+                'owner_id' => $adminId,
+                'is_admin_channel' => true,
+                'booking_id' => null,
+            ]);
+        }
+
+        // S'assurer que la conversation apparaît (liste utilisateur filtre sur whereHas('messages'))
+        $hasMessage = Message::where('conversation_id', $conv->id)->exists();
+        if (!$hasMessage) {
+            try {
+                $snippet = 'Bonjour, je souhaite contacter l’équipe Afridayz.';
+                $msg = Message::create([
+                    'conversation_id' => $conv->id,
+                    'sender_id' => $userId,
+                    'receiver_id' => $adminId,
+                    'content' => $snippet,
+                ]);
+                try {
+                    broadcast(new MessageSent($msg));
+                } catch (\Throwable $e) {
+                }
+            } catch (\Throwable $e) {
+            }
+        }
+
+        return redirect()->route('user.chat', ['conversation_id' => $conv->id]);
     }
 
     public function getExchangeRate($from, $to)
@@ -820,9 +872,9 @@ class BookingManager extends Component
         } catch (\Exception $e) {
         }
 
-    // Fermer le modal et rediriger vers la conversation créée
-    $this->showSummaryModal = false;
-    return redirect()->route('user.chat', ['conversation_id' => $adminGroupConversation->id]);
+        // Fermer le modal et rediriger vers la conversation créée
+        $this->showSummaryModal = false;
+        return redirect()->route('user.chat', ['conversation_id' => $adminGroupConversation->id]);
     }
 
     // Réservation rapide depuis la ligne du tableau (bouton "Réserver")
@@ -1026,8 +1078,8 @@ class BookingManager extends Component
         } catch (\Exception $e) {
         }
 
-    // Rediriger vers la conversation créée
-    return redirect()->route('user.chat', ['conversation_id' => $adminGroupConversation->id]);
+        // Rediriger vers la conversation créée
+        return redirect()->route('user.chat', ['conversation_id' => $adminGroupConversation->id]);
     }
 
     // toggleWishlist supprimée: non utilisée dans cette vue et relation User::wishlists absente

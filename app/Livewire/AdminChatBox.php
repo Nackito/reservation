@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Illuminate\Support\Carbon;
 use Livewire\Attributes\On;
+use App\Models\Conversation;
 
 class AdminChatBox extends Component
 {
@@ -184,11 +185,48 @@ class AdminChatBox extends Component
       // Fallback: reconstruire à partir du modèle
       $user = User::find($id);
       if ($user) {
-        $this->selectedUser = [
-          'id' => (string) $user->id,
-          'name' => $user->name,
-          'email' => $user->email,
-        ];
+        // Si un canal admin existe pour cet utilisateur, forcer la sélection de ce canal plutôt que d'ouvrir une DM
+        $conv = $this->findPreferredAdminConversationForUser((int) $user->id);
+        if ($conv) {
+          $booking = $conv->booking_id ? \App\Models\Booking::find($conv->booking_id) : null;
+          $baseUserName = $conv->user?->name ?? $user->name;
+          $propertyName = $baseUserName;
+          if ($booking && $booking->property && !empty($booking->property->name)) {
+            $propertyName = $booking->property->name . ' - ' . $baseUserName;
+          }
+          $last = Message::where('conversation_id', $conv->id)->latest('created_at')->first();
+          $preview = $last?->content ? Str::limit($last->content, 55) : '';
+          $lastAt = $last?->created_at ? $last->created_at->locale('fr')->isoFormat(self::DATE_BADGE_FORMAT) : '';
+          $lastAtSort = $last?->created_at ? $last->created_at->getTimestamp() : 0;
+          $entry = [
+            'id' => 'admin_channel_' . $conv->id,
+            'name' => $propertyName,
+            'email' => $booking ? 'Canal de réservation' : 'Canal admin',
+            'conversation_id' => $conv->id,
+            'last_preview' => $preview,
+            'last_at' => $lastAt,
+            'last_at_sort' => $lastAtSort,
+            'last_sender_id' => $last?->sender_id,
+          ];
+          // Injecter si absent puis sélectionner
+          $exists = collect($this->usersActive)->contains(fn($u) => ($u['id'] ?? null) === $entry['id'])
+            || collect($this->usersArchived)->contains(fn($u) => ($u['id'] ?? null) === $entry['id']);
+          if (!$exists) {
+            array_unshift($this->usersActive, $entry);
+            $this->sortArrayByLastAt($this->usersActive);
+            $this->users = $this->activeTab === 'active' ? $this->usersActive : $this->usersArchived;
+          }
+          $this->selectedUser = $entry;
+          // Remplacer l'id mémorisé par l'identifiant du canal admin
+          $id = $entry['id'];
+        } else {
+          // Aucun canal admin: rester en DM (numérique)
+          $this->selectedUser = [
+            'id' => (string) $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+          ];
+        }
       }
     }
     // Mémoriser la sélection (pour l'action Filament côté page)
@@ -257,19 +295,67 @@ class AdminChatBox extends Component
         // ne bloque pas l'envoi du message si l'email échoue
       }
     } else {
-      $message = Message::create([
-        'sender_id' => Auth::id(),
-        'receiver_id' => (int) ($this->selectedUser['id'] ?? 0),
-        'content' => $this->newMessage,
-      ]);
-      // Notification email destinataire direct
-      try {
-        $recipient = User::find($message->receiver_id);
-        if ($recipient && !empty($recipient->email)) {
-          $recipient->notify(new \App\Notifications\MessageReceivedNotification($message));
+      // Si la sélection est un ID numérique, préférer router dans un canal admin existant plutôt que créer une DM
+      $peerId = (int) ($this->selectedUser['id'] ?? 0);
+      $preferred = $peerId > 0 ? $this->findPreferredAdminConversationForUser($peerId) : null;
+      if ($preferred) {
+        $message = Message::create([
+          'conversation_id' => $preferred->id,
+          'sender_id' => Auth::id(),
+          'receiver_id' => (int) $preferred->user_id,
+          'content' => $this->newMessage,
+        ]);
+        // S'assurer que la sélection et la liste reflètent le canal admin
+        $adminId = 'admin_channel_' . $preferred->id;
+        // Injecter/mettre à jour l'entrée
+        $lastAtSort = $message->created_at ? $message->created_at->getTimestamp() : time();
+        $entry = [
+          'id' => $adminId,
+          'name' => ($preferred->booking && $preferred->booking->property && $preferred->booking->property->name)
+            ? ($preferred->booking->property->name . ' - ' . ($preferred->user?->name ?? 'Utilisateur'))
+            : ($preferred->user?->name ?? 'Utilisateur'),
+          'email' => $preferred->booking ? 'Canal de réservation' : 'Canal admin',
+          'conversation_id' => $preferred->id,
+          'last_preview' => Str::limit($message->content, 55),
+          'last_at' => $message->created_at ? $message->created_at->locale('fr')->isoFormat(self::DATE_BADGE_FORMAT) : '',
+          'last_at_sort' => $lastAtSort,
+          'last_sender_id' => $message->sender_id,
+        ];
+        $existsIdx = null;
+        foreach ($this->usersActive as $idx => $u) {
+          if (($u['id'] ?? null) === $adminId) {
+            $existsIdx = $idx;
+            break;
+          }
         }
-      } catch (\Throwable $e) {
-        // ignorer les erreurs d'email
+        if ($existsIdx === null) {
+          array_unshift($this->usersActive, $entry);
+        } else {
+          $this->usersActive[$existsIdx] = array_merge($this->usersActive[$existsIdx], $entry);
+        }
+        $this->sortArrayByLastAt($this->usersActive);
+        $this->users = $this->activeTab === 'active' ? $this->usersActive : $this->usersArchived;
+        $this->selectedUser = $entry;
+        // Recharger les messages de ce canal pour éviter un mélange avec d'anciennes DMs
+        $this->messages = Message::where('conversation_id', $preferred->id)
+          ->orderBy('created_at')
+          ->get();
+      } else {
+        // Aucun canal admin: fallback DM direct
+        $message = Message::create([
+          'sender_id' => Auth::id(),
+          'receiver_id' => $peerId,
+          'content' => $this->newMessage,
+        ]);
+        // Notification email destinataire direct
+        try {
+          $recipient = User::find($message->receiver_id);
+          if ($recipient && !empty($recipient->email)) {
+            $recipient->notify(new \App\Notifications\MessageReceivedNotification($message));
+          }
+        } catch (\Throwable $e) {
+          // ignorer les erreurs d'email
+        }
       }
     }
 
@@ -287,6 +373,30 @@ class AdminChatBox extends Component
     // Re-focuser l'input après envoi
     $this->dispatch('focusMessageInput');
     $this->dispatch('scrollToBottom');
+  }
+
+  /**
+   * Retourne le canal admin préféré pour un utilisateur: d'abord le canal générique (booking_id NULL),
+   * sinon le plus récent des canaux admin existants pour cet utilisateur.
+   */
+  private function findPreferredAdminConversationForUser(int $userId): ?Conversation
+  {
+    try {
+      $generic = Conversation::where('is_admin_channel', true)
+        ->where('user_id', $userId)
+        ->whereNull('booking_id')
+        ->latest('created_at')
+        ->first();
+      if ($generic) {
+        return $generic;
+      }
+      return Conversation::where('is_admin_channel', true)
+        ->where('user_id', $userId)
+        ->latest('created_at')
+        ->first();
+    } catch (\Throwable $e) {
+      return null;
+    }
   }
 
   /**

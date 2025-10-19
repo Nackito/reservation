@@ -26,7 +26,7 @@
 
       <!-- Messages -->
       <div id="messages" class="flex-1 max-h-[60vh] overflow-y-auto p-4 bg-gray-50 dark:bg-gray-950 space-y-3">
-        @if($selectedUser && str_starts_with($selectedUser['id'] ?? '', 'admin_channel_'))
+        @if($selectedUser && str_starts_with($selectedUser['id'] ?? '', 'admin_channel_') && $this->currentBooking)
         @php
         $bk = $this->currentBooking ?? null;
         $isPending = $bk && ($bk->status === 'pending');

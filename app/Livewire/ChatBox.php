@@ -91,7 +91,11 @@ class ChatBox extends Component
         return $msg->sender_id == $userId ? $msg->receiver_id : $msg->sender_id;
       })
       ->unique()
-      ->filter(fn($id) => $id != $userId)
+      // Exclure moi-même et l'utilisateur admin (les échanges avec l'admin doivent rester dans le canal Afridayz)
+      ->filter(function ($id) use ($userId) {
+        $adminId = (int) config('chat.admin_user_id', 5);
+        return $id != $userId && (int) $id !== $adminId;
+      })
       ->values();
 
     $directUsers = User::whereIn('id', $directUserIds)->get();
@@ -106,6 +110,12 @@ class ChatBox extends Component
         ->latest('created_at')
         ->first();
 
+      // Si le dernier message appartient à un canal admin (conversation_id défini),
+      // on ne doit pas créer une entrée « Discussions directes » en doublon.
+      if ($last && !empty($last->conversation_id)) {
+        return null; // filtré plus bas
+      }
+
       $preview = $last?->content ? \Illuminate\Support\Str::limit($last->content, 55) : '';
       $lastAt = $last?->created_at ? $last->created_at->locale('fr')->isoFormat(self::DATE_BADGE_FORMAT) : '';
       $lastAtSort = $last?->created_at ? $last->created_at->getTimestamp() : 0;
@@ -119,7 +129,10 @@ class ChatBox extends Component
         'last_at_sort' => $lastAtSort,
         'last_sender_id' => $last?->sender_id,
       ];
-    })->values()->all();
+    })
+      ->filter() // supprime les null issus du filtrage canal admin
+      ->values()
+      ->all();
   }
 
   /**
@@ -177,7 +190,8 @@ class ChatBox extends Component
       return false;
     }
     $end = $booking->end_date instanceof \Carbon\Carbon ? $booking->end_date->copy() : \Carbon\Carbon::parse($booking->end_date);
-    $cutoff = $end->endOfDay()->addDays(2);
+    $grace = (int) config('chat.archive.booking_grace_days', 2);
+    $cutoff = $end->endOfDay()->addDays($grace);
     return \Carbon\Carbon::now()->greaterThan($cutoff);
   }
 

@@ -257,17 +257,17 @@
                                 </div>
                             </div>
                         </div>
-                        <!-- Bouton de contact employé (connexion requise) -->
+                        <!-- Bouton de contact Afridayz (connexion requise) -->
                         @if($property)
                         @if(Auth::check())
                         <button onclick="openContactModal()" class="flex items-center justify-center px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg shadow transition" title="Contacter un employé de la plateforme">
                             <i class="fas fa-headset text-lg"></i>
-                            <span class="hidden sm:inline ml-1">Contacter un employé</span>
+                            <span class="hidden sm:inline ml-1">Contacter Afridayz</span>
                         </button>
                         @else
                         <button onclick="showContactLoginNotification()" class="flex items-center justify-center px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg shadow transition" title="Connectez-vous pour contacter un employé">
                             <i class="fas fa-headset text-lg"></i>
-                            <span class="hidden sm:inline ml-1">Contacter un employé</span>
+                            <span class="hidden sm:inline ml-1">Contacter Afridayz</span>
                         </button>
                         @endif
                         @endif
@@ -279,7 +279,7 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                                     </svg>
                                 </button>
-                                <h2 class="text-2xl font-bold mb-4 text-gray-800">Contacter un employé</h2>
+                                <h2 class="text-2xl font-bold mb-4 text-gray-800">Contacter Afridayz</h2>
                                 <form method="POST" action="{{ route('contact.hebergement') }}">
                                     @csrf
                                     <div class="mb-4">

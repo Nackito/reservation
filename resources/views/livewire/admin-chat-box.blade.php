@@ -106,6 +106,8 @@
         </div>
       </div>
       <div class="bg-gray-50 dark:bg-gray-950">
+        @php $total = is_countable($users) ? count($users) : 0; @endphp
+        @if ($total > 0)
         <div class="divide-y">
           @foreach ($users as $user)
           @php
@@ -138,56 +140,72 @@
           </button>
           @endforeach
         </div>
+        @else
+        <div class="px-6 py-10 sm:px-12 sm:py-16">
+          <div class="flex items-center gap-6">
+            <div class="shrink-0 w-28 h-28 sm:w-36 sm:h-36 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-14 h-14 text-gray-400 dark:text-gray-500">
+                <path d="M7.5 3h9a4.5 4.5 0 014.5 4.5v6a4.5 4.5 0 01-4.5 4.5h-2.379l-2.94 2.94A1.5 1.5 0 019 19.94V18H7.5A4.5 4.5 0 013 13.5v-6A4.5 4.5 0 017.5 3z" />
+              </svg>
+            </div>
+            <div class="min-w-0">
+              <div class="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100">Aucune conversation pour le moment</div>
+              <div class="mt-1 text-sm text-gray-500 dark:text-gray-400">Les messages récents apparaîtront ici dès qu’un client vous écrira.</div>
+            </div>
+          </div>
+        </div>
+        @endif
       </div>
     </div>
-    @endif
   </div>
+  @endif
+</div>
 
 
-  <script>
-    // Livewire v3: initialisation + auto-scroll + indicateur de frappe
-    document.addEventListener('livewire:init', () => {
-      const scrollToBottom = () => {
-        const c = document.getElementById('messages');
-        if (c) c.scrollTop = c.scrollHeight;
-      };
+<script>
+  // Livewire v3: initialisation + auto-scroll + indicateur de frappe
+  document.addEventListener('livewire:init', () => {
+    const scrollToBottom = () => {
+      const c = document.getElementById('messages');
+      if (c) c.scrollTop = c.scrollHeight;
+    };
 
-      // Scroll initial
-      scrollToBottom();
+    // Scroll initial
+    scrollToBottom();
 
-      // Scroll après chaque update Livewire
-      if (window.Livewire && typeof window.Livewire.hook === 'function') {
-        window.Livewire.hook('message.processed', () => scrollToBottom());
-      }
+    // Scroll après chaque update Livewire
+    if (window.Livewire && typeof window.Livewire.hook === 'function') {
+      window.Livewire.hook('message.processed', () => scrollToBottom());
+    }
 
-      // Evènement explicite depuis le composant côté PHP
-      Livewire.on('scrollToBottom', () => {
-        setTimeout(scrollToBottom, 0);
-      });
-
-      // Whisper "typing"
-      // Évite les whispers sur le canal privé de l'autre (403 auth). Voir notes dans chat-box.
-      Livewire.on('userTyping', () => {});
-
-      // Réception de l'indicateur "typing" via event broadcast UserTyping
-      if (window.Echo && typeof window.Echo.private === 'function') {
-        window.Echo.private(`chat.{{ $loginID }}`)
-          .listen('.UserTyping', (event) => {
-            const t = document.getElementById('typing-indicator');
-            if (!t) return;
-            t.innerText = `${event.userName} est en train d'écrire...`;
-            setTimeout(() => {
-              if (t.innerText.includes("est en train d'écrire")) t.innerText = '';
-            }, 2000);
-          });
-      }
-
-      // Focus input message sur demande du composant
-      Livewire.on('focusMessageInput', () => {
-        const input = document.getElementById('message-input');
-        if (input) input.focus();
-      });
+    // Evènement explicite depuis le composant côté PHP
+    Livewire.on('scrollToBottom', () => {
+      setTimeout(scrollToBottom, 0);
     });
-  </script>
 
-  <!-- EOF -->
+    // Whisper "typing"
+    // Évite les whispers sur le canal privé de l'autre (403 auth). Voir notes dans chat-box.
+    Livewire.on('userTyping', () => {});
+
+    // Réception de l'indicateur "typing" via event broadcast UserTyping
+    if (window.Echo && typeof window.Echo.private === 'function') {
+      window.Echo.private(`chat.{{ $loginID }}`)
+        .listen('.UserTyping', (event) => {
+          const t = document.getElementById('typing-indicator');
+          if (!t) return;
+          t.innerText = `${event.userName} est en train d'écrire...`;
+          setTimeout(() => {
+            if (t.innerText.includes("est en train d'écrire")) t.innerText = '';
+          }, 2000);
+        });
+    }
+
+    // Focus input message sur demande du composant
+    Livewire.on('focusMessageInput', () => {
+      const input = document.getElementById('message-input');
+      if (input) input.focus();
+    });
+  });
+</script>
+
+<!-- EOF -->

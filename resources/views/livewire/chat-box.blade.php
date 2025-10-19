@@ -147,6 +147,8 @@
         <div class="text-xs text-gray-500 dark:text-gray-400">{{ is_countable($users) ? count($users) : 0 }} au total</div>
       </div>
       <div class="bg-gray-50 dark:bg-gray-950">
+        @php $total = is_countable($users) ? count($users) : 0; @endphp
+        @if ($total > 0)
         <div class="divide-y">
           @foreach ($users as $user)
           @php
@@ -176,6 +178,21 @@
           </button>
           @endforeach
         </div>
+        @else
+        <div class="px-6 py-10 sm:px-12 sm:py-16">
+          <div class="flex items-center gap-6">
+            <div class="shrink-0 w-28 h-28 sm:w-36 sm:h-36 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-14 h-14 text-gray-400 dark:text-gray-500">
+                <path d="M7.5 3h9a4.5 4.5 0 014.5 4.5v6a4.5 4.5 0 01-4.5 4.5h-2.379l-2.94 2.94A1.5 1.5 0 019 19.94V18H7.5A4.5 4.5 0 013 13.5v-6A4.5 4.5 0 017.5 3z" />
+              </svg>
+            </div>
+            <div class="min-w-0">
+              <div class="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100">Vous n'avez aucun message</div>
+              <div class="mt-1 text-sm text-gray-500 dark:text-gray-400">Lorsque vous enverrez une demande de réservation, il apparaîtra ici.</div>
+            </div>
+          </div>
+        </div>
+        @endif
       </div>
     </div>
     @endif

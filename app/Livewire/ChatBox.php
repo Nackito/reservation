@@ -151,7 +151,7 @@ class ChatBox extends Component
 
     $items = [];
     foreach ($channels as $channel) {
-      $booking = $channel->booking_id ? \App\Models\Booking::find($channel->booking_id) : null;
+      $booking = $channel->booking_id ? Booking::find($channel->booking_id) : null;
       if ($this->isChannelExpiredForUser($booking)) {
         continue;
       }
@@ -184,18 +184,18 @@ class ChatBox extends Component
   }
 
   // --- Helpers buildAdminItems ---
-  private function isChannelExpiredForUser(?\App\Models\Booking $booking): bool
+  private function isChannelExpiredForUser(?Booking $booking): bool
   {
     if (!$booking || !$booking->end_date) {
       return false;
     }
-    $end = $booking->end_date instanceof \Carbon\Carbon ? $booking->end_date->copy() : \Carbon\Carbon::parse($booking->end_date);
+    $end = $booking->end_date instanceof Carbon ? $booking->end_date->copy() : Carbon::parse($booking->end_date);
     $grace = (int) config('chat.archive.booking_grace_days', 2);
     $cutoff = $end->endOfDay()->addDays($grace);
-    return \Carbon\Carbon::now()->greaterThan($cutoff);
+    return Carbon::now()->greaterThan($cutoff);
   }
 
-  private function userDisplayNameForAdminChannel(?\App\Models\Booking $booking): string
+  private function userDisplayNameForAdminChannel(?Booking $booking): string
   {
     if ($booking && $booking->property && !empty($booking->property->name)) {
       return $booking->property->name;
@@ -236,7 +236,7 @@ class ChatBox extends Component
           return \Illuminate\Support\Str::startsWith((string) ($m->content ?? ''), 'Nouvelle demande de réservation');
         });
       // Charger la réservation liée pour affichage de la carte
-      $conv = $conversationId ? \App\Models\Conversation::find($conversationId) : null;
+      $conv = $conversationId ? Conversation::find($conversationId) : null;
       $this->currentBooking = ($conv && $conv->booking_id) ? Booking::with('property.images')->find($conv->booking_id) : null;
     } else {
       $peerId = (int)$this->selectedUser['id'];

@@ -39,12 +39,6 @@
       <button wire:click="payWithCinetPayCard" type="button" class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-emerald-300 dark:border-emerald-700 bg-white dark:bg-gray-800 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20">
         <span>Carte bancaire (VISA / MasterCard)</span>
       </button>
-      <button type="button" disabled class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-900 text-gray-400 cursor-not-allowed">
-        <span>PayPal</span>
-      </button>
-      <button type="button" disabled class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-900 text-gray-400 cursor-not-allowed">
-        <span>Autres (bientôt)</span>
-      </button>
     </div>
   </div>
 </div>

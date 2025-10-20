@@ -99,9 +99,9 @@ class PaymentCheckout extends Component
         $iso2 = strtoupper(substr($rawCountry, 0, 2));
       }
 
-      $forceCard = (bool) config('cinetpay.force_card', false);
+      // Forcer l'univers de paiement par carte uniquement pour ce flux
       $overrides = [
-        'channels' => $forceCard ? 'CREDIT_CARD' : 'ALL',
+        'channels' => 'CREDIT_CARD',
         // Champs client recommandés pour CB (mettre des défauts si non disponibles)
         'customer_id' => (string) ($user?->id ?? $this->booking->user_id),
         'customer_surname' => $firstname,

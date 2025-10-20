@@ -6,6 +6,8 @@ return [
   'secret_key' => env('CINETPAY_SECRET_KEY'),
   'currency' => env('CINETPAY_CURRENCY', 'XOF'),
   'channels' => env('CINETPAY_CHANNELS', 'ALL'),
+  // Forcer le canal CB uniquement depuis l'env, sinon ALL (évite écran vide si CB non activé)
+  'force_card' => env('CINETPAY_FORCE_CREDIT_CARD', false),
   // Activer les routes de simulation (désactivé par défaut en production)
   'simulation_enabled' => env('CINETPAY_SIMULATION', env('APP_ENV') !== 'production'),
   // API base URL for initialization
@@ -15,4 +17,6 @@ return [
   // Callback URLs
   'notify_url' => env('CINETPAY_NOTIFY_URL', rtrim(env('APP_URL', ''), '/') . '/cinetpay/notify'),
   'return_url' => env('CINETPAY_RETURN_URL', rtrim(env('APP_URL', ''), '/') . '/cinetpay/return'),
+  // Pays ISO2 de votre compte CinetPay (utilisé pour l'univers CB)
+  'account_country' =>  env('CINETPAY_ACCOUNT_COUNTRY', 'CI'),
 ];

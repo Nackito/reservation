@@ -34,10 +34,10 @@
     <h2 class="text-sm uppercase tracking-wide text-gray-500 dark:text-gray-400">Moyens de paiement</h2>
     <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
       <button wire:click="payWithCinetPay" type="button" class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-50">
-        <span>Mobile Money / Cartes (CinetPay)</span>
+        <span>Mobile Money / Tous moyens (CinetPay)</span>
       </button>
-      <button type="button" disabled class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-900 text-gray-400 cursor-not-allowed">
-        <span>Carte VISA / MasterCard</span>
+      <button wire:click="payWithCinetPayCard" type="button" class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-emerald-300 dark:border-emerald-700 bg-white dark:bg-gray-800 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20">
+        <span>Carte bancaire (VISA / MasterCard)</span>
       </button>
       <button type="button" disabled class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-900 text-gray-400 cursor-not-allowed">
         <span>PayPal</span>

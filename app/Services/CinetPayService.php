@@ -89,7 +89,16 @@ class CinetPayService
     $result = ['success' => false];
     $apiKey = config('cinetpay.api_key');
     $siteId = config('cinetpay.site_id');
+    // Devise par défaut depuis la config; peut être forcée via overrides['currency']
     $currency = config('cinetpay.currency', 'XOF');
+    $allowed = (array) config('cinetpay.allowed_currencies', [$currency]);
+    $allowed = array_values(array_unique(array_map('strtoupper', array_map('trim', $allowed))));
+    if (isset($overrides['currency'])) {
+      $c = strtoupper(trim((string) $overrides['currency']));
+      if (preg_match('/^[A-Z]{3}$/', $c) && in_array($c, $allowed, true)) {
+        $currency = $c;
+      }
+    }
     $channels = config('cinetpay.channels', 'ALL');
     $initUrl = config('cinetpay.init_url');
     $returnUrl = config('cinetpay.return_url');
@@ -113,10 +122,18 @@ class CinetPayService
       $payload = $this->applyOverrides($payload, $overrides, $channels);
       // CinetPay exige que `metadata` soit une chaîne (et non un tableau)
       // On envoie une chaîne JSON compacte avec quelques infos utiles
-      $payload['metadata'] = json_encode([
+      $meta = [
         'app' => config('app.name', 'Afridayz'),
         'tx' => $transactionId,
-      ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+      ];
+      // Si on nous transmet des infos d'affichage (ex: devise affichée au client), on les ajoute
+      if (isset($overrides['display_currency'])) {
+        $meta['display_currency'] = strtoupper((string) $overrides['display_currency']);
+      }
+      if (isset($overrides['display_amount'])) {
+        $meta['display_amount'] = (float) $overrides['display_amount'];
+      }
+      $payload['metadata'] = json_encode($meta, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
       try {
         $resp = Http::timeout((int) config('cinetpay.timeout', 8))

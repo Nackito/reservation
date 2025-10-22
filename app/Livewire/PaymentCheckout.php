@@ -13,6 +13,61 @@ class PaymentCheckout extends Component
   public Booking $booking;
   public $amount;
 
+  /**
+   * Calcule les montants/devise pour affichage et pour l'appel API.
+   * - Le montant source ($this->amount) est en devise de base (config('cinetpay.currency'), XOF par défaut)
+   * - On tente de convertir vers la devise de l'utilisateur pour l'affichage
+   * - On utilise une liste blanche de devises autorisées pour l'API CinetPay; sinon, fallback à la devise de base
+   * Retour:
+   *   [
+   *     'amount_for_payment' => float|int,
+   *     'currency_for_payment' => string,
+   *     'display_amount' => float|int, // ce que l'on montre à l'utilisateur
+   *     'display_currency' => string,
+   *     'rate' => float|null,
+   *   ]
+   */
+  private function computePayAmountAndCurrency(): array
+  {
+    $baseCurrency = strtoupper((string) config('cinetpay.currency', 'XOF'));
+    $allowed = (array) config('cinetpay.allowed_currencies', [$baseCurrency]);
+    $allowed = array_values(array_unique(array_map('strtoupper', array_map('trim', $allowed))));
+    $user = $this->booking->user;
+    $userCurrency = strtoupper((string) ($user?->currency ?: $baseCurrency));
+
+    $rate = null;
+    $displayAmount = $this->amount;
+    $displayCurrency = $baseCurrency;
+
+    if ($userCurrency !== $baseCurrency) {
+      try {
+        /** @var \App\Livewire\BookingManager $bm */
+        $bm = app(\App\Livewire\BookingManager::class);
+        $rate = $bm->getExchangeRate($baseCurrency, $userCurrency);
+        if (is_numeric($rate) && (float) $rate > 0) {
+          $displayAmount = (float) $this->amount * (float) $rate;
+          $displayCurrency = $userCurrency;
+        } else {
+          $rate = null;
+        }
+      } catch (\Throwable $e) {
+        $rate = null;
+      }
+    }
+
+    // Devise réellement utilisée côté API: uniquement si autorisée, sinon devise de base
+    $currencyForPayment = in_array($userCurrency, $allowed, true) ? $userCurrency : $baseCurrency;
+    $amountForPayment = ($currencyForPayment === $baseCurrency) ? $this->amount : $displayAmount;
+
+    return [
+      'amount_for_payment' => $amountForPayment,
+      'currency_for_payment' => $currencyForPayment,
+      'display_amount' => $displayAmount,
+      'display_currency' => $displayCurrency,
+      'rate' => $rate !== null ? (float) $rate : null,
+    ];
+  }
+
   public function mount(Booking $booking)
   {
     // Autorisation: seul le propriétaire de la réservation (ou un admin) peut accéder
@@ -33,6 +88,8 @@ class PaymentCheckout extends Component
     try {
       /** @var CinetPayService $cinetpay */
       $cinetpay = app(CinetPayService::class);
+      // Déterminer montant/devise à utiliser
+      $pay = $this->computePayAmountAndCurrency();
       // Générer/attribuer une transaction
       $txId = 'BK-' . $this->booking->id . '-' . time();
       $this->booking->payment_transaction_id = $txId;
@@ -42,17 +99,24 @@ class PaymentCheckout extends Component
       $desc = 'Paiement reservation ' . $this->booking->id;
       $resp = $cinetpay->initPayment(
         $txId,
-        $this->amount,
+        $pay['amount_for_payment'],
         $desc,
         $this->booking->user?->name,
         $this->booking->user?->email,
-        $this->booking->user?->phone ?? null
+        $this->booking->user?->phone ?? null,
+        [
+          'currency' => $pay['currency_for_payment'],
+          // Conserver la devise affichée dans les métadonnées pour réconciliation éventuelle
+          'display_currency' => $pay['display_currency'],
+          'display_amount' => $pay['display_amount'],
+        ]
       );
       if (!empty($resp['success']) && !empty($resp['url'])) {
         Log::debug('CinetPay CB init success', [
           'txId' => $txId,
           'booking_id' => $this->booking->id,
           'url' => $resp['url'],
+          'currency' => $pay['currency_for_payment'] ?? null,
         ]);
         return redirect()->away($resp['url']);
       }
@@ -70,6 +134,8 @@ class PaymentCheckout extends Component
     try {
       /** @var CinetPayService $cinetpay */
       $cinetpay = app(CinetPayService::class);
+      // Déterminer montant/devise à utiliser
+      $pay = $this->computePayAmountAndCurrency();
       $txId = 'BK-' . $this->booking->id . '-' . time();
       $this->booking->payment_transaction_id = $txId;
       $this->booking->payment_status = 'pending';
@@ -119,9 +185,13 @@ class PaymentCheckout extends Component
         'overrides' => collect($overrides)->only(['channels', 'customer_country', 'customer_state', 'customer_city', 'customer_zip_code', 'customer_address'])->toArray(),
       ]);
 
+      // Ajouter la devise choisie pour l'API + infos d'affichage
+      $overrides['currency'] = $pay['currency_for_payment'];
+      $overrides['display_currency'] = $pay['display_currency'];
+      $overrides['display_amount'] = $pay['display_amount'];
       $resp = $cinetpay->initPayment(
         $txId,
-        $this->amount,
+        $pay['amount_for_payment'],
         $desc,
         $name,
         $user?->email,
@@ -136,6 +206,7 @@ class PaymentCheckout extends Component
         'booking_id' => $this->booking->id,
         'error' => $resp['error'] ?? null,
         'api_response' => $resp['response'] ?? null,
+        'currency' => $pay['currency_for_payment'] ?? null,
       ]);
       $apiMsg = (string) (data_get($resp, 'response.message') ?? data_get($resp, 'response.description') ?? $resp['error'] ?? '');
       session()->flash('error', 'Impossible d’ouvrir le guichet CB pour le moment.' . ($apiMsg ? ' Détail: ' . $apiMsg : ''));

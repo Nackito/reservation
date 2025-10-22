@@ -5,6 +5,13 @@ return [
   'site_id' => env('CINETPAY_SITE_ID'),
   'secret_key' => env('CINETPAY_SECRET_KEY'),
   'currency' => env('CINETPAY_CURRENCY', 'XOF'),
+  // Liste blanche des devises autorisées par le compte marchand.
+  // Par défaut, on restreint à la devise principale du compte.
+  // Pour en autoriser plusieurs: CINETPAY_ALLOWED_CURRENCIES="XOF,USD,EUR"
+  'allowed_currencies' => array_values(array_filter(array_map(
+    'strtoupper',
+    array_map('trim', explode(',', env('CINETPAY_ALLOWED_CURRENCIES', env('CINETPAY_CURRENCY', 'XOF'))))
+  ))),
   'channels' => env('CINETPAY_CHANNELS', 'ALL'),
   // Forcer le canal CB uniquement depuis l'env, sinon ALL (évite écran vide si CB non activé)
   'force_card' => env('CINETPAY_FORCE_CREDIT_CARD', false),

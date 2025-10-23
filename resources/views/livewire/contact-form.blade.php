@@ -125,14 +125,14 @@
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">Localisation précise</label>
               <p class="text-xs text-gray-500 mb-3">Cliquez sur la carte pour indiquer l'emplacement exact de votre établissement</p>
-              
+
               {{-- Carte Leaflet --}}
               <div id="map" style="height: 400px; width: 100%;" class="rounded-lg border border-gray-300"></div>
-              
+
               {{-- Coordonnées (cachées) --}}
               <input type="hidden" wire:model="latitude" id="latitude">
               <input type="hidden" wire:model="longitude" id="longitude">
-              
+
               {{-- Affichage des coordonnées --}}
               <div class="mt-2 text-xs text-gray-600">
                 <span id="coordinates-display">Coordonnées: Non sélectionnées</span>
@@ -297,56 +297,56 @@
 
   {{-- Leaflet JavaScript --}}
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  
+
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       // Initialiser la carte centrée sur Abidjan, Côte d'Ivoire
       const map = L.map('map').setView([5.3600, -4.0083], 10);
-      
+
       // Ajouter les tuiles OpenStreetMap
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors'
       }).addTo(map);
-      
+
       let marker = null;
-      
+
       // Fonction pour mettre à jour les coordonnées
       function updateCoordinates(lat, lng) {
         // Déclencher l'événement Livewire
         @this.set('latitude', lat);
         @this.set('longitude', lng);
-        
+
         // Mettre à jour l'affichage
-        document.getElementById('coordinates-display').textContent = 
+        document.getElementById('coordinates-display').textContent =
           `Coordonnées: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
       }
-      
+
       // Gestionnaire de clic sur la carte
       map.on('click', function(e) {
         const lat = e.latlng.lat;
         const lng = e.latlng.lng;
-        
+
         // Supprimer le marqueur précédent
         if (marker) {
           map.removeLayer(marker);
         }
-        
+
         // Ajouter le nouveau marqueur
         marker = L.marker([lat, lng]).addTo(map);
-        
+
         // Mettre à jour les coordonnées
         updateCoordinates(lat, lng);
       });
-      
+
       // Geocoding avec l'adresse
       const adresseInput = document.getElementById('adresse');
       if (adresseInput) {
         let geocodeTimeout;
-        
+
         adresseInput.addEventListener('input', function() {
           clearTimeout(geocodeTimeout);
           const adresse = this.value.trim();
-          
+
           if (adresse && adresse.length > 10) {
             // Débouncer pour éviter trop de requêtes
             geocodeTimeout = setTimeout(() => {
@@ -355,11 +355,11 @@
           }
         });
       }
-      
+
       function geocodeAddress(address) {
         // Utiliser Nominatim pour le géocodage gratuit
         const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address + ', Côte d\'Ivoire')}&limit=1`;
-        
+
         fetch(url)
           .then(response => response.json())
           .then(data => {
@@ -367,18 +367,18 @@
               const result = data[0];
               const lat = parseFloat(result.lat);
               const lng = parseFloat(result.lon);
-              
+
               // Centrer la carte sur le résultat
               map.setView([lat, lng], 15);
-              
+
               // Supprimer le marqueur précédent
               if (marker) {
                 map.removeLayer(marker);
               }
-              
+
               // Ajouter le marqueur
               marker = L.marker([lat, lng]).addTo(map);
-              
+
               // Mettre à jour les coordonnées
               updateCoordinates(lat, lng);
             }
@@ -387,25 +387,28 @@
             console.log('Géocodage impossible:', error);
           });
       }
-      
+
       // Écouter les événements Livewire pour la mise à jour des coordonnées
       window.addEventListener('coordinates-updated', function(event) {
-        const { latitude, longitude } = event.detail;
-        
+        const {
+          latitude,
+          longitude
+        } = event.detail;
+
         if (latitude && longitude) {
           // Centrer la carte
           map.setView([latitude, longitude], 15);
-          
+
           // Supprimer le marqueur précédent
           if (marker) {
             map.removeLayer(marker);
           }
-          
+
           // Ajouter le marqueur
           marker = L.marker([latitude, longitude]).addTo(map);
-          
+
           // Mettre à jour l'affichage
-          document.getElementById('coordinates-display').textContent = 
+          document.getElementById('coordinates-display').textContent =
             `Coordonnées: ${latitude.toFixed(6)}, ${longitude.toFixed(6)} (géocodées)`;
         }
       });

@@ -23,3 +23,9 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
+
+# Ensure correct MIME type for Web App Manifest
+<IfModule mod_mime.c>
+    AddType application/manifest+json .webmanifest
+    AddCharset UTF-8 .webmanifest
+</IfModule>

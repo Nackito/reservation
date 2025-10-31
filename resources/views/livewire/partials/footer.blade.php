@@ -1,7 +1,7 @@
 <div>
 
     <!-- Footer mobile de navigation rapide, visible uniquement sur mobile -->
-    <nav class="w-full flex-shrink-0 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border-t border-gray-200 dark:border-gray-700 shadow-lg flex justify-between items-center px-6 py-2 md:hidden fixed inset-x-0 bottom-0 z-50" style="padding-bottom: env(safe-area-inset-bottom);">
+    <nav class="w-full flex-shrink-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 shadow-sm flex justify-between items-center px-6 py-2 md:hidden fixed inset-x-0 bottom-0 z-50" style="padding-bottom: env(safe-area-inset-bottom);">
         <a href="{{ route('home') }}" class="flex flex-col items-center text-gray-500 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition">
             <i class="fas fa-search text-xl"></i>
             <span class="text-xs">Recherche</span>

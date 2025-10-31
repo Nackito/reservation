@@ -1,5 +1,5 @@
 <div class="livewire-navbar-root">
-    <header class="flex z-[9999] fixed inset-x-0 top-0 md:sticky md:top-0 flex-wrap md:justify-start md:flex-nowrap w-full bg-white/90 md:bg-white text-sm py-3 md:py-0 dark:bg-gray-800/90 md:dark:bg-gray-800 backdrop-blur-md md:backdrop-blur-none shadow-md" style="padding-top: env(safe-area-inset-top);">
+    <header class="flex z-[9999] fixed inset-x-0 top-0 md:sticky md:top-0 flex-wrap md:justify-start md:flex-nowrap w-full bg-white md:bg-white text-sm py-3 md:py-0 dark:bg-gray-800 md:dark:bg-gray-800 shadow-sm" style="padding-top: env(safe-area-inset-top);">
         <nav class="max-w-[85rem] w-full mx-auto px-4 md:px-6 lg:px-8" aria-label="Global">
             <div class="relative md:flex md:items-center md:justify-between">
                 <div class="flex items-center justify-between">

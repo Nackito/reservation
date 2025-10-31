@@ -38,11 +38,28 @@ function init(lat, lng, label = "Résidence") {
             : 11;
 
     const map = L.map("map").setView([centerLat, centerLng], zoom);
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        maxZoom: 19,
-        attribution:
-            '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    }).addTo(map);
+    const tilesUrl =
+        typeof import.meta !== "undefined" &&
+        import.meta.env &&
+        import.meta.env.VITE_MAP_TILES_URL
+            ? import.meta.env.VITE_MAP_TILES_URL
+            : typeof import.meta !== "undefined" &&
+              import.meta.env &&
+              import.meta.env.VITE_MAP_TILER_KEY
+            ? `https://api.maptiler.com/maps/streets-v2/256/{z}/{x}/{y}.png?key=${
+                  import.meta.env.VITE_MAP_TILER_KEY
+              }`
+            : "https://tile.openstreetmap.org/{z}/{x}/{y}.png"; // fallback (peut être bloqué sur APK)
+
+    const tilesAttribution =
+        typeof import.meta !== "undefined" &&
+        import.meta.env &&
+        import.meta.env.VITE_MAP_TILES_ATTRIBUTION
+            ? import.meta.env.VITE_MAP_TILES_ATTRIBUTION
+            : "&copy; MapTiler &copy; OpenStreetMap contributors";
+
+    const layerOptions = { maxZoom: 20, attribution: tilesAttribution };
+    L.tileLayer(tilesUrl, layerOptions).addTo(map);
 
     if (
         typeof lat === "number" &&

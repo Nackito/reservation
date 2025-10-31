@@ -303,10 +303,30 @@
       // Initialiser la carte centrée sur Abidjan, Côte d'Ivoire
       const map = L.map('map').setView([5.3600, -4.0083], 10);
 
-      // Ajouter les tuiles OpenStreetMap
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
-      }).addTo(map);
+      // Config des tuiles via env/config (privilégie un fournisseur compatible APK)
+      @php
+      $mapTilesUrl = config('services.maptiler.tiles_url');
+      $mapTilerKey = config('services.maptiler.key');
+      $mapAttribution = config('services.maptiler.attribution', '© MapTiler © OpenStreetMap contributors');
+      $computedUrl = $mapTilesUrl ? : (
+        $mapTilerKey ?
+        ("https://api.maptiler.com/maps/streets-v2/256/{z}/{x}/{y}.png?key=".$mapTilerKey) :
+        'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
+      );
+      @endphp
+
+      const tilesUrl = {
+        !!json_encode($computedUrl) !!
+      };
+      const tilesAttribution = {
+        !!json_encode($mapAttribution ? : '© MapTiler © OpenStreetMap contributors') !!
+      };
+      const layerOptions = {
+        maxZoom: 20,
+        attribution: tilesAttribution
+      };
+      // Pas d'ajustement nécessaire avec les tuiles 256px
+      L.tileLayer(tilesUrl, layerOptions).addTo(map);
 
       let marker = null;
 

@@ -45,4 +45,11 @@
             'key' => env('EXCHANGERATE_API_KEY'),
         ],
 
+        // Cartes: fournisseur recommandé pour APK / mobile (évite le blocage OSM)
+        'maptiler' => [
+            'key' => env('MAP_TILER_KEY'),
+            'tiles_url' => env('MAP_TILES_URL'),
+            'attribution' => env('MAP_TILES_ATTRIBUTION', '© MapTiler © OpenStreetMap contributors'),
+        ],
+
     ];

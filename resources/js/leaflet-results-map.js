@@ -66,10 +66,26 @@ function initResultsMap(el) {
             [data.center.lat, data.center.lng],
             data.zoom || 12
         );
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-            maxZoom: 19,
-            attribution: "&copy; OpenStreetMap",
-        }).addTo(map);
+        const tilesUrl =
+            typeof import.meta !== "undefined" &&
+            import.meta.env &&
+            import.meta.env.VITE_MAP_TILES_URL
+                ? import.meta.env.VITE_MAP_TILES_URL
+                : typeof import.meta !== "undefined" &&
+                  import.meta.env &&
+                  import.meta.env.VITE_MAP_TILER_KEY
+                ? `https://api.maptiler.com/maps/streets-v2/256/{z}/{x}/{y}.png?key=${
+                      import.meta.env.VITE_MAP_TILER_KEY
+                  }`
+                : "https://tile.openstreetmap.org/{z}/{x}/{y}.png"; // fallback
+        const tilesAttribution =
+            typeof import.meta !== "undefined" &&
+            import.meta.env &&
+            import.meta.env.VITE_MAP_TILES_ATTRIBUTION
+                ? import.meta.env.VITE_MAP_TILES_ATTRIBUTION
+                : "&copy; MapTiler &copy; OpenStreetMap contributors";
+        const layerOptions = { maxZoom: 20, attribution: tilesAttribution };
+        L.tileLayer(tilesUrl, layerOptions).addTo(map);
 
         const markers = [];
         (data.markers || []).forEach((m) => {

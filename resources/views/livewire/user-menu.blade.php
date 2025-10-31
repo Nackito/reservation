@@ -40,6 +40,13 @@
       </div>
 
       <!-- Bouton Se déconnecter -->
+      <!-- Lien mobile: Politique de confidentialité (visible uniquement sur mobile) -->
+      <a class="font-medium text-gray-500 py-3 md:py-6 dark:text-blue-500 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600 md:hidden flex items-center gap-2 w-full px-4 rounded-lg border border-gray-200 bg-gray-50 hover:bg-gray-100 transition" href="{{ route('privacy') }}">
+        <i class="fas fa-user-shield mr-2"></i>
+        Politique de confidentialité
+      </a>
+
+      <!-- Bouton Se déconnecter -->
       <form id="logout-form-mobile" action="{{ route('logout') }}" method="POST">
         @csrf
         <button type="submit" class="w-full px-4 py-3 rounded-lg bg-gray-600 text-white font-semibold hover:bg-gray-700 transition"><i class="fas fa-sign-out-alt mr-2"></i>Se déconnecter</button>

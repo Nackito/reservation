@@ -47,6 +47,7 @@
                     <div class="mt-3 grid space-y-3">
                         <p><a class="inline-flex gap-x-2 text-gray-400 dark:text-gray-400 hover:text-gray-200 dark:hover:text-gray-200 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600" href="#">A propos de nous</a></p>
                         <p><a class="inline-flex gap-x-2 text-gray-400 dark:text-gray-400 hover:text-gray-200 dark:hover:text-gray-200 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600" href="#">Blog</a></p>
+                        <p><a class="inline-flex gap-x-2 text-gray-400 dark:text-gray-400 hover:text-gray-200 dark:hover:text-gray-200 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600" href="{{ route('privacy') }}">Politique de confidentialité</a></p>
                     </div>
                 </div>
                 <!-- End Col -->

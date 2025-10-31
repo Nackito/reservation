@@ -112,6 +112,9 @@ Route::post('/preferences/currency', [PreferencesController::class, 'updateCurre
 Route::get('/preferences/display', [PreferencesController::class, 'display'])->name('preferences.display');
 Route::post('/preferences/display', [PreferencesController::class, 'updateDisplay'])->name('preferences.display.update');
 
+// Page statique: Politique de confidentialité
+Route::view('/privacy-policy', 'privacy')->name('privacy');
+
 
 // Routes pour la double authentification
 Route::middleware(['auth'])->post('/two-factor/enable', function () {

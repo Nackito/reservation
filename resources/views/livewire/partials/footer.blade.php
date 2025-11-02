@@ -1,7 +1,7 @@
 <div>
 
     <!-- Footer mobile de navigation rapide, visible uniquement sur mobile -->
-    <nav class="w-full flex-shrink-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 shadow-sm flex justify-between items-center px-6 py-2 md:hidden fixed inset-x-0 bottom-0 z-50" style="padding-bottom: env(safe-area-inset-bottom);">
+    <nav class="w-full flex-shrink-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 shadow-sm flex justify-between items-center px-6 py-2 md:hidden fixed inset-x-0 z-50" style="bottom: calc(env(safe-area-inset-bottom) + 32px);">
         <a href="{{ route('home') }}" class="flex flex-col items-center text-gray-500 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition">
             <i class="fas fa-search text-xl"></i>
             <span class="text-xs">Recherche</span>
@@ -20,6 +20,11 @@
             <span class="text-xs">Profil</span>
         </a>
     </nav>
+
+    <!-- Scrim noir sous le footer pour masquer la zone des boutons système (mobile seulement) -->
+    <div class="md:hidden" aria-hidden="true" style="position: fixed; left: 0; right: 0; bottom: 0; height: calc(env(safe-area-inset-bottom) + 42px); background: #000; z-index: 40; pointer-events: none;"></div>
+    <!-- Scrim noir entre le footer et la barre système (pousse le footer au-dessus des boutons) -->
+    <div class="md:hidden" aria-hidden="true" style="position: fixed; left: 0; right: 0; bottom: 0; height: calc(env(safe-area-inset-bottom) + 24px); background: #000; z-index: 40; pointer-events: none;"></div>
     <!-- Spacer pour éviter que le contenu soit masqué par la nav fixe sur mobile -->
     <div class="md:hidden" style="height: calc(56px + env(safe-area-inset-bottom));"></div>
     <footer class="bg-gray-900 dark:bg-gray-900 w-full hidden md:block">

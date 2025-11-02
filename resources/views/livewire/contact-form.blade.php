@@ -166,6 +166,7 @@
                     el._leaflet_map = map;
 
                     var marker;
+                    var accuracyCircle;
                     map.on('click', function(e) {
                       var lat = e.latlng.lat.toFixed(6);
                       var lng = e.latlng.lng.toFixed(6);
@@ -176,6 +177,13 @@
                         marker = L.marker(e.latlng).addTo(map);
                       }
 
+                      if (accuracyCircle) {
+                        try {
+                          map.removeLayer(accuracyCircle);
+                        } catch (_) {}
+                        accuracyCircle = null;
+                      }
+
                       var latEl = document.getElementById('latitude');
                       var lngEl = document.getElementById('longitude');
                       var disp = document.getElementById('coordinates-display');
@@ -183,6 +191,110 @@
                       if (lngEl) lngEl.value = lng;
                       if (disp) disp.innerText = 'Coordonnées: ' + lat + ', ' + lng;
                     });
+
+                    // === Géolocalisation (GPS) ===
+                    function onLocationFound(e) {
+                      var lat = e.latlng.lat.toFixed(6);
+                      var lng = e.latlng.lng.toFixed(6);
+
+                      if (marker) {
+                        marker.setLatLng(e.latlng);
+                      } else {
+                        marker = L.marker(e.latlng).addTo(map);
+                      }
+
+                      if (accuracyCircle) {
+                        try {
+                          map.removeLayer(accuracyCircle);
+                        } catch (_) {}
+                      }
+                      // Afficher un cercle d'accuracy si disponible
+                      if (typeof e.accuracy === 'number') {
+                        accuracyCircle = L.circle(e.latlng, {
+                          radius: e.accuracy,
+                          color: '#3b82f6',
+                          fillColor: '#3b82f6',
+                          fillOpacity: 0.1
+                        });
+                        accuracyCircle.addTo(map);
+                      } else {
+                        accuracyCircle = null;
+                      }
+
+                      var latEl = document.getElementById('latitude');
+                      var lngEl = document.getElementById('longitude');
+                      var disp = document.getElementById('coordinates-display');
+                      if (latEl) latEl.value = lat;
+                      if (lngEl) lngEl.value = lng;
+                      if (disp) disp.innerText = 'Coordonnées (GPS): ' + lat + ', ' + lng;
+
+                      try {
+                        map.setView(e.latlng, Math.max(map.getZoom(), 15));
+                      } catch (_) {}
+                    }
+
+                    function onLocationError(err) {
+                      var disp = document.getElementById('coordinates-display');
+                      if (disp) disp.innerText = 'Localisation impossible: ' + (err && err.message ? err.message : 'permission refusée ou contexte non sécurisé');
+                    }
+
+                    function tryGeolocate() {
+                      if (!navigator.geolocation) {
+                        onLocationError({
+                          message: 'Géolocalisation non supportée par le navigateur'
+                        });
+                        return;
+                      }
+                      // Utiliser l’API interne de Leaflet (basée sur navigator.geolocation)
+                      try {
+                        map.locate({
+                          setView: false,
+                          enableHighAccuracy: true,
+                          maximumAge: 10000,
+                          timeout: 8000
+                        });
+                      } catch (_) {
+                        // Fallback direct
+                        navigator.geolocation.getCurrentPosition(function(pos) {
+                          onLocationFound({
+                            latlng: L.latLng(pos.coords.latitude, pos.coords.longitude),
+                            accuracy: pos.coords.accuracy
+                          });
+                        }, onLocationError, {
+                          enableHighAccuracy: true,
+                          maximumAge: 10000,
+                          timeout: 8000
+                        });
+                      }
+                    }
+
+                    map.on('locationfound', onLocationFound);
+                    map.on('locationerror', onLocationError);
+
+                    // Bouton de contrôle Leaflet pour se localiser
+                    var LocateControl = L.Control.extend({
+                      options: {
+                        position: 'topleft'
+                      },
+                      onAdd: function() {
+                        var btn = L.DomUtil.create('button', 'leaflet-bar leaflet-control');
+                        btn.type = 'button';
+                        btn.title = 'Me localiser';
+                        btn.innerHTML = '📍';
+                        btn.style.width = '34px';
+                        btn.style.height = '34px';
+                        btn.style.lineHeight = '30px';
+                        btn.style.fontSize = '18px';
+                        btn.style.cursor = 'pointer';
+                        L.DomEvent.on(btn, 'click', function(ev) {
+                          L.DomEvent.stopPropagation(ev);
+                          L.DomEvent.preventDefault(ev);
+                          tryGeolocate();
+                        });
+                        return btn;
+                      }
+                    });
+                    map.addControl(new LocateControl());
 
                     // Sécuriser le rendu (si container caché au montage)
                     setTimeout(function() {

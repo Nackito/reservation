@@ -47,8 +47,12 @@
 
         // Cartes: fournisseur recommandé pour APK / mobile (évite le blocage OSM)
         'maptiler' => [
-            'key' => env('MAP_TILER_KEY'),
-            'tiles_url' => env('MAP_TILES_URL'),
+            // Utiliser la clé front si la clé serveur n'est pas définie
+            'key' => env('MAP_TILER_KEY', env('VITE_MAP_TILER_KEY')),
+            // URL des tuiles: utilise celle du serveur si définie, sinon construite avec la clé disponible
+            'tiles_url' => (env('MAP_TILES_URL') ?: (env('MAP_TILER_KEY', env('VITE_MAP_TILER_KEY'))
+                ? ('https://api.maptiler.com/maps/streets-v2/256/{z}/{x}/{y}.png?key=' . env('MAP_TILER_KEY', env('VITE_MAP_TILER_KEY')))
+                : null)),
             'attribution' => env('MAP_TILES_ATTRIBUTION', '© MapTiler © OpenStreetMap contributors'),
         ],
 

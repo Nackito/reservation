@@ -175,4 +175,6 @@ if (config('cinetpay.simulation_enabled')) {
             Route::post('/cancel', [\App\Http\Controllers\CinetPayController::class, 'simulateCancel'])
                 ->name('cancel');
         });
+
+    Route::get('/map', [\App\Http\Controllers\MapController::class, 'show'])->name('map.show');
 }

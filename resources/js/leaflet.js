@@ -38,18 +38,17 @@ function init(lat, lng, label = "Résidence") {
             : 11;
 
     const map = L.map("map").setView([centerLat, centerLng], zoom);
+    // Forcer l'utilisation de MapTiler (pas de fallback OSM pour éviter les blocages APK)
     const tilesUrl =
         typeof import.meta !== "undefined" &&
         import.meta.env &&
-        import.meta.env.VITE_MAP_TILES_URL
-            ? import.meta.env.VITE_MAP_TILES_URL
-            : typeof import.meta !== "undefined" &&
-              import.meta.env &&
-              import.meta.env.VITE_MAP_TILER_KEY
-            ? `https://api.maptiler.com/maps/streets-v2/256/{z}/{x}/{y}.png?key=${
+        (import.meta.env.VITE_MAP_TILES_URL ||
+            import.meta.env.VITE_MAP_TILER_KEY)
+            ? import.meta.env.VITE_MAP_TILES_URL ||
+              `https://api.maptiler.com/maps/streets-v2/256/{z}/{x}/{y}.png?key=${
                   import.meta.env.VITE_MAP_TILER_KEY
               }`
-            : "https://tile.openstreetmap.org/{z}/{x}/{y}.png"; // fallback (peut être bloqué sur APK)
+            : "about:blank"; // si aucune clé n'est fournie, on n'appelle aucun serveur de tuiles
 
     const tilesAttribution =
         typeof import.meta !== "undefined" &&

@@ -66,18 +66,17 @@ function initResultsMap(el) {
             [data.center.lat, data.center.lng],
             data.zoom || 12
         );
+        // Forcer MapTiler uniquement (pas de fallback OSM)
         const tilesUrl =
             typeof import.meta !== "undefined" &&
             import.meta.env &&
-            import.meta.env.VITE_MAP_TILES_URL
-                ? import.meta.env.VITE_MAP_TILES_URL
-                : typeof import.meta !== "undefined" &&
-                  import.meta.env &&
-                  import.meta.env.VITE_MAP_TILER_KEY
-                ? `https://api.maptiler.com/maps/streets-v2/256/{z}/{x}/{y}.png?key=${
+            (import.meta.env.VITE_MAP_TILES_URL ||
+                import.meta.env.VITE_MAP_TILER_KEY)
+                ? import.meta.env.VITE_MAP_TILES_URL ||
+                  `https://api.maptiler.com/maps/streets-v2/256/{z}/{x}/{y}.png?key=${
                       import.meta.env.VITE_MAP_TILER_KEY
                   }`
-                : "https://tile.openstreetmap.org/{z}/{x}/{y}.png"; // fallback
+                : "about:blank";
         const tilesAttribution =
             typeof import.meta !== "undefined" &&
             import.meta.env &&

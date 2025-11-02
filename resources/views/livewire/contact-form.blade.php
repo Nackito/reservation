@@ -153,8 +153,8 @@
 
                     el.dataset.initialized = '1';
 
-                    // Vue initiale (Afrique de l'Ouest)
-                    var map = L.map(el).setView([5.0, -5.0], 6);
+                    // Vue initiale centrée sur Abidjan, Côte d'Ivoire
+                    var map = L.map(el).setView([5.3600, -4.0083], 12);
 
                     // Tuiles MapTiler (provenant de la config Laravel)
                     L.tileLayer(@json($mapTilerTilesUrl), {

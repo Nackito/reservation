@@ -7,10 +7,56 @@
         body {
             overflow-x: hidden !important;
         }
+
+        /* Par défaut, footer collé en bas */
+        .footer-mobile {
+            bottom: 0;
+        }
+
+        /* Quand la page est affichée dans l'APK/WebView, on expose la variable et on décale le footer */
+        html.webview {
+            --apk-offset-bottom: 40px;
+        }
+
+        html.webview .footer-mobile {
+            bottom: calc(env(safe-area-inset-bottom) + var(--apk-offset-bottom));
+        }
+
+        html.webview .mobile-scrim {
+            display: block;
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: calc(env(safe-area-inset-bottom) + var(--apk-offset-bottom));
+            background: #000;
+            z-index: 40;
+            pointer-events: none;
+        }
+
+        .mobile-scrim {
+            display: none;
+        }
     </style>
 
+    <script>
+        // Détection légère d'un WebView Android et ajout de la classe html.webview
+        (function() {
+            try {
+                var ua = navigator.userAgent || '';
+                var android = /Android/i.test(ua);
+                var isWv = /\bwv\b/i.test(ua) || /Version\/\d+\.\d+/i.test(ua);
+                var bridge = !!(window.ReactNativeWebView || window.AndroidInterface || window.flutter_inappwebview || window.cordova || window.Capacitor);
+                var noChrome = android && !/Chrome\//i.test(ua);
+                if (android && (isWv || bridge || noChrome)) {
+                    document.documentElement.classList.add('webview');
+                }
+            } catch (e) {}
+        })();
+    </script>
+
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <!-- WebView & mobile friendly -->
     <meta name="theme-color" content="#2563eb">

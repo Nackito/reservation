@@ -1559,7 +1559,9 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                     </svg>
                 </button>
-                <img id="galleryMainImage" src="{{ $firstImg }}" alt="{{ $property->name ?? 'Image' }}" class="max-h-[80vh] w-full max-w-full h-auto object-contain rounded-lg" />
+                <div id="galleryZoom" class="relative w-full max-h-[80vh] overflow-hidden touch-none">
+                    <img id="galleryMainImage" src="{{ $firstImg }}" alt="{{ $property->name ?? 'Image' }}" class="max-h-[80vh] w-full max-w-full h-auto object-contain rounded-lg select-none" />
+                </div>
                 <button type="button" onclick="window.galleryNext()" class="hidden md:flex absolute right-2 top-1/2 -translate-y-1/2 bg-white/70 hover:bg-white text-gray-800 rounded-full p-2 shadow">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
@@ -1599,6 +1601,18 @@
                     let touchStartX = 0,
                         touchStartY = 0,
                         touchMoved = false;
+                    // Zoom/Pan state
+                    let scale = 1,
+                        minScale = 1,
+                        maxScale = 4;
+                    let tx = 0,
+                        ty = 0; // translation
+                    let isDragging = false,
+                        dragStartX = 0,
+                        dragStartY = 0,
+                        dragStartTx = 0,
+                        dragStartTy = 0;
+                    let lastTapTime = 0;
 
                     function collectImages() {
                         const thumbs = document.querySelectorAll('#photoGalleryModal #galleryThumbs img.thumb');
@@ -1642,6 +1656,176 @@
                         modal.classList.add('hidden');
                     };
 
+                    // ----- Zoom & Pan Logic -----
+                    const zoomContainer = document.getElementById('galleryZoom');
+                    const imgEl = document.getElementById('galleryMainImage');
+
+                    function applyTransform(animate = false) {
+                        if (!imgEl) return;
+                        imgEl.style.transition = animate ? 'transform .15s ease-out' : 'transform 0s';
+                        imgEl.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+                        if (scale > 1.01) {
+                            zoomContainer && zoomContainer.classList.add('cursor-grab');
+                        } else {
+                            zoomContainer && zoomContainer.classList.remove('cursor-grab', 'cursor-grabbing');
+                        }
+                    }
+
+                    function resetZoom() {
+                        scale = 1;
+                        tx = 0;
+                        ty = 0;
+                        applyTransform(true);
+                    }
+
+                    function setScaleAtPoint(targetScale, clientX, clientY) {
+                        if (!zoomContainer || !imgEl) return;
+                        const rect = zoomContainer.getBoundingClientRect();
+                        const cx = clientX - rect.left;
+                        const cy = clientY - rect.top;
+                        const ix = (cx - tx) / scale;
+                        const iy = (cy - ty) / scale;
+                        scale = Math.min(maxScale, Math.max(minScale, targetScale));
+                        tx = cx - ix * scale;
+                        ty = cy - iy * scale;
+                        applyTransform();
+                    }
+
+                    // Wheel zoom (desktop)
+                    if (zoomContainer) {
+                        zoomContainer.addEventListener('wheel', (e) => {
+                            e.preventDefault();
+                            const factor = Math.exp(-e.deltaY * 0.0015);
+                            setScaleAtPoint(scale * factor, e.clientX, e.clientY);
+                        }, {
+                            passive: false
+                        });
+
+                        // Double click toggle zoom
+                        zoomContainer.addEventListener('dblclick', (e) => {
+                            e.preventDefault();
+                            if (scale > 1.01) resetZoom();
+                            else setScaleAtPoint(2, e.clientX, e.clientY);
+                        });
+
+                        // Drag pan (desktop)
+                        zoomContainer.addEventListener('mousedown', (e) => {
+                            if (scale <= 1.01) return;
+                            isDragging = true;
+                            dragStartX = e.clientX;
+                            dragStartY = e.clientY;
+                            dragStartTx = tx;
+                            dragStartTy = ty;
+                            zoomContainer.classList.add('cursor-grabbing');
+                            e.preventDefault();
+                        });
+                        window.addEventListener('mousemove', (e) => {
+                            if (!isDragging) return;
+                            tx = dragStartTx + (e.clientX - dragStartX);
+                            ty = dragStartTy + (e.clientY - dragStartY);
+                            applyTransform();
+                        });
+                        window.addEventListener('mouseup', () => {
+                            if (isDragging) {
+                                isDragging = false;
+                                zoomContainer.classList.remove('cursor-grabbing');
+                            }
+                        });
+
+                        // Mobile: double-tap to toggle zoom
+                        zoomContainer.addEventListener('touchend', (e) => {
+                            if (e.touches.length === 0 && e.changedTouches && e.changedTouches.length === 1) {
+                                const now = Date.now();
+                                if (now - lastTapTime < 300) {
+                                    const t = e.changedTouches[0];
+                                    if (scale > 1.01) resetZoom();
+                                    else setScaleAtPoint(2, t.clientX, t.clientY);
+                                }
+                                lastTapTime = now;
+                            }
+                        }, {
+                            passive: true
+                        });
+
+                        // One-finger pan
+                        zoomContainer.addEventListener('touchstart', (e) => {
+                            if (e.touches.length === 1 && scale > 1.01) {
+                                const t = e.touches[0];
+                                isDragging = true;
+                                dragStartX = t.clientX;
+                                dragStartY = t.clientY;
+                                dragStartTx = tx;
+                                dragStartTy = ty;
+                            }
+                        }, {
+                            passive: true
+                        });
+                        zoomContainer.addEventListener('touchmove', (e) => {
+                            if (e.touches.length === 1 && isDragging && scale > 1.01) {
+                                const t = e.touches[0];
+                                tx = dragStartTx + (t.clientX - dragStartX);
+                                ty = dragStartTy + (t.clientY - dragStartY);
+                                applyTransform();
+                                e.preventDefault();
+                            }
+                        }, {
+                            passive: false
+                        });
+                        zoomContainer.addEventListener('touchcancel', () => {
+                            isDragging = false;
+                        }, {
+                            passive: true
+                        });
+                        zoomContainer.addEventListener('touchend', () => {
+                            isDragging = false;
+                        }, {
+                            passive: true
+                        });
+
+                        // Two-finger pinch zoom
+                        let pinchStartDist = 0,
+                            pinchStartScale = 1;
+
+                        function dist(a, b) {
+                            const dx = a.clientX - b.clientX;
+                            const dy = a.clientY - b.clientY;
+                            return Math.hypot(dx, dy);
+                        }
+
+                        function center(a, b) {
+                            return {
+                                x: (a.clientX + b.clientX) / 2,
+                                y: (a.clientY + b.clientY) / 2
+                            };
+                        }
+                        zoomContainer.addEventListener('touchstart', (e) => {
+                            if (e.touches.length === 2) {
+                                pinchStartDist = dist(e.touches[0], e.touches[1]);
+                                pinchStartScale = scale;
+                            }
+                        }, {
+                            passive: true
+                        });
+                        zoomContainer.addEventListener('touchmove', (e) => {
+                            if (e.touches.length === 2) {
+                                const d = dist(e.touches[0], e.touches[1]);
+                                const c = center(e.touches[0], e.touches[1]);
+                                const target = pinchStartScale * (d / (pinchStartDist || d));
+                                setScaleAtPoint(target, c.x, c.y);
+                                e.preventDefault();
+                            }
+                        }, {
+                            passive: false
+                        });
+                    }
+
+                    // Réinitialiser zoom après changement d'image
+                    const __origUpdateMain = updateMain;
+                    updateMain = function() {
+                        __origUpdateMain();
+                        resetZoom();
+                    };
+
                     // Gestes tactiles (swipe gauche/droite) pour mobile
                     (function bindTouchGestures() {
                         const area = document.getElementById('galleryMain');
@@ -1649,6 +1833,7 @@
                         area.dataset.touchBound = '1';
                         const THRESHOLD = 40; // px
                         area.addEventListener('touchstart', (e) => {
+                            if (scale > 1.01) return;
                             if (!e.touches || !e.touches.length) return;
                             const t = e.touches[0];
                             touchStartX = t.clientX;
@@ -1658,6 +1843,7 @@
                             passive: true
                         });
                         area.addEventListener('touchmove', (e) => {
+                            if (scale > 1.01) return;
                             if (!e.touches || !e.touches.length) return;
                             const t = e.touches[0];
                             const dx = t.clientX - touchStartX;
@@ -1671,6 +1857,7 @@
                             passive: false
                         });
                         area.addEventListener('touchend', (e) => {
+                            if (scale > 1.01) return;
                             if (!e.changedTouches || !e.changedTouches.length) return;
                             const t = e.changedTouches[0];
                             const dx = t.clientX - touchStartX;

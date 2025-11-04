@@ -10,6 +10,7 @@ use App\Models\Message;
 use App\Models\Conversation;
 use App\Models\Reviews;
 use App\Models\User;
+use App\Models\Wishlist;
 use App\Models\SearchState;
 use Illuminate\Support\Facades\Auth;
 use Jantinnerezo\LivewireAlert\Facades\LivewireAlert;
@@ -1083,6 +1084,52 @@ class BookingManager extends Component
     }
 
     // toggleWishlist supprimée: non utilisée dans cette vue et relation User::wishlists absente
+
+    /**
+     * Ajoute ou retire la propriété courante de la wishlist de l'utilisateur.
+     * Cette méthode est appelée depuis booking-manager.blade.php via wire:click="toggleWishlist".
+     */
+    public function toggleWishlist()
+    {
+        if (!Auth::check()) {
+            return redirect()->route('login');
+        }
+
+        // La vue désactive le bouton si $property est null, mais on sécurise quand même
+        $property = $this->property ?? null;
+        if (!$property) {
+            session()->flash('error', 'Propriété introuvable');
+            return;
+        }
+
+        $user = Auth::user();
+        if (!method_exists($user, 'wishlists')) {
+            session()->flash('error', 'Relation wishlists manquante sur User');
+            return;
+        }
+
+        $existing = Wishlist::where('user_id', Auth::id())
+            ->where('property_id', $property->id)
+            ->first();
+        if ($existing) {
+            try {
+                $existing->delete();
+                session()->flash('message', 'Retiré de votre liste de souhaits');
+            } catch (\Throwable $e) {
+                session()->flash('error', "Impossible de retirer de la liste de souhaits");
+            }
+        } else {
+            try {
+                Wishlist::create(['user_id' => Auth::id(), 'property_id' => $property->id]);
+                session()->flash('message', 'Ajouté à votre liste de souhaits !');
+            } catch (\Throwable $e) {
+                session()->flash('error', "Impossible d'ajouter à la liste de souhaits");
+            }
+        }
+
+        // Eventuel rafraîchissement d'UI côté front si nécessaire
+        $this->dispatch('wishlist-updated');
+    }
 
     public function render()
     {

@@ -312,7 +312,14 @@
                         @foreach($property->images as $index => $image)
                         @if ($index < 3)
                             <div class="image-container relative {{ $index % 3 === 0 ? 'large' : 'small' }}">
-                            <img src="{{ asset('storage/' . $image->image_path) }}" alt="Image de la propriété" class="w-full h-auto object-cover rounded-lg cursor-pointer" onclick="openGallery({{ $index }})">
+                            @php
+                                $imgPath = $image->image_path ?? '';
+                                if (\Illuminate\Support\Str::startsWith($imgPath, 'storage/')) {
+                                    $imgPath = substr($imgPath, 8);
+                                }
+                                $imgPath = ltrim($imgPath, '/');
+                            @endphp
+                            <img src="{{ asset('storage/' . $imgPath) }}" alt="Image de la propriété" class="w-full h-auto object-cover rounded-lg cursor-pointer" onclick="openGallery({{ $index }})">
                             @if($index === 2 && $property->images->count() > 3)
                             <div class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center text-white text-lg font-bold cursor-pointer rounded-lg" onclick="openGallery({{ $index }})">
                                 +{{ $property->images->count() - 3 }}
@@ -1541,8 +1548,15 @@
             <div class="swiper swiper-container mySwiper">
                 <div class="swiper-wrapper">
                     @foreach($property->images as $idx => $image)
+                    @php
+                        $imgPath = $image->image_path ?? '';
+                        if (\Illuminate\Support\Str::startsWith($imgPath, 'storage/')) {
+                            $imgPath = substr($imgPath, 8);
+                        }
+                        $imgPath = ltrim($imgPath, '/');
+                    @endphp
                     <div class="swiper-slide flex items-center justify-center">
-                        <img src="{{ asset('storage/' . $image->image_path) }}" alt="Image {{ $idx + 1 }} - {{ $property->name ?? 'Propriété' }}" class="max-h-[70vh] w-auto object-contain rounded-lg" />
+                        <img src="{{ asset('storage/' . $imgPath) }}" alt="Image {{ $idx + 1 }} - {{ $property->name ?? 'Propriété' }}" class="max-h-[70vh] w-auto object-contain rounded-lg" />
                     </div>
                     @endforeach
                 </div>
@@ -1555,8 +1569,15 @@
             <div class="swiper swiper-container mySwiper2 mt-4">
                 <div class="swiper-wrapper">
                     @foreach($property->images as $idx => $image)
+                    @php
+                        $imgPath = $image->image_path ?? '';
+                        if (\Illuminate\Support\Str::startsWith($imgPath, 'storage/')) {
+                            $imgPath = substr($imgPath, 8);
+                        }
+                        $imgPath = ltrim($imgPath, '/');
+                    @endphp
                     <div class="swiper-slide !w-auto">
-                        <img src="{{ asset('storage/' . $image->image_path) }}" alt="Miniature {{ $idx + 1 }}" class="w-20 h-20 object-cover rounded-lg border-2 border-transparent hover:border-blue-500" />
+                        <img src="{{ asset('storage/' . $imgPath) }}" alt="Miniature {{ $idx + 1 }}" class="w-20 h-20 object-cover rounded-lg border-2 border-transparent hover:border-blue-500" />
                     </div>
                     @endforeach
                 </div>

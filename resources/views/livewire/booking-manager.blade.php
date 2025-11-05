@@ -1594,7 +1594,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
         </button>
-        <div class="p-0 md:p-4">
+        <div class="p-0 md:p-4 h-full">
             @php
             $firstImg = null;
             if ($property && $property->images && $property->images->count()) {
@@ -1613,7 +1613,7 @@
                     </svg>
                 </button>
                 <div id="galleryZoom" class="relative w-full h-full md:max-h-[80vh] overflow-hidden touch-none flex items-center justify-center bg-black">
-                    <img id="galleryMainImage" src="{{ $firstImg }}" alt="{{ $property->name ?? 'Image' }}" class="h-[100svh] w-auto max-w-none md:max-h-[80vh] md:h-auto md:w-full md:max-w-none object-contain select-none" />
+                    <img id="galleryMainImage" src="{{ $firstImg }}" alt="{{ $property->name ?? 'Image' }}" class="max-h-[100svh] max-w-[100vw] w-auto h-auto md:max-h-[80vh] md:max-w-none md:w-full md:h-auto object-contain select-none" />
                 </div>
                 <button type="button" onclick="window.galleryNext()" class="hidden md:flex absolute right-2 top-1/2 -translate-y-1/2 bg-white/70 hover:bg-white text-gray-800 rounded-full p-2 shadow">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

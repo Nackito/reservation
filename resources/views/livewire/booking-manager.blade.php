@@ -1358,11 +1358,11 @@
 
 <!-- Modal galerie pour types de chambre -->
 @if(isset($showSummaryModal) && $showSummaryModal)
-<div class="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" wire:key="summary-modal">
-    <div class="relative w-full max-w-3xl">
-        <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden ring-1 ring-gray-100 dark:ring-gray-800">
+<div id="summaryModal" class="fixed inset-0 z-[100000] bg-black/60 flex items-center justify-center p-4 overflow-y-auto overscroll-none" wire:key="summary-modal" aria-modal="true" role="dialog">
+    <div class="relative w-full max-w-3xl my-8">
+        <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl ring-1 ring-gray-100 dark:ring-gray-800 max-h-[90vh] overflow-y-auto">
             <!-- Header -->
-            <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+            <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between sticky top-0 z-10 bg-white dark:bg-gray-900">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/40 flex items-center justify-center text-blue-600 dark:text-blue-300">
                         <i class="fas fa-receipt"></i>
@@ -1498,6 +1498,59 @@
         </div>
     </div>
 </div>
+<script>
+    (function() {
+        function ensureSummaryModal() {
+            try {
+                var modal = document.getElementById('summaryModal');
+                if (!modal) return;
+                if (modal.parentElement !== document.body) {
+                    document.body.appendChild(modal);
+                }
+                if (getComputedStyle(modal).display !== 'none') {
+                    document.documentElement.style.overflow = 'hidden';
+                    document.body.style.overflow = 'hidden';
+                } else {
+                    document.documentElement.style.overflow = '';
+                    document.body.style.overflow = '';
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        document.addEventListener('livewire:load', function() {
+            ensureSummaryModal();
+            if (window.Livewire && typeof window.Livewire.hook === 'function') {
+                window.Livewire.hook('message.processed', function() {
+                    ensureSummaryModal();
+                });
+            }
+        });
+
+        var obs = new MutationObserver(function() {
+            ensureSummaryModal();
+            if (!document.getElementById('summaryModal')) {
+                document.documentElement.style.overflow = '';
+                document.body.style.overflow = '';
+            }
+        });
+        obs.observe(document.documentElement, {
+            childList: true,
+            subtree: true
+        });
+
+        document.addEventListener('click', function(e) {
+            var target = e.target;
+            if (!target) return;
+            if (target.closest('[wire\:click="closeSummary"]') || target.closest('[aria-label="Fermer"]')) {
+                document.documentElement.style.overflow = '';
+                document.body.style.overflow = '';
+            }
+        }, true);
+    })();
+</script>
+
 @endif
 
 <div id="roomTypeGalleryModal" class="fixed inset-0 z-50 hidden bg-black bg-opacity-75 flex items-center justify-center">

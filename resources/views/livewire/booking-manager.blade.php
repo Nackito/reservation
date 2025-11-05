@@ -369,27 +369,79 @@
         </div>
 
         <div class="p-4">
-            <div class="prose dark:prose-invert max-w-none text-gray-800 dark:text-gray-100 mt-5">
-                {!! $property->description ?? 'Description non disponible' !!}
-            </div>
-            <p id="pricing" class="text-gray-600 dark:text-gray-200 mt-5">
-                @php
-                $user = auth()->user();
-                $userCurrency = $user && $user->currency ? $user->currency : 'XOF';
-                $rate = app('App\\Livewire\\BookingManager')->getExchangeRate('XOF', $userCurrency);
-                $basePrice = $property->starting_price ?? $property->price_per_night; // starting_price pour hôtel
-                $displayCurrency = ($rate && $rate > 0) ? $userCurrency : 'XOF';
-                $converted = ($rate && $rate > 0 && $basePrice !== null) ? round($basePrice * $rate, 2) : $basePrice;
-                $isHotel = $property && $property->category && in_array($property->category->name, ['Hôtel','Hotel']);
+            @php
+            $desc = $property->description ?? null;
+            // Détecter si le contenu contient déjà du HTML (ex: RichEditor Filament)
+            $isHtml = is_string($desc) && preg_match('/<\w+[^>]*>/', $desc);
                 @endphp
-                @if($basePrice !== null)
-                @if($isHotel)
-                À partir de <span class="text-xl font-bold">{{ number_format($converted, 2) }} {{ $displayCurrency }} par nuit</span>
-                @else
-                Vous pouvez disposez de ce logement à <span class="text-xl font-bold">{{ number_format($converted, 2) }} {{ $displayCurrency }} par nuit</span>
-                @endif
-                @endif
-            </p>
+                <style>
+                    /* Afficher un vrai espace pour les paragraphes vides générés par l'éditeur */
+                    .prose p:empty::before {
+                        content: "\00a0";
+                    }
+                </style>
+                <div class="prose dark:prose-invert max-w-none text-gray-800 dark:text-gray-100 mt-5 prose-p:my-4 prose-p:leading-relaxed">
+                    @if($desc)
+                    @if($isHtml)
+                    @php
+                    $html = trim($desc ?? '');
+                    // Si le contenu n'a pas de <p>, fabriquer des paragraphes à partir des doubles retours.
+                        $hasParagraph = preg_match('/<p[\s>]/i', $html);
+                            if (!$hasParagraph) {
+                            // Normaliser les fins de ligne Windows/Mac
+                            $html = preg_replace("/\r\n|\r/", "\n", $html);
+                            $parts = preg_split("/\n{2,}/", $html);
+                            $parts = array_map(function ($p) {
+                            $p = trim($p);
+                            if ($p === '') return '';
+                            // Si la portion commence déjà par un bloc (blockquote, liste, titre, etc.), la laisser telle quelle
+                            if (preg_match('/^<(blockquote|ul|ol|pre|table|figure|section|article|h[1-6]|div)[\s>]/i', $p)) {
+                                return $p;
+                                }
+                                // Sinon, créer un paragraphe et convertir les \n simples en <br>
+                                return '<p>' . nl2br($p) . '</p>';
+                                }, $parts ?: []);
+                                // Retirer les vides potentiels
+                                $parts = array_filter($parts, fn($x) => $x !== '');
+                                $html = implode("\n", $parts);
+                                }
+                                // Préserver les sauts visuels lorsque l'éditeur a inséré des <p> vides
+                                    // (Sécurisé par le CSS .prose p:empty::before; cette ligne est un bonus)
+                                    $html = preg_replace('~
+                                <p>\s*</p>~i', '<p><br></p>', $html);
+                                @endphp
+                                {!! $html !!}
+                                @else
+                                @php
+                                // Scinder en paragraphes sur 2+ sauts de ligne, puis convertir les sauts simples en <br>
+                                $paragraphs = preg_split("/\r?\n\r?\n+/", trim($desc));
+                                @endphp
+                                @foreach($paragraphs as $para)
+                                <p>{!! nl2br(e($para)) !!}</p>
+                                @endforeach
+                                @endif
+                                @else
+                                Description non disponible
+                                @endif
+                </div>
+                <p id="pricing" class="text-gray-600 dark:text-gray-200 mt-5">
+                    @php
+                    $user = auth()->user();
+                    $userCurrency = $user && $user->currency ? $user->currency : 'XOF';
+                    $rate = app('App\\Livewire\\BookingManager')->getExchangeRate('XOF', $userCurrency);
+                    $basePrice = $property->starting_price ?? $property->price_per_night; // starting_price pour hôtel
+                    $displayCurrency = ($rate && $rate > 0) ? $userCurrency : 'XOF';
+                    $converted = ($rate && $rate > 0 && $basePrice !== null) ? round($basePrice * $rate, 2) : $basePrice;
+                    $isHotel = $property && $property->category && in_array($property->category->name, ['Hôtel','Hotel']);
+                    @endphp
+                    @if($basePrice !== null)
+                    @if($isHotel)
+                    À partir de <span class="text-xl font-bold">{{ number_format($converted, 2) }} {{ $displayCurrency }} par nuit</span>
+                    @else
+                    Vous pouvez disposez de ce logement à <span class="text-xl font-bold">{{ number_format($converted, 2) }} {{ $displayCurrency }} par nuit</span>
+                    @endif
+                    @endif
+                </p>
         </div>
 
 

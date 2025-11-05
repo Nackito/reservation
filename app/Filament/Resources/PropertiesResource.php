@@ -64,6 +64,7 @@ class PropertiesResource extends Resource
                             'orderedList',
                             'bulletList',
                             'blockquote',
+                            'horizontalRule',
                             'codeBlock',
                             'h2',
                             'h3',

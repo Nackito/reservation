@@ -1577,7 +1577,7 @@
     };
 </script>
 
-<div id="photoGalleryModal" class="fixed inset-0 z-50 hidden bg-black bg-opacity-75 flex items-center justify-center">
+<div id="photoGalleryModal" class="fixed inset-0 z-[10000] hidden bg-black bg-opacity-75 flex items-center justify-center">
     <!-- Bouton de fermeture en overlay (desktop/tablette) -->
     <button type="button" aria-label="Fermer la galerie" onclick="closeGallery()"
         class="hidden md:flex absolute top-3 right-3 z-[60] bg-black/60 hover:bg-black/70 text-white rounded-full p-3 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black">
@@ -1585,15 +1585,16 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
         </svg>
     </button>
-    <div class="relative bg-white dark:bg-gray-900 rounded-lg shadow-lg w-11/12 lg:w-3/4 max-h-screen overflow-hidden">
+    <div class="relative bg-black md:bg-white dark:bg-black md:dark:bg-gray-900 rounded-none md:rounded-lg shadow-lg w-full md:w-11/12 lg:w-3/4 h-[100svh] md:h-auto md:max-h-screen overflow-hidden" style="height: 100svh;">
         <!-- Bouton de fermeture spécifique mobile, ancré dans le conteneur blanc -->
         <button type="button" aria-label="Fermer la galerie" onclick="closeGallery()"
-            class="md:hidden absolute top-2 right-2 z-10 bg-black/60 hover:bg-black/70 text-white rounded-full p-3 focus:outline-none focus:ring-2 focus:ring-white">
+            class="md:hidden fixed z-[10010] bg-black/60 hover:bg-black/70 text-white rounded-full p-3 focus:outline-none focus:ring-2 focus:ring-white"
+            style="top: max(0.5rem, env(safe-area-inset-top)); right: max(0.5rem, env(safe-area-inset-right));">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
         </button>
-        <div class="p-4">
+        <div class="p-0 md:p-4">
             @php
             $firstImg = null;
             if ($property && $property->images && $property->images->count()) {
@@ -1605,14 +1606,14 @@
             @endphp
 
             <!-- Galerie simple CSS/JS -->
-            <div id="galleryMain" class="relative w-full flex items-center justify-center">
+            <div id="galleryMain" class="relative w-full h-full md:h-auto flex items-center justify-center">
                 <button type="button" onclick="window.galleryPrev()" class="hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 bg-white/70 hover:bg-white text-gray-800 rounded-full p-2 shadow">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                     </svg>
                 </button>
-                <div id="galleryZoom" class="relative w-full max-h-[80vh] overflow-hidden touch-none">
-                    <img id="galleryMainImage" src="{{ $firstImg }}" alt="{{ $property->name ?? 'Image' }}" class="max-h-[80vh] w-full max-w-full h-auto object-contain rounded-lg select-none" />
+                <div id="galleryZoom" class="relative w-full h-full md:max-h-[80vh] overflow-hidden touch-none flex items-center justify-center bg-black">
+                    <img id="galleryMainImage" src="{{ $firstImg }}" alt="{{ $property->name ?? 'Image' }}" class="h-[100svh] w-auto max-w-none md:max-h-[80vh] md:h-auto md:w-full md:max-w-none object-contain select-none" />
                 </div>
                 <button type="button" onclick="window.galleryNext()" class="hidden md:flex absolute right-2 top-1/2 -translate-y-1/2 bg-white/70 hover:bg-white text-gray-800 rounded-full p-2 shadow">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1699,6 +1700,10 @@
                         const modal = document.getElementById('photoGalleryModal');
                         if (!modal) return;
                         modal.classList.remove('hidden');
+                        try {
+                            document.documentElement.style.overflow = 'hidden';
+                            document.body.style.overflow = 'hidden';
+                        } catch (_) {}
                         collectImages();
                         setIndex(Number.isFinite(index) ? index : 0);
                     };
@@ -1706,6 +1711,10 @@
                         const modal = document.getElementById('photoGalleryModal');
                         if (!modal) return;
                         modal.classList.add('hidden');
+                        try {
+                            document.documentElement.style.overflow = '';
+                            document.body.style.overflow = '';
+                        } catch (_) {}
                     };
 
                     // ----- Zoom & Pan Logic -----
@@ -1715,7 +1724,12 @@
                     function applyTransform(animate = false) {
                         if (!imgEl) return;
                         imgEl.style.transition = animate ? 'transform .15s ease-out' : 'transform 0s';
-                        imgEl.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+                        // Éviter de créer un nouveau stacking context lorsqu'on est à l'échelle 1 (sinon le bouton mobile peut passer derrière)
+                        if (Math.abs(scale - 1) < 0.01 && Math.abs(tx) < 0.5 && Math.abs(ty) < 0.5) {
+                            imgEl.style.transform = 'none';
+                        } else {
+                            imgEl.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+                        }
                         if (scale > 1.01) {
                             zoomContainer && zoomContainer.classList.add('cursor-grab');
                         } else {

@@ -72,6 +72,18 @@
     <title>{{ $title ?? 'Afridayz'}}</title>
 
 
+    <!-- Resource Hints -->
+    <link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+    <link rel="dns-prefetch" href="//fonts.bunny.net">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="dns-prefetch" href="//cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://unpkg.com" crossorigin>
+    <link rel="dns-prefetch" href="//unpkg.com">
+    <link rel="preconnect" href="https://api.maptiler.com" crossorigin>
+    <link rel="dns-prefetch" href="//api.maptiler.com">
+    <link rel="preconnect" href="https://api-eu.pusher.com" crossorigin>
+    <link rel="dns-prefetch" href="//api-eu.pusher.com">
+
     <!-- Leaflet chargé via Vite (ESM) dans resources/js/app.js -->
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">

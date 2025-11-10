@@ -9,6 +9,18 @@
   <title>{{ $title ?? 'Afridayz'}}</title>
 
 
+  <!-- Resource Hints -->
+  <link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+  <link rel="dns-prefetch" href="//fonts.bunny.net">
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+  <link rel="dns-prefetch" href="//cdnjs.cloudflare.com">
+  <link rel="preconnect" href="https://unpkg.com" crossorigin>
+  <link rel="dns-prefetch" href="//unpkg.com">
+  <link rel="preconnect" href="https://api.maptiler.com" crossorigin>
+  <link rel="dns-prefetch" href="//api.maptiler.com">
+  <link rel="preconnect" href="https://api-eu.pusher.com" crossorigin>
+  <link rel="dns-prefetch" href="//api-eu.pusher.com">
+
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.bunny.net">
   <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />

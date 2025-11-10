@@ -1241,7 +1241,7 @@
                     <div class="grid grid-cols-3 gap-2">
                         @if(is_array($rt->images) && count($rt->images))
                         @foreach(array_slice($rt->images, 0, 6) as $img)
-                        <img src="{{ asset('storage/' . ltrim($img, '/')) }}" alt="{{ $rt->name }}" class="w-full h-16 object-cover rounded border border-gray-200 dark:border-gray-700 cursor-pointer" onclick="openRoomTypeGallery({{ $rt->id }}, {{ $loop->index }})">
+                        <img src="{{ asset('storage/' . ltrim($img, '/')) }}" alt="{{ $rt->name }}" loading="lazy" decoding="async" class="w-full h-16 object-cover rounded border border-gray-200 dark:border-gray-700 cursor-pointer" onclick="openRoomTypeGallery({{ $rt->id }}, {{ $loop->index }})">
                         @endforeach
                         @else
                         <span class="text-sm text-gray-400">Aucune image</span>
@@ -1684,7 +1684,7 @@
                 $imgPath = ltrim($imgPath, '/');
                 $url = asset('storage/' . $imgPath);
                 @endphp
-                <img src="{{ $url }}" data-src="{{ $url }}" data-index="{{ $idx }}" alt="Miniature {{ $idx + 1 }}" class="thumb w-20 h-20 object-cover rounded-lg border-2 border-transparent hover:border-blue-500 cursor-pointer" />
+                <img src="{{ $url }}" data-src="{{ $url }}" data-index="{{ $idx }}" alt="Miniature {{ $idx + 1 }}" loading="lazy" decoding="async" class="thumb w-20 h-20 object-cover rounded-lg border-2 border-transparent hover:border-blue-500 cursor-pointer" />
                 @endforeach
             </div>
 

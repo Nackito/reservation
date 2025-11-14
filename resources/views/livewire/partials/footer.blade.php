@@ -80,11 +80,11 @@
 
                 <!-- Social Brands -->
                 <div>
-                    <a class="w-10 h-10 inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent text-white dark:text-white hover:bg-white/10 dark:hover:bg-white/20 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:ring-1 focus:ring-gray-600 dark:focus:ring-gray-500" href="https://www.facebook.com/afridayzci/" aria-label="Facebook">
+                    <a class="w-10 h-10 inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent text-white dark:text-white hover:bg-white/10 dark:hover:bg-white/20 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:ring-1 focus:ring-gray-600 dark:focus:ring-gray-500" href="https://www.facebook.com/afridayzci/" aria-label="Facebook" target="_blank" rel="noopener noreferrer">
                         <i class="fab fa-facebook text-lg" aria-hidden="true"></i>
                     </a>
                     <!-- Spacer pour éviter que le contenu soit masqué par la nav fixe sur mobile -->
-                    <a class="w-10 h-10 inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent text-white dark:text-white hover:bg-white/10 dark:hover:bg-white/20 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:ring-1 focus:ring-gray-600 dark:focus:ring-gray-500" href="https://www.instagram.com/afridayz225/" aria-label="Instagram">
+                    <a class="w-10 h-10 inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent text-white dark:text-white hover:bg-white/10 dark:hover:bg-white/20 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:ring-1 focus:ring-gray-600 dark:focus:ring-gray-500" href="https://www.instagram.com/afridayz225/" aria-label="Instagram" target="_blank" rel="noopener noreferrer">
                         <i class="fab fa-instagram text-lg" aria-hidden="true"></i>
                     </a>
 

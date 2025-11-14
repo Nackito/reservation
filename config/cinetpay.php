@@ -26,4 +26,8 @@ return [
   'return_url' => env('CINETPAY_RETURN_URL', rtrim(env('APP_URL', ''), '/') . '/cinetpay/return'),
   // Pays ISO2 de votre compte CinetPay (utilisé pour l'univers CB)
   'account_country' =>  env('CINETPAY_ACCOUNT_COUNTRY', 'CI'),
+  // Nombre de tentatives de vérification côté return_url (poll API) avant d'abandonner l'affichage du statut.
+  'return_verify_attempts' => (int) env('CINETPAY_RETURN_VERIFY_ATTEMPTS', 3),
+  // Délai (ms) entre deux tentatives de vérification sur return_url
+  'return_verify_delay_ms' => (int) env('CINETPAY_RETURN_VERIFY_DELAY_MS', 600),
 ];

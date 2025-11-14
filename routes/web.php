@@ -159,8 +159,9 @@ Route::middleware(['auth'])->delete('/two-factor/disable', function () {
 require_once __DIR__ . '/auth.php';
 
 // CinetPay callbacks
-Route::post('/cinetpay/notify', [\App\Http\Controllers\CinetPayController::class, 'notify'])->name('cinetpay.notify');
-Route::get('/cinetpay/return', [\App\Http\Controllers\CinetPayController::class, 'return'])->name('cinetpay.return');
+// Accepte POST (webhook officiel) et GET (certains environnements/proxys peuvent réémettre en GET)
+Route::match(['post', 'get'], '/cinetpay/notify', [\App\Http\Controllers\CinetPayController::class, 'notify'])->name('cinetpay.notify');
+Route::match(['get', 'post'], '/cinetpay/return', [\App\Http\Controllers\CinetPayController::class, 'return'])->name('cinetpay.return');
 
 // Routes de simulation CinetPay (activables via config)
 if (config('cinetpay.simulation_enabled')) {

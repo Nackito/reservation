@@ -104,6 +104,19 @@ class CinetPayService
     $returnUrl = config('cinetpay.return_url');
     $notifyUrl = config('cinetpay.notify_url');
 
+    // Logguer explicitement les URLs envoyées à CinetPay pour diagnostiquer les callbacks en production
+    try {
+      \Illuminate\Support\Facades\Log::info('CinetPay init URLs', [
+        'txId' => $transactionId,
+        'return_url' => $returnUrl,
+        'notify_url' => $notifyUrl,
+        'app_url' => config('app.url'),
+        'channels' => $channels,
+        'currency' => $currency,
+      ]);
+    } catch (\Throwable $e) { /* ignore logging failures */
+    }
+
     if (!$apiKey || !$siteId) {
       $result['error'] = 'CinetPay non configuré (API_KEY/SITE_ID manquants)';
     } else {
@@ -120,6 +133,13 @@ class CinetPayService
       $payload['site_id'] = $siteId;
       // Overrides (channels & infos client étendues pour CB)
       $payload = $this->applyOverrides($payload, $overrides, $channels);
+      try {
+        \Illuminate\Support\Facades\Log::debug('CinetPay init effective channels', [
+          'txId' => $transactionId,
+          'effective_channels' => $payload['channels'] ?? 'ALL',
+        ]);
+      } catch (\Throwable $e) { /* ignore */
+      }
       // CinetPay exige que `metadata` soit une chaîne (et non un tableau)
       // On envoie une chaîne JSON compacte avec quelques infos utiles
       $meta = [

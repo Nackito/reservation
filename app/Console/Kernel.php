@@ -18,6 +18,8 @@ class Kernel extends ConsoleKernel
     $schedule->command('reviews:remind')->dailyAt('10:00');
     // Optionnel: un second rappel à J+7
     $schedule->command('reviews:remind --days=7')->dailyAt('10:15');
+    // Vérification automatique des paiements en attente (rattrapage webhook)
+    $schedule->command('payments:verify-pending')->everyFiveMinutes()->withoutOverlapping();
   }
 
   protected function commands(): void

@@ -83,6 +83,56 @@ class CinetPayController extends Controller
     }
   }
 
+  // Helpers dédiés au flux de retour (return_url) CinetPay
+
+  private function extractReturnTransactionId(Request $request): ?string
+  {
+    return $request->query('transaction_id')
+      ?? $request->query('cpm_trans_id')
+      ?? $request->input('transaction_id')
+      ?? $request->input('cpm_trans_id');
+  }
+
+  private function pollVerifyStatus(string $txId, ?Booking $booking): ?string
+  {
+    $result = null;
+    if (!$txId) {
+      return $result;
+    }
+    if ($booking && $booking->payment_status === 'paid') {
+      return 'PAID';
+    }
+    $attempts = max(1, (int) config('cinetpay.return_verify_attempts', 3));
+    $delayMs = max(0, (int) config('cinetpay.return_verify_delay_ms', 600));
+    /** @var CinetPayService $cinetpay */
+    $cinetpay = app(CinetPayService::class);
+    for ($i = 1; $i <= $attempts; $i++) {
+      $verify = $cinetpay->verifyPayment($txId);
+      if (!empty($verify['success']) && !empty($verify['status'])) {
+        $result = strtoupper((string) $verify['status']);
+        break;
+      }
+      if ($i < $attempts && $delayMs > 0) {
+        usleep($delayMs * 1000);
+      }
+    }
+    return $result;
+  }
+
+  private function buildReturnStatusLabel(?string $finalStatus, ?Booking $booking): string
+  {
+    $accepted = ['ACCEPTED', 'SUCCESS', 'PAID', 'PAYMENT_ACCEPTED', 'CONFIRMED'];
+    $label = 'Paiement en cours de finalisation, veuillez patienter.';
+    if ($finalStatus && in_array($finalStatus, $accepted, true)) {
+      $label = 'Paiement confirmé.';
+    } elseif ($finalStatus) {
+      $label = 'Statut paiement: ' . $finalStatus;
+    } elseif ($booking && $booking->payment_status === 'paid') {
+      $label = 'Paiement confirmé.';
+    }
+    return $label;
+  }
+
   public function notify(Request $request)
   {
     // CinetPay envoie un POST avec les informations de transaction
@@ -210,66 +260,26 @@ class CinetPayController extends Controller
 
   public function return(Request $request)
   {
-    $txId = $request->query('transaction_id') ?? $request->input('transaction_id');
-    $statusLabel = 'Paiement CinetPay traité.';
-    if ($txId) {
-      $booking = null;
-      /** @var CinetPayService $cinetpay */
-      $cinetpay = app(CinetPayService::class);
-      $verify = $cinetpay->verifyPayment($txId);
-      $status = strtoupper((string)($verify['status'] ?? ''));
-      $accepted = ['ACCEPTED', 'SUCCESS', 'PAID', 'PAYMENT_ACCEPTED', 'CONFIRMED'];
+    $txId = $this->extractReturnTransactionId($request);
+    $rawQuery = $request->query();
+    Log::info('CinetPay return hit', ['query' => $rawQuery, 'txId' => $txId]);
 
-      // Tente de retrouver la réservation et la marquer payée si statut accepté
-      $booking = $this->findBookingByTxId($txId);
-      if ($booking && in_array($status, $accepted, true)) {
-        if ($booking->payment_status !== 'paid') {
-          // Passage à paid ici: envoyer aussi le message et les emails
-          $booking->markAsPaid($txId);
-          // Après paiement confirmé, annuler et notifier les autres réservations en conflit
-          try {
-            \App\Services\Admin\BookingActionHelper::handlePaymentConflictsForOthers($booking);
-          } catch (\Throwable $e) {
-            Log::warning('Conflit de paiements (return) non traité', ['err' => $e->getMessage()]);
-          }
-          $amountFmt = is_numeric($booking->total_price) ? number_format($booking->total_price, 0, ',', ' ') : (string)$booking->total_price;
-          $msg = "Paiement confirmé. Nous avons bien reçu {$amountFmt} FrCFA pour votre réservation. Réf: {$txId}. Merci !";
-          $this->sendPaymentMessageToConversation($booking, $msg);
-
-          try {
-            $user = $booking->user;
-            if ($user && $user->email) {
-              Mail::raw(
-                'Votre paiement a été reçu. Merci pour votre confiance.',
-                function ($m) use ($user) {
-                  $m->to($user->email)->subject('Paiement confirmé');
-                }
-              );
-            }
-            $adminMail = config('mail.admin_email') ?? env('MAIL_ADMIN_EMAIL');
-            if ($adminMail) {
-              Mail::raw(
-                'Paiement confirmé pour la réservation #' . $booking->id,
-                function ($m) use ($adminMail) {
-                  $m->to($adminMail)->subject('Paiement confirmé - Réservation');
-                }
-              );
-            }
-          } catch (\Throwable $e) {
-            Log::warning('Email post-paiement (return) non envoyé', ['err' => $e->getMessage()]);
-          }
-        }
-        $statusLabel = 'Paiement confirmé.';
-        // Journaliser le retour
-        $this->auditPayment($booking, $txId, $status, 'return', null, [
-          'payload' => ['query' => $request->query()],
-          'headers' => ['user-agent' => $request->header('user-agent')],
-          'ip' => $request->ip(),
-        ]);
-      } elseif ($status) {
-        $statusLabel = 'Statut de paiement: ' . $status;
-      }
+    if (!$txId) {
+      Log::warning('CinetPay return sans transaction_id', ['query' => $rawQuery]);
+      return redirect()->route('user-reservations')->with('status', 'Retour sans transaction_id');
     }
+
+    $booking = $this->findBookingByTxId($txId);
+    $finalStatus = $this->pollVerifyStatus($txId, $booking);
+    $statusLabel = $this->buildReturnStatusLabel($finalStatus, $booking);
+
+    // Audit systématique du retour (sans signature – elle n'est pas fournie sur return)
+    $this->auditPayment($booking, $txId, $finalStatus ?? 'UNVERIFIED_RETURN', 'return', null, [
+      'payload' => ['query' => $rawQuery],
+      'headers' => ['user-agent' => $request->header('user-agent')],
+      'ip' => $request->ip(),
+    ]);
+
     return redirect()->route('user-reservations')->with('status', $statusLabel);
   }
 

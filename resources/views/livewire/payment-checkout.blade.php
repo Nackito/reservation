@@ -44,12 +44,69 @@
   <div class="mt-6">
     <h2 class="text-sm uppercase tracking-wide text-gray-500 dark:text-gray-400">Moyens de paiement</h2>
     <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
-      <button wire:click="payWithCinetPay" type="button" class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-50">
+      <button onclick="window.__preOpenPaymentTab()"
+        wire:click="payWithCinetPay"
+        type="button" class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-50">
         <span>Mobile Money / Wave (Côte d'Ivoire, Sénégal)</span>
       </button>
-      <button wire:click="payWithCinetPayCard" type="button" class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-emerald-300 dark:border-emerald-700 bg-white dark:bg-gray-800 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20">
+      <button onclick="window.__preOpenPaymentTab()"
+        wire:click="payWithCinetPayCard"
+        type="button" class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-emerald-300 dark:border-emerald-700 bg-white dark:bg-gray-800 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20">
         <span>Carte bancaire (VISA / MasterCard)</span>
       </button>
     </div>
+
+    <script>
+      document.addEventListener('livewire:init', () => {
+        // Fonction utilitaire sans dépendance à Alpine
+        window.__preOpenPaymentTab = function() {
+          try {
+            // Important: ne pas utiliser 'noopener' ici pour conserver le handle de l'onglet
+            window.__paymentTab = window.open('about:blank', '_blank');
+            if (window.__paymentTab && !window.__paymentTab.closed) {
+              try {
+                window.__paymentTab.document.write('<p style=\'font-family:sans-serif;padding:16px\'>Redirection vers le paiement…</p>');
+              } catch (_) {}
+            }
+            // Reset du flag de déduplication
+            window.__paymentNavigated = false;
+            clearTimeout(window.__paymentTabTimeout);
+            window.__paymentTabTimeout = setTimeout(() => {
+              try {
+                if (window.__paymentTab && !window.__paymentTab.closed) window.__paymentTab.close();
+              } catch (_) {}
+              window.__paymentTab = null;
+              alert('Le service de paiement tarde à répondre. Veuillez réessayer.');
+            }, 12000);
+          } catch (_) {}
+        }
+
+        const handleOpenNewTab = (url) => {
+          if (!url) return;
+          if (window.__paymentNavigated) return; // éviter double ouverture
+          // Nettoyer le timeout d'attente
+          clearTimeout(window.__paymentTabTimeout);
+          // Si on a pré-ouvert un onglet au clic, on l'utilise pour éviter le bloqueur
+          if (window.__paymentTab && !window.__paymentTab.closed) {
+            try {
+              // Par sécurité, tenter de couper l'opener avant navigation
+              try {
+                window.__paymentTab.opener = null;
+              } catch (_) {}
+              window.__paymentTab.location = url;
+            } catch (_) {}
+            window.__paymentTab = null;
+          } else {
+            // Fallback (peut être bloqué car pas déclenché directement par un clic)
+            window.open(url, '_blank');
+          }
+          window.__paymentNavigated = true;
+        };
+
+        // Écoute via événement DOM natif (Livewire $this->dispatch)
+        window.addEventListener('open-new-tab', (e) => handleOpenNewTab(e?.detail?.url));
+        // Note: on n'utilise pas Livewire.on ici pour éviter un double déclenchement
+      });
+    </script>
   </div>
 </div>

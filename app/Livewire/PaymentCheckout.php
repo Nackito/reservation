@@ -118,7 +118,9 @@ class PaymentCheckout extends Component
           'url' => $resp['url'],
           'currency' => $pay['currency_for_payment'] ?? null,
         ]);
-        return redirect()->away($resp['url']);
+        // Ouvrir dans un nouvel onglet via événement navigateur (géré côté Blade)
+        $this->dispatch('open-new-tab', url: $resp['url']);
+        return null;
       }
       session()->flash('error', 'Le service de paiement est indisponible pour le moment.');
       return null;
@@ -199,7 +201,9 @@ class PaymentCheckout extends Component
         $overrides
       );
       if (!empty($resp['success']) && !empty($resp['url'])) {
-        return redirect()->away($resp['url']);
+        // Ouvrir dans un nouvel onglet via événement navigateur (géré côté Blade)
+        $this->dispatch('open-new-tab', url: $resp['url']);
+        return null;
       }
       Log::warning('CinetPay CB initPayment a échoué', [
         'txId' => $txId,

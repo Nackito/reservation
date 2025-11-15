@@ -8,6 +8,7 @@
     ->whereDate('start_date', '<=', now())
         ->whereDate('end_date', '>=', now())
         ->exists();
+
         // Afficher uniquement pour les résidences meublées (catégorie id = 2) – robuste (id ou nom)
         $isResidenceMeublee = false;
         if ($property) {
@@ -29,12 +30,9 @@
             Ce bien est actuellement <span class="font-semibold">occupé</span>. Vous pouvez essayer de réserver à une autre date.
         </div>
         @endif
-        <!-- Début du composant Livewire : tout est enveloppé dans ce div racine -->
+
         <div class="container mx-auto py-8">
-            {{-- Modèle Livewire caché pour la plage de dates (protège Flatpickr des morph Livewire) --}}
             <input type="hidden" id="dateRangeModel" wire:model.defer="dateRange" />
-            {{-- Statut de la propriété (affiché uniquement pour Résidence meublée) --}}
-            {{-- $isOccupied et $isResidenceMeublee sont définis en haut du fichier --}}
             @if($isResidenceMeublee)
             <div class="mb-4">
                 <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold {{ $isOccupied ? 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200' : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' }}">
@@ -46,19 +44,10 @@
 
             <form wire:submit.prevent="searchDates" class="mb-4 hidden md:block">
                 <div class="flex mt-4 flex-col sm:flex-row gap-2 sm:gap-3 items-center bg-white rounded-lg p-2 dark:bg-gray-800">
-                    <div class="w-full">
-                        <input type="text" value="{{ $property->name ?? '' }}" readonly
-                            class="py-3 px-4 block w-full border border-blue-400 bg-white text-gray-900 placeholder-gray-500 rounded-lg text-lg font-bold shadow-sm
-                            focus:border-blue-600 focus:ring-blue-500 disabled:opacity-50
-                            disabled:pointer-events-none dark:bg-gray-900 dark:border-blue-700 dark:text-gray-100 dark:placeholder-gray-400 dark:focus:ring-blue-400"
-                            placeholder="Nom de l'établissement">
-                    </div>
-
-                    {{-- Champ type de chambre supprimé: le choix se fait via le bouton Réserver du tableau --}}
                     <div class="w-full" id="DateRange1Wrapper" wire:ignore>
                         <input type="text" id="ReservationDateRange" class="py-3 px-4 block w-full border border-blue-400 bg-white text-gray-900 placeholder-gray-500 rounded-lg text-sm
-                    focus:border-blue-600 focus:ring-blue-500 disabled:opacity-50
-                    disabled:pointer-events-none dark:bg-gray-900 dark:border-blue-700 dark:text-gray-100 dark:placeholder-gray-400 dark:focus:ring-blue-400" placeholder="Choisissez vos dates (arrivée - départ)">
+                focus:border-blue-600 focus:ring-blue-500 disabled:opacity-50
+                disabled:pointer-events-none dark:bg-gray-900 dark:border-blue-700 dark:text-gray-100 dark:placeholder-gray-400 dark:focus:ring-blue-400" placeholder="Choisissez vos dates (arrivée - départ)">
                     </div>
                     @error('dateRange') <span class="text-red-500">{{ $message }}</span> @enderror
                     <div class="flex items-center gap-2">
@@ -312,7 +301,14 @@
                         @foreach($property->images as $index => $image)
                         @if ($index < 3)
                             <div class="image-container relative {{ $index % 3 === 0 ? 'large' : 'small' }}">
-                            <img src="{{ asset('storage/' . $image->image_path) }}" alt="Image de la propriété" class="w-full h-auto object-cover rounded-lg cursor-pointer" onclick="openGallery({{ $index }})">
+                            @php
+                            $imgPath = $image->image_path ?? '';
+                            if (\Illuminate\Support\Str::startsWith($imgPath, 'storage/')) {
+                            $imgPath = substr($imgPath, 8);
+                            }
+                            $imgPath = ltrim($imgPath, '/');
+                            @endphp
+                            <img src="{{ asset('storage/' . $imgPath) }}" alt="Image de la propriété" class="w-full h-auto object-cover rounded-lg cursor-pointer" onclick="openGallery({{ $index }})">
                             @if($index === 2 && $property->images->count() > 3)
                             <div class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center text-white text-lg font-bold cursor-pointer rounded-lg" onclick="openGallery({{ $index }})">
                                 +{{ $property->images->count() - 3 }}
@@ -373,27 +369,79 @@
         </div>
 
         <div class="p-4">
-            <div class="prose dark:prose-invert max-w-none text-gray-800 dark:text-gray-100 mt-5">
-                {!! $property->description ?? 'Description non disponible' !!}
-            </div>
-            <p id="pricing" class="text-gray-600 dark:text-gray-200 mt-5">
-                @php
-                $user = auth()->user();
-                $userCurrency = $user && $user->currency ? $user->currency : 'XOF';
-                $rate = app('App\\Livewire\\BookingManager')->getExchangeRate('XOF', $userCurrency);
-                $basePrice = $property->starting_price ?? $property->price_per_night; // starting_price pour hôtel
-                $displayCurrency = ($rate && $rate > 0) ? $userCurrency : 'XOF';
-                $converted = ($rate && $rate > 0 && $basePrice !== null) ? round($basePrice * $rate, 2) : $basePrice;
-                $isHotel = $property && $property->category && in_array($property->category->name, ['Hôtel','Hotel']);
+            @php
+            $desc = $property->description ?? null;
+            // Détecter si le contenu contient déjà du HTML (ex: RichEditor Filament)
+            $isHtml = is_string($desc) && preg_match('/<\w+[^>]*>/', $desc);
                 @endphp
-                @if($basePrice !== null)
-                @if($isHotel)
-                À partir de <span class="text-xl font-bold">{{ number_format($converted, 2) }} {{ $displayCurrency }} par nuit</span>
-                @else
-                Vous pouvez disposez de ce logement à <span class="text-xl font-bold">{{ number_format($converted, 2) }} {{ $displayCurrency }} par nuit</span>
-                @endif
-                @endif
-            </p>
+                <style>
+                    /* Afficher un vrai espace pour les paragraphes vides générés par l'éditeur */
+                    .prose p:empty::before {
+                        content: "\00a0";
+                    }
+                </style>
+                <div class="prose dark:prose-invert max-w-none text-gray-800 dark:text-gray-100 mt-5 prose-p:my-4 prose-p:leading-relaxed">
+                    @if($desc)
+                    @if($isHtml)
+                    @php
+                    $html = trim($desc ?? '');
+                    // Si le contenu n'a pas de <p>, fabriquer des paragraphes à partir des doubles retours.
+                        $hasParagraph = preg_match('/<p[\s>]/i', $html);
+                            if (!$hasParagraph) {
+                            // Normaliser les fins de ligne Windows/Mac
+                            $html = preg_replace("/\r\n|\r/", "\n", $html);
+                            $parts = preg_split("/\n{2,}/", $html);
+                            $parts = array_map(function ($p) {
+                            $p = trim($p);
+                            if ($p === '') return '';
+                            // Si la portion commence déjà par un bloc (blockquote, liste, titre, etc.), la laisser telle quelle
+                            if (preg_match('/^<(blockquote|ul|ol|pre|table|figure|section|article|h[1-6]|div)[\s>]/i', $p)) {
+                                return $p;
+                                }
+                                // Sinon, créer un paragraphe et convertir les \n simples en <br>
+                                return '<p>' . nl2br($p) . '</p>';
+                                }, $parts ?: []);
+                                // Retirer les vides potentiels
+                                $parts = array_filter($parts, fn($x) => $x !== '');
+                                $html = implode("\n", $parts);
+                                }
+                                // Préserver les sauts visuels lorsque l'éditeur a inséré des <p> vides
+                                    // (Sécurisé par le CSS .prose p:empty::before; cette ligne est un bonus)
+                                    $html = preg_replace('~
+                                <p>\s*</p>~i', '<p><br></p>', $html);
+                                @endphp
+                                {!! $html !!}
+                                @else
+                                @php
+                                // Scinder en paragraphes sur 2+ sauts de ligne, puis convertir les sauts simples en <br>
+                                $paragraphs = preg_split("/\r?\n\r?\n+/", trim($desc));
+                                @endphp
+                                @foreach($paragraphs as $para)
+                                <p>{!! nl2br(e($para)) !!}</p>
+                                @endforeach
+                                @endif
+                                @else
+                                Description non disponible
+                                @endif
+                </div>
+                <p id="pricing" class="text-gray-600 dark:text-gray-200 mt-5">
+                    @php
+                    $user = auth()->user();
+                    $userCurrency = $user && $user->currency ? $user->currency : 'XOF';
+                    $rate = app('App\\Livewire\\BookingManager')->getExchangeRate('XOF', $userCurrency);
+                    $basePrice = $property->starting_price ?? $property->price_per_night; // starting_price pour hôtel
+                    $displayCurrency = ($rate && $rate > 0) ? $userCurrency : 'XOF';
+                    $converted = ($rate && $rate > 0 && $basePrice !== null) ? round($basePrice * $rate, 2) : $basePrice;
+                    $isHotel = $property && $property->category && in_array($property->category->name, ['Hôtel','Hotel']);
+                    @endphp
+                    @if($basePrice !== null)
+                    @if($isHotel)
+                    À partir de <span class="text-xl font-bold">{{ number_format($converted, 2) }} {{ $displayCurrency }} par nuit</span>
+                    @else
+                    Vous pouvez disposez de ce logement à <span class="text-xl font-bold">{{ number_format($converted, 2) }} {{ $displayCurrency }} par nuit</span>
+                    @endif
+                    @endif
+                </p>
         </div>
 
 
@@ -1310,11 +1358,11 @@
 
 <!-- Modal galerie pour types de chambre -->
 @if(isset($showSummaryModal) && $showSummaryModal)
-<div class="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" wire:key="summary-modal">
-    <div class="relative w-full max-w-3xl">
-        <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden ring-1 ring-gray-100 dark:ring-gray-800">
+<div id="summaryModal" class="fixed inset-0 z-[100000] bg-black/60 flex items-center justify-center p-4 overflow-y-auto overscroll-none" wire:key="summary-modal" aria-modal="true" role="dialog">
+    <div class="relative w-full max-w-3xl my-8">
+        <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl ring-1 ring-gray-100 dark:ring-gray-800 max-h-[90vh] overflow-y-auto">
             <!-- Header -->
-            <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+            <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between sticky top-0 z-10 bg-white dark:bg-gray-900">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/40 flex items-center justify-center text-blue-600 dark:text-blue-300">
                         <i class="fas fa-receipt"></i>
@@ -1450,6 +1498,59 @@
         </div>
     </div>
 </div>
+<script>
+    (function() {
+        function ensureSummaryModal() {
+            try {
+                var modal = document.getElementById('summaryModal');
+                if (!modal) return;
+                if (modal.parentElement !== document.body) {
+                    document.body.appendChild(modal);
+                }
+                if (getComputedStyle(modal).display !== 'none') {
+                    document.documentElement.style.overflow = 'hidden';
+                    document.body.style.overflow = 'hidden';
+                } else {
+                    document.documentElement.style.overflow = '';
+                    document.body.style.overflow = '';
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        document.addEventListener('livewire:load', function() {
+            ensureSummaryModal();
+            if (window.Livewire && typeof window.Livewire.hook === 'function') {
+                window.Livewire.hook('message.processed', function() {
+                    ensureSummaryModal();
+                });
+            }
+        });
+
+        var obs = new MutationObserver(function() {
+            ensureSummaryModal();
+            if (!document.getElementById('summaryModal')) {
+                document.documentElement.style.overflow = '';
+                document.body.style.overflow = '';
+            }
+        });
+        obs.observe(document.documentElement, {
+            childList: true,
+            subtree: true
+        });
+
+        document.addEventListener('click', function(e) {
+            var target = e.target;
+            if (!target) return;
+            if (target.closest('[wire\:click="closeSummary"]') || target.closest('[aria-label="Fermer"]')) {
+                document.documentElement.style.overflow = '';
+                document.body.style.overflow = '';
+            }
+        }, true);
+    })();
+</script>
+
 @endif
 
 <div id="roomTypeGalleryModal" class="fixed inset-0 z-50 hidden bg-black bg-opacity-75 flex items-center justify-center">
@@ -1492,7 +1593,7 @@
             const src = (img || '').replace(/^\/+/, '');
             const slide = document.createElement('div');
             slide.className = 'swiper-slide flex items-center justify-center';
-            slide.innerHTML = `<img src="${window.location.origin}/storage/${src}" class="max-h-[70vh] w-auto object-contain rounded-lg" alt="RoomType Image" />`;
+            slide.innerHTML = `<img src="${window.location.origin}/storage/${src}" class="max-h-[80vh] w-full max-w-full h-auto object-contain rounded-lg" alt="RoomType Image" />`;
             wrapper.appendChild(slide);
         });
         modal.classList.remove('hidden');
@@ -1529,38 +1630,393 @@
     };
 </script>
 
-<div id="photoGalleryModal" class="fixed inset-0 z-50 hidden bg-black bg-opacity-75 flex items-center justify-center">
-    <div class="relative bg-white dark:bg-gray-900 rounded-lg shadow-lg w-11/12 lg:w-3/4 max-h-screen overflow-hidden">
-        <button class="absolute top-2 right-2 text-gray-500 hover:text-gray-700" onclick="closeGallery()">
+<div id="photoGalleryModal" class="fixed inset-0 z-[10000] hidden bg-black bg-opacity-75 flex items-center justify-center">
+    <!-- Bouton de fermeture en overlay (desktop/tablette) -->
+    <button type="button" aria-label="Fermer la galerie" onclick="closeGallery()"
+        class="hidden md:flex absolute top-3 right-3 z-[60] bg-black/60 hover:bg-black/70 text-white rounded-full p-3 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+    </button>
+    <div class="relative bg-black md:bg-white dark:bg-black md:dark:bg-gray-900 rounded-none md:rounded-lg shadow-lg w-full md:w-11/12 lg:w-3/4 h-[100svh] md:h-auto md:max-h-screen overflow-hidden" style="height: 100svh;">
+        <!-- Bouton de fermeture spécifique mobile, ancré dans le conteneur blanc -->
+        <button type="button" aria-label="Fermer la galerie" onclick="closeGallery()"
+            class="md:hidden fixed z-[10010] bg-black/60 hover:bg-black/70 text-white rounded-full p-3 focus:outline-none focus:ring-2 focus:ring-white"
+            style="top: max(0.5rem, env(safe-area-inset-top)); right: max(0.5rem, env(safe-area-inset-right));">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
         </button>
-        <div class="p-4">
-            <!-- Swiper principal -->
-            <div class="swiper swiper-container mySwiper">
-                <div class="swiper-wrapper">
-                    @foreach($property->images as $idx => $image)
-                    <div class="swiper-slide flex items-center justify-center">
-                        <img src="{{ asset('storage/' . $image->image_path) }}" alt="Image {{ $idx + 1 }} - {{ $property->name ?? 'Propriété' }}" class="max-h-[70vh] w-auto object-contain rounded-lg" />
-                    </div>
-                    @endforeach
+        <div class="p-0 md:p-4 h-full">
+            @php
+            $firstImg = null;
+            if ($property && $property->images && $property->images->count()) {
+            $fp = $property->images[0]->image_path ?? '';
+            if (\Illuminate\Support\Str::startsWith($fp, 'storage/')) { $fp = substr($fp, 8); }
+            $fp = ltrim($fp, '/');
+            $firstImg = asset('storage/' . $fp);
+            }
+            @endphp
+
+            <!-- Galerie simple CSS/JS -->
+            <div id="galleryMain" class="relative w-full h-full md:h-auto flex items-center justify-center">
+                <button type="button" onclick="window.galleryPrev()" class="hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 bg-white/70 hover:bg-white text-gray-800 rounded-full p-2 shadow">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                    </svg>
+                </button>
+                <div id="galleryZoom" class="relative w-full h-full md:max-h-[80vh] overflow-hidden touch-none flex items-center justify-center bg-black">
+                    <img id="galleryMainImage" src="{{ $firstImg }}" alt="{{ $property->name ?? 'Image' }}" class="max-h-[100svh] max-w-[100vw] w-auto h-auto md:max-h-[80vh] md:max-w-none md:w-full md:h-auto object-contain select-none" />
                 </div>
-                <div class="swiper-button-prev"></div>
-                <div class="swiper-button-next"></div>
-                <div class="swiper-pagination"></div>
+                <button type="button" onclick="window.galleryNext()" class="hidden md:flex absolute right-2 top-1/2 -translate-y-1/2 bg-white/70 hover:bg-white text-gray-800 rounded-full p-2 shadow">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                </button>
             </div>
 
-            <!-- Miniatures -->
-            <div class="swiper swiper-container mySwiper2 mt-4">
-                <div class="swiper-wrapper">
-                    @foreach($property->images as $idx => $image)
-                    <div class="swiper-slide !w-auto">
-                        <img src="{{ asset('storage/' . $image->image_path) }}" alt="Miniature {{ $idx + 1 }}" class="w-20 h-20 object-cover rounded-lg border-2 border-transparent hover:border-blue-500" />
-                    </div>
-                    @endforeach
-                </div>
+            <!-- Miniatures (desktop uniquement) -->
+            <div id="galleryThumbs" class="mt-4 hidden md:flex gap-2 overflow-x-auto">
+                @foreach($property->images as $idx => $image)
+                @php
+                $imgPath = $image->image_path ?? '';
+                if (\Illuminate\Support\Str::startsWith($imgPath, 'storage/')) { $imgPath = substr($imgPath, 8); }
+                $imgPath = ltrim($imgPath, '/');
+                $url = asset('storage/' . $imgPath);
+                @endphp
+                <img src="{{ $url }}" data-src="{{ $url }}" data-index="{{ $idx }}" alt="Miniature {{ $idx + 1 }}" class="thumb w-20 h-20 object-cover rounded-lg border-2 border-transparent hover:border-blue-500 cursor-pointer" />
+                @endforeach
             </div>
+
+            <style>
+                #photoGalleryModal #galleryThumbs .thumb.selected {
+                    border-color: #3b82f6;
+                    box-shadow: 0 0 0 2px rgba(59, 130, 246, .5);
+                }
+
+                #photoGalleryModal #galleryMain button {
+                    transition: background-color .15s ease;
+                }
+            </style>
+
+            <!-- script pour la galerie (CSS/JS pur, sans Swiper) -->
+            <script>
+                (function() {
+                    let images = [];
+                    let current = 0;
+                    let touchStartX = 0,
+                        touchStartY = 0,
+                        touchMoved = false;
+                    // Zoom/Pan state
+                    let scale = 1,
+                        minScale = 1,
+                        maxScale = 4;
+                    let tx = 0,
+                        ty = 0; // translation
+                    let isDragging = false,
+                        dragStartX = 0,
+                        dragStartY = 0,
+                        dragStartTx = 0,
+                        dragStartTy = 0;
+                    let lastTapTime = 0;
+
+                    function collectImages() {
+                        const thumbs = document.querySelectorAll('#photoGalleryModal #galleryThumbs img.thumb');
+                        images = Array.from(thumbs).map(img => img.getAttribute('data-src') || img.src);
+                    }
+
+                    function updateMain() {
+                        const main = document.getElementById('galleryMainImage');
+                        if (!main || !images.length) return;
+                        main.src = images[current];
+                        document.querySelectorAll('#photoGalleryModal #galleryThumbs img.thumb').forEach((el, idx) => {
+                            el.classList.toggle('selected', idx === current);
+                        });
+                    }
+
+                    function setIndex(i) {
+                        if (!images.length) collectImages();
+                        if (!images.length) return;
+                        const n = images.length;
+                        current = ((i % n) + n) % n;
+                        updateMain();
+                    }
+
+                    window.galleryNext = function() {
+                        setIndex(current + 1);
+                    };
+                    window.galleryPrev = function() {
+                        setIndex(current - 1);
+                    };
+
+                    window.openGallery = function(index = 0) {
+                        const modal = document.getElementById('photoGalleryModal');
+                        if (!modal) return;
+                        modal.classList.remove('hidden');
+                        try {
+                            document.documentElement.style.overflow = 'hidden';
+                            document.body.style.overflow = 'hidden';
+                        } catch (_) {}
+                        collectImages();
+                        setIndex(Number.isFinite(index) ? index : 0);
+                    };
+                    window.closeGallery = function() {
+                        const modal = document.getElementById('photoGalleryModal');
+                        if (!modal) return;
+                        modal.classList.add('hidden');
+                        try {
+                            document.documentElement.style.overflow = '';
+                            document.body.style.overflow = '';
+                        } catch (_) {}
+                    };
+
+                    // ----- Zoom & Pan Logic -----
+                    const zoomContainer = document.getElementById('galleryZoom');
+                    const imgEl = document.getElementById('galleryMainImage');
+
+                    function applyTransform(animate = false) {
+                        if (!imgEl) return;
+                        imgEl.style.transition = animate ? 'transform .15s ease-out' : 'transform 0s';
+                        // Éviter de créer un nouveau stacking context lorsqu'on est à l'échelle 1 (sinon le bouton mobile peut passer derrière)
+                        if (Math.abs(scale - 1) < 0.01 && Math.abs(tx) < 0.5 && Math.abs(ty) < 0.5) {
+                            imgEl.style.transform = 'none';
+                        } else {
+                            imgEl.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+                        }
+                        if (scale > 1.01) {
+                            zoomContainer && zoomContainer.classList.add('cursor-grab');
+                        } else {
+                            zoomContainer && zoomContainer.classList.remove('cursor-grab', 'cursor-grabbing');
+                        }
+                    }
+
+                    function resetZoom() {
+                        scale = 1;
+                        tx = 0;
+                        ty = 0;
+                        applyTransform(true);
+                    }
+
+                    function setScaleAtPoint(targetScale, clientX, clientY) {
+                        if (!zoomContainer || !imgEl) return;
+                        const rect = zoomContainer.getBoundingClientRect();
+                        const cx = clientX - rect.left;
+                        const cy = clientY - rect.top;
+                        const ix = (cx - tx) / scale;
+                        const iy = (cy - ty) / scale;
+                        scale = Math.min(maxScale, Math.max(minScale, targetScale));
+                        tx = cx - ix * scale;
+                        ty = cy - iy * scale;
+                        applyTransform();
+                    }
+
+                    // Wheel zoom (desktop)
+                    if (zoomContainer) {
+                        zoomContainer.addEventListener('wheel', (e) => {
+                            e.preventDefault();
+                            const factor = Math.exp(-e.deltaY * 0.0015);
+                            setScaleAtPoint(scale * factor, e.clientX, e.clientY);
+                        }, {
+                            passive: false
+                        });
+
+                        // Double click toggle zoom
+                        zoomContainer.addEventListener('dblclick', (e) => {
+                            e.preventDefault();
+                            if (scale > 1.01) resetZoom();
+                            else setScaleAtPoint(2, e.clientX, e.clientY);
+                        });
+
+                        // Drag pan (desktop)
+                        zoomContainer.addEventListener('mousedown', (e) => {
+                            if (scale <= 1.01) return;
+                            isDragging = true;
+                            dragStartX = e.clientX;
+                            dragStartY = e.clientY;
+                            dragStartTx = tx;
+                            dragStartTy = ty;
+                            zoomContainer.classList.add('cursor-grabbing');
+                            e.preventDefault();
+                        });
+                        window.addEventListener('mousemove', (e) => {
+                            if (!isDragging) return;
+                            tx = dragStartTx + (e.clientX - dragStartX);
+                            ty = dragStartTy + (e.clientY - dragStartY);
+                            applyTransform();
+                        });
+                        window.addEventListener('mouseup', () => {
+                            if (isDragging) {
+                                isDragging = false;
+                                zoomContainer.classList.remove('cursor-grabbing');
+                            }
+                        });
+
+                        // Mobile: double-tap to toggle zoom
+                        zoomContainer.addEventListener('touchend', (e) => {
+                            if (e.touches.length === 0 && e.changedTouches && e.changedTouches.length === 1) {
+                                const now = Date.now();
+                                if (now - lastTapTime < 300) {
+                                    const t = e.changedTouches[0];
+                                    if (scale > 1.01) resetZoom();
+                                    else setScaleAtPoint(2, t.clientX, t.clientY);
+                                }
+                                lastTapTime = now;
+                            }
+                        }, {
+                            passive: true
+                        });
+
+                        // One-finger pan
+                        zoomContainer.addEventListener('touchstart', (e) => {
+                            if (e.touches.length === 1 && scale > 1.01) {
+                                const t = e.touches[0];
+                                isDragging = true;
+                                dragStartX = t.clientX;
+                                dragStartY = t.clientY;
+                                dragStartTx = tx;
+                                dragStartTy = ty;
+                            }
+                        }, {
+                            passive: true
+                        });
+                        zoomContainer.addEventListener('touchmove', (e) => {
+                            if (e.touches.length === 1 && isDragging && scale > 1.01) {
+                                const t = e.touches[0];
+                                tx = dragStartTx + (t.clientX - dragStartX);
+                                ty = dragStartTy + (t.clientY - dragStartY);
+                                applyTransform();
+                                e.preventDefault();
+                            }
+                        }, {
+                            passive: false
+                        });
+                        zoomContainer.addEventListener('touchcancel', () => {
+                            isDragging = false;
+                        }, {
+                            passive: true
+                        });
+                        zoomContainer.addEventListener('touchend', () => {
+                            isDragging = false;
+                        }, {
+                            passive: true
+                        });
+
+                        // Two-finger pinch zoom
+                        let pinchStartDist = 0,
+                            pinchStartScale = 1;
+
+                        function dist(a, b) {
+                            const dx = a.clientX - b.clientX;
+                            const dy = a.clientY - b.clientY;
+                            return Math.hypot(dx, dy);
+                        }
+
+                        function center(a, b) {
+                            return {
+                                x: (a.clientX + b.clientX) / 2,
+                                y: (a.clientY + b.clientY) / 2
+                            };
+                        }
+                        zoomContainer.addEventListener('touchstart', (e) => {
+                            if (e.touches.length === 2) {
+                                pinchStartDist = dist(e.touches[0], e.touches[1]);
+                                pinchStartScale = scale;
+                            }
+                        }, {
+                            passive: true
+                        });
+                        zoomContainer.addEventListener('touchmove', (e) => {
+                            if (e.touches.length === 2) {
+                                const d = dist(e.touches[0], e.touches[1]);
+                                const c = center(e.touches[0], e.touches[1]);
+                                const target = pinchStartScale * (d / (pinchStartDist || d));
+                                setScaleAtPoint(target, c.x, c.y);
+                                e.preventDefault();
+                            }
+                        }, {
+                            passive: false
+                        });
+                    }
+
+                    // Réinitialiser zoom après changement d'image
+                    const __origUpdateMain = updateMain;
+                    updateMain = function() {
+                        __origUpdateMain();
+                        resetZoom();
+                    };
+
+                    // Gestes tactiles (swipe gauche/droite) pour mobile
+                    (function bindTouchGestures() {
+                        const area = document.getElementById('galleryMain');
+                        if (!area || area.dataset.touchBound === '1') return;
+                        area.dataset.touchBound = '1';
+                        const THRESHOLD = 40; // px
+                        area.addEventListener('touchstart', (e) => {
+                            if (scale > 1.01) return;
+                            if (!e.touches || !e.touches.length) return;
+                            const t = e.touches[0];
+                            touchStartX = t.clientX;
+                            touchStartY = t.clientY;
+                            touchMoved = false;
+                        }, {
+                            passive: true
+                        });
+                        area.addEventListener('touchmove', (e) => {
+                            if (scale > 1.01) return;
+                            if (!e.touches || !e.touches.length) return;
+                            const t = e.touches[0];
+                            const dx = t.clientX - touchStartX;
+                            const dy = t.clientY - touchStartY;
+                            if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) {
+                                // Empêcher le scroll vertical pendant un swipe horizontal
+                                e.preventDefault();
+                                touchMoved = true;
+                            }
+                        }, {
+                            passive: false
+                        });
+                        area.addEventListener('touchend', (e) => {
+                            if (scale > 1.01) return;
+                            if (!e.changedTouches || !e.changedTouches.length) return;
+                            const t = e.changedTouches[0];
+                            const dx = t.clientX - touchStartX;
+                            if (Math.abs(dx) >= THRESHOLD) {
+                                if (dx < 0) {
+                                    window.galleryNext();
+                                } else {
+                                    window.galleryPrev();
+                                }
+                            }
+                        }, {
+                            passive: true
+                        });
+                    })();
+
+                    // Clic sur miniature
+                    document.addEventListener('click', function(e) {
+                        const t = e.target.closest('#photoGalleryModal #galleryThumbs img.thumb');
+                        if (!t) return;
+                        const idx = parseInt(t.getAttribute('data-index') || '0', 10);
+                        setIndex(idx);
+                    });
+
+                    // Navigation clavier dans la modale
+                    document.addEventListener('keydown', function(e) {
+                        const modal = document.getElementById('photoGalleryModal');
+                        if (!modal || modal.classList.contains('hidden')) return;
+                        if (e.key === 'ArrowRight') {
+                            e.preventDefault();
+                            window.galleryNext();
+                        } else if (e.key === 'ArrowLeft') {
+                            e.preventDefault();
+                            window.galleryPrev();
+                        } else if (e.key === 'Escape') {
+                            e.preventDefault();
+                            window.closeGallery();
+                        }
+                    });
+                })();
+            </script>
         </div>
     </div>
 </div>
@@ -1702,54 +2158,7 @@
             });
         });
     </script>
-    <!-- script pour le swiper -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Détruit d’éventuelles anciennes instances (sécurité)
-            if (window.swiperMain && typeof window.swiperMain.destroy === 'function') {
-                window.swiperMain.destroy(true, true);
-                window.swiperMain = null;
-            }
-            if (window.swiperThumbs && typeof window.swiperThumbs.destroy === 'function') {
-                window.swiperThumbs.destroy(true, true);
-                window.swiperThumbs = null;
-            }
 
-            // Initialisation du Swiper des miniatures (accessible globalement)
-            window.swiperThumbs = new Swiper('#photoGalleryModal .mySwiper2', {
-                spaceBetween: 10,
-                slidesPerView: 4,
-                freeMode: true,
-                watchSlidesProgress: true,
-                slideToClickedSlide: true,
-                breakpoints: {
-                    640: {
-                        slidesPerView: 5
-                    },
-                    1024: {
-                        slidesPerView: 6
-                    }
-                }
-            });
-
-            // Initialisation du Swiper principal (accessible globalement)
-            window.swiperMain = new Swiper('#photoGalleryModal .mySwiper', {
-                spaceBetween: 10,
-                loop: false,
-                navigation: {
-                    nextEl: '#photoGalleryModal .swiper-button-next',
-                    prevEl: '#photoGalleryModal .swiper-button-prev',
-                },
-                thumbs: {
-                    swiper: window.swiperThumbs,
-                },
-                pagination: {
-                    el: '#photoGalleryModal .swiper-pagination',
-                    clickable: true,
-                },
-            });
-        });
-    </script>
     <!-- script pour le carrousel des avis (responsive) -->
     <script>
         (function() {
@@ -1804,26 +2213,9 @@
             window.addEventListener('livewire:navigated', () => setTimeout(updateReviewsSwiper, 0));
         })();
     </script>
-    <!-- script pour le modal de la galerie (pilotage Swiper) -->
+    <!-- script pour le modal de la galerie (wrappers) -->
     <script>
-        function openGallery(index = 0) {
-            const modal = document.getElementById('photoGalleryModal');
-            modal.classList.remove('hidden');
-            // S'assure que Swiper se met à jour après l'affichage du modal
-            setTimeout(() => {
-                if (window.swiperMain) {
-                    window.swiperMain.update();
-                    window.swiperMain.slideTo(index, 0);
-                }
-                if (window.swiperThumbs) {
-                    window.swiperThumbs.update();
-                    window.swiperThumbs.slideTo(index, 0);
-                }
-            }, 0);
-        }
-
-        function closeGallery() {
-            document.getElementById('photoGalleryModal').classList.add('hidden');
-        }
+        // Les fonctions openGallery/closeGallery/galleryNext/galleryPrev sont définies plus haut
+        // et gèrent une galerie CSS/JS sans Swiper.
     </script>
 </div>

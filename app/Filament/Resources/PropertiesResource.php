@@ -54,9 +54,24 @@ class PropertiesResource extends Resource
                         ->label('Slug')
                         ->required()
                         ->readOnly(),
-                    \Filament\Forms\Components\Textarea::make('description')
+                    \Filament\Forms\Components\RichEditor::make('description')
                         ->label('Description')
-                        ->rows(12),
+                        ->toolbarButtons([
+                            'bold',
+                            'italic',
+                            'strike',
+                            'link',
+                            'orderedList',
+                            'bulletList',
+                            'blockquote',
+                            'horizontalRule',
+                            'codeBlock',
+                            'h2',
+                            'h3',
+                            'undo',
+                            'redo',
+                        ])
+                        ->columnSpanFull(),
                 ])->columns(1),
 
             Section::make('Caractéristiques')
